@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { StickerRegistry } from '../entities/Card';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -42,12 +43,37 @@ export class BootScene extends Phaser.Scene {
     this.load.image('logo', 'assets/images/logo.png');
     this.load.image('button_wood_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_dark_corners_b.png');
     this.load.image('resource_construction', 'assets/images/fantasyIconPack/64/HammerT1.png');
-    this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/Scroll.png');
+    this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/TomeYellow.png');
     this.load.image('resource_power', 'assets/images/fantasyIconPack/64/SwordT1.png');
+
+    // Load sticker configs
+    this.load.json('stickers', 'src/config/stickers.json');
+    
+    // Load individual sticker images
+    this.load.image('sticker_power_1', 'assets/images/stickers/SwordPlus1.png');
+    this.load.image('sticker_construction_1', 'assets/images/stickers/HammerPlus1.png');
+    this.load.image('sticker_invention_1', 'assets/images/stickers/TomeYellowPlus1.png');
   }
 
   create(): void {
+    // Initialize sticker registry with loaded data
+    this.initializeStickerRegistry();
+    
     // Transition to the level select scene
     this.scene.start('LevelSelectScene');
+  }
+  
+  /**
+   * Load sticker configs into the global registry
+   */
+  private initializeStickerRegistry(): void {
+    const stickerData = this.cache.json.get('stickers');
+    if (stickerData) {
+      const registry = StickerRegistry.getInstance();
+      registry.loadStickers(stickerData);
+      console.log('Sticker registry initialized with', stickerData.length, 'stickers');
+    } else {
+      console.error('Failed to load stickers.json');
+    }
   }
 } 

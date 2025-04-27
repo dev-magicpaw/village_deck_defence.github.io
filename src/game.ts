@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Plugin as NineSlicePlugin } from 'phaser3-nineslice';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { LevelSelectScene } from './scenes/LevelSelectScene';
@@ -12,6 +13,11 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  plugins: {
+    global: [
+      { key: 'NineSlicePlugin', plugin: NineSlicePlugin, start: true }
+    ]
   },
   scene: [BootScene, LevelSelectScene, GameScene]
 };

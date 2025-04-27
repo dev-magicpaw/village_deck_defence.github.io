@@ -10,12 +10,23 @@ export class LevelSelectScene extends Phaser.Scene {
     const { width, height } = this.cameras.main;
     
     // Add game logo
-    const logo = this.add.image(width / 2, height / 3, 'logo');
+    const logo = this.add.image(width / 2, height / 3 + 80, 'logo');
     logo.setScale(0.5);
     
-    // Add play button
-    const playButton = this.add.rectangle(width / 2, height / 2 + 50, 200, 50, 0x00aa00);
-    const playText = this.add.text(width / 2, height / 2 + 50, 'Play Game', { 
+    const playButton = this.add['nineslice'](
+      width / 2, 
+      height / 2 + 280, 
+      'button_wood_corners_metal', // texture key
+      undefined, // frame
+      200, // width
+      50, // height
+      20, // leftWidth
+      20, // rightWidth
+      20, // topHeight
+      20  // bottomHeight
+    );
+    
+    const playText = this.add.text(width / 2, height / 2 + 280, 'Play', { 
       fontSize: '24px', 
       color: '#ffffff' 
     });
@@ -36,19 +47,11 @@ export class LevelSelectScene extends Phaser.Scene {
       
     // Button hover effects
     playButton.on('pointerover', () => {
-      playButton.fillColor = 0x00ff00;
+      playButton.setScale(1.05);
     });
     
     playButton.on('pointerout', () => {
-      playButton.fillColor = 0x00aa00;
+      playButton.setScale(1.0);
     });
-
-    // Add title text
-    const titleText = this.add.text(width / 2, height / 5, 'Sticker Village', {
-      fontSize: '36px',
-      fontStyle: 'bold',
-      color: '#ffffff'
-    });
-    titleText.setOrigin(0.5);
   }
 } 

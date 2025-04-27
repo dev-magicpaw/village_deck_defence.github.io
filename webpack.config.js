@@ -25,13 +25,12 @@ module.exports = {
       template: './src/index.html',
       filename: 'index.html'
     }),
-    // TODO: enable this when we have assets
-    // new CopyWebpackPlugin({
-    //   patterns: [
-    //     { from: 'assets', to: 'assets' },
-    //     { from: 'src/config', to: 'config' }
-    //   ]
-    // })
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'assets', to: 'assets' },
+        { from: 'src/config', to: 'config' }
+      ]
+    })
   ],
   devServer: {
     static: {

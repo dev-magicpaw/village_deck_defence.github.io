@@ -39,7 +39,8 @@ export class BootScene extends Phaser.Scene {
     });
     
     // Load essential assets
-    this.load.image('logo', 'assets/ui/logo.png');
+    this.load.image('logo', 'assets/images/logo.png');
+    this.load.image('button_wood_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_dark_corners_b.png');
   }
 
   create(): void {

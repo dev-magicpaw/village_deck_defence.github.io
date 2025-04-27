@@ -36,3 +36,7 @@ The goal is to build up your village's defenses before the invasion arrives.
 - Language: TypeScript
 - Storage: localStorage for game progress
 - Analytics: Google Analytics 4 + Google Tag Manager
+
+## Used assets:
+- https://kenney.nl/assets/ui-pack-adventure
+- https://assetstore.unity.com/packages/2d/gui/icons/painterly-fantasy-icon-pack-285865

@@ -1,0 +1,16 @@
+[
+    {
+      "id": "sticker_power_1",
+      "name": "Power 1",
+      "description": "Adds 1 power",
+      "image": "src/assets/images/stickers/sticker_power_1.png",
+      "type": "Power",
+      "effects": [
+        {
+          "type": "Resource",
+          "resourceType": "Power",
+          "value": 1
+        }
+      ]
+    }
+]

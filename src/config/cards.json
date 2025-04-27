@@ -7,14 +7,14 @@
     "race": "Elf",
 
     "startingStickers": {
-      "power": ["sticker_slot_dark","sticker_slot_dark","sticker_slot_dark","sticker_slot_dark"],
-      "construction": ["sticker_slot_dark","sticker_slot_dark","sticker_slot_dark"],
-      "invention": ["sticker_slot_dark","sticker_slot_dark","sticker_slot_dark","sticker_slot_dark"]
+      "power": ["sticker_power_1"],
+      "construction": [],
+      "invention": []
     },
     "maxSlots": {
-      "power": 4,
-      "construction": 3,
-      "invention": 4
+      "power": 3,
+      "construction": 0,
+      "invention": 1
     }
   }
 ]

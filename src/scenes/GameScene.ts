@@ -3,6 +3,7 @@ import { PlayerHand } from '../entities/PlayerHand';
 import { trackEvent } from '../game';
 import { CardRegistry } from '../services/CardRegistry';
 import { DeckService } from '../services/DeckService';
+import { InvasionService } from '../services/InvasionService';
 import { Card } from '../types/game';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
@@ -20,6 +21,7 @@ export class GameScene extends Phaser.Scene {
   private playerDeck!: DeckService<Card>;
   private playerHand!: PlayerHand;
   private playerHandRenderer!: PlayerHandRenderer;
+  private invasionService!: InvasionService;
   private gameConfig!: GameConfig;
   private cardRegistry!: CardRegistry;
 
@@ -36,6 +38,9 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     // Load configs
     this.loadConfigurations();
+    
+    // Initialize the invasion service
+    this.initializeInvasionService();
     
     // Initialize the deck and hand
     this.initializePlayerDeck();
@@ -66,6 +71,16 @@ export class GameScene extends Phaser.Scene {
     // Initialize the card registry
     this.cardRegistry = CardRegistry.getInstance();
     this.cardRegistry.loadCards(this.cache.json.get('cardsConfig'));
+  }
+  
+  /**
+   * Initialize the invasion service
+   */
+  private initializeInvasionService(): void {
+    this.invasionService = new InvasionService(
+      this.gameConfig.invasion_distance,
+      this.gameConfig.invasion_speed_per_turn
+    );
   }
   
   /**
@@ -114,7 +129,8 @@ export class GameScene extends Phaser.Scene {
       dimensions.x,
       dimensions.y,
       dimensions.width,
-      dimensions.height
+      dimensions.height,
+      this.invasionService
     );
     
     // Initialize and render the hand

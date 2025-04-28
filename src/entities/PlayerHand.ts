@@ -39,14 +39,32 @@ export class PlayerHand {
    */
   public discardAndDraw(): number {
     // Discard all cards in hand
+    this.discardHand()
+    
+    // Draw up to the hand limit
+    return this.drawUpToLimit();
+  }
+
+  /**
+   * Discard the entire hand and draw new cards
+   * @returns The number of cards drawn
+   */
+  public discardHand(): void {
+    // Discard all cards in hand
     this._cards.forEach(card => {
       this._deckService.discard(card);
     });
     
     this._cards = [];
-    
-    // Draw up to the hand limit
-    return this.drawUpToLimit();
+  }
+  
+  /**
+   * End the day by shuffling discard pile into deck and drawing a new hand
+   * @returns The number of cards drawn
+   */
+  public shuffleDiscardIntoTheDeck(): void {
+    // Shuffle discard pile into deck
+    this._deckService.shuffleDiscardIntoDeck();
   }
   
   /**

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { PlayerHand } from '../entities/PlayerHand';
+import { InvasionService } from '../services/InvasionService';
 import { Card } from '../types/game';
 
 /**
@@ -11,6 +12,10 @@ export class PlayerHandRenderer {
   private cardObjects: Phaser.GameObjects.Container[] = [];
   private handPanel!: Phaser.GameObjects.NineSlice;
   private discardButton!: Phaser.GameObjects.NineSlice;
+  private discardButtonText!: Phaser.GameObjects.Text;
+  private endDayButton!: Phaser.GameObjects.NineSlice;
+  private endDayButtonText!: Phaser.GameObjects.Text;
+  private invasionService?: InvasionService;
   private panelWidth: number;
   private panelHeight: number;
   private panelX: number;
@@ -29,6 +34,7 @@ export class PlayerHandRenderer {
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
+   * @param invasionService Optional invasion service for day progression
    */
   constructor(
     scene: Phaser.Scene, 
@@ -36,7 +42,8 @@ export class PlayerHandRenderer {
     panelX: number,
     panelY: number,
     panelWidth: number,
-    panelHeight: number
+    panelHeight: number,
+    invasionService?: InvasionService
   ) {
     this.scene = scene;
     this.playerHand = playerHand;
@@ -44,6 +51,7 @@ export class PlayerHandRenderer {
     this.panelY = panelY;
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
+    this.invasionService = invasionService;
   }
   
   /**
@@ -80,19 +88,8 @@ export class PlayerHandRenderer {
     );
     this.discardButton.setOrigin(0, 0.5);
     
-    // Add button text
-    const buttonText = this.scene.add.text(
-      this.panelX + 20 + this.cardWidth / 2,
-      this.panelY + this.panelHeight / 2,
-      'Discard\nthe rest\nand draw\nnew hand',
-      {
-        fontSize: '18px',
-        color: '#000000',
-        align: 'center',
-        wordWrap: { width: this.cardWidth - 30 }
-      }
-    );
-    buttonText.setOrigin(0.5, 0.5);
+    // Add button text with deck size
+    this.updateDiscardButtonText();
     
     // Make button interactive
     this.discardButton.setInteractive({ useHandCursor: true })
@@ -103,13 +100,93 @@ export class PlayerHandRenderer {
     // Button hover effects
     this.discardButton.on('pointerover', () => {
       this.discardButton.setScale(1.05);
-      buttonText.setScale(1.05);
+      this.discardButtonText.setScale(1.05);
     });
     
     this.discardButton.on('pointerout', () => {
       this.discardButton.setScale(1);
-      buttonText.setScale(1);
+      this.discardButtonText.setScale(1);
     });
+    
+    // Create End the Day button (initially hidden)
+    this.endDayButton = this.scene.add['nineslice'](
+      this.panelX + this.panelMarginX,
+      this.panelY + this.panelHeight / 2,
+      'panel_metal_corners_nice',
+      undefined,
+      this.cardWidth,
+      this.cardHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.endDayButton.setOrigin(0, 0.5);
+    
+    // Add End Day button text
+    this.endDayButtonText = this.scene.add.text(
+      this.panelX + 20 + this.cardWidth / 2,
+      this.panelY + this.panelHeight / 2,
+      'End\nthe\nday',
+      {
+        fontSize: '24px',
+        color: '#000000',
+        align: 'center',
+        wordWrap: { width: this.cardWidth - 30 }
+      }
+    );
+    this.endDayButtonText.setOrigin(0.5, 0.5);
+    
+    // Make End Day button interactive
+    this.endDayButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        this.endDay();
+      });
+      
+    // End Day button hover effects
+    this.endDayButton.on('pointerover', () => {
+      this.endDayButton.setScale(1.05);
+      this.endDayButtonText.setScale(1.05);
+    });
+    
+    this.endDayButton.on('pointerout', () => {
+      this.endDayButton.setScale(1);
+      this.endDayButtonText.setScale(1);
+    });
+    
+    // Initially hide the End Day button
+    this.endDayButton.setVisible(false);
+    this.endDayButtonText.setVisible(false);
+    
+    // Update button visibility based on deck state
+    this.updateButtonVisibility();
+  }
+  
+  /**
+   * Update the discard button text to show number of cards in deck
+   */
+  private updateDiscardButtonText(): void {
+    const deckService = this.playerHand['_deckService'];
+    const cardsInDeck = deckService.getDeckSize();
+    
+    // Create the text object if it doesn't exist
+    if (!this.discardButtonText) {
+      this.discardButtonText = this.scene.add.text(
+        this.panelX + 20 + this.cardWidth / 2,
+        this.panelY + this.panelHeight / 2,
+        '',
+        {
+          fontSize: '18px',
+          color: '#000000',
+          align: 'center',
+          wordWrap: { width: this.cardWidth - 30 }
+        }
+      );
+      this.discardButtonText.setOrigin(0.5, 0.5);
+    }
+    
+    // Update the text
+    this.discardButtonText.setText(`Discard\nand draw\n\n${cardsInDeck} cards left`);
   }
   
   /**
@@ -281,11 +358,50 @@ export class PlayerHandRenderer {
   }
   
   /**
+   * Update the visibility of buttons based on deck state
+   */
+  private updateButtonVisibility(): void {
+    const deckService = this.playerHand['_deckService'];
+    const isDeckEmpty = deckService.isEmpty();
+    
+    this.discardButton.setVisible(!isDeckEmpty);
+    this.discardButtonText.setVisible(!isDeckEmpty);
+    
+    this.endDayButton.setVisible(isDeckEmpty);
+    this.endDayButtonText.setVisible(isDeckEmpty);
+    
+    // Update the discard button text if it's visible
+    if (!isDeckEmpty) {
+      this.updateDiscardButtonText();
+    }
+  }
+  
+  /**
    * Handle discard and draw new hand button click
    */
   private discardAndDrawNewHand(): void {
     this.playerHand.discardAndDraw();
     this.render();
+    this.updateButtonVisibility();
+  }
+  
+  /**
+   * Handle End the Day button click
+   */
+  private endDay(): void {
+    // 1. Progress the invasion if service exists
+    if (this.invasionService) {
+      this.invasionService.progressInvasion();
+    }
+    
+    // 2. Shuffle discard into deck and draw new hand
+    this.playerHand.discardHand();
+    this.playerHand.shuffleDiscardIntoTheDeck();
+    this.playerHand.drawUpToLimit();
+    
+    // 3. Update UI
+    this.render();
+    this.updateButtonVisibility();
   }
   
   /**
@@ -293,5 +409,6 @@ export class PlayerHandRenderer {
    */
   public update(): void {
     this.render();
+    this.updateButtonVisibility();
   }
 } 

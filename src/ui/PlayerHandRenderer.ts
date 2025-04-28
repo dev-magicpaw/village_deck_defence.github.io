@@ -23,7 +23,7 @@ export class PlayerHandRenderer {
   private panelMarginX: number = 20;
   private cardWidth: number = 150;
   private cardHeight: number = 200;
-  private cardSpacing: number = 20;
+  private cardSpacing: number = 30;
   private deckHandMargin: number = 50;
   
   /**

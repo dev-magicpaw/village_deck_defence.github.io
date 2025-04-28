@@ -13,7 +13,11 @@ export class CardRenderer {
   private card: Card;
   private onClickCallback?: (index: number) => void;
   private index: number;
-
+  private slotSize: number = 40;
+  private slotScale: number = 0.5;
+  private slotSpacing: number = 5;
+  private slotOffset: number = 10;
+  
   /**
    * Create a new card renderer
    * @param scene The Phaser scene to render in
@@ -82,8 +86,10 @@ export class CardRenderer {
     
     // Do not add race text
     
-    // Add construction slots at the bottom
+    // Add slots
+    this.renderPowerSlots();
     this.renderConstructionSlots();
+    this.renderInventionSlots();
     
     // Make card interactive
     this.cardBackground.setInteractive({ useHandCursor: true })
@@ -104,6 +110,29 @@ export class CardRenderer {
   }
   
   /**
+   * Render the power slots on the left side of the card
+   */
+  private renderPowerSlots(): void {
+    // Get the number of power slots from the card
+    const powerSlots = this.card.slots?.power || 0;
+    
+    if (powerSlots <= 0) return;
+    
+    // Slot configuration
+    const totalHeight = (this.slotSize * powerSlots) + (this.slotSpacing * (powerSlots - 1));
+    const startY = -(totalHeight / 2) + (this.slotSize / 2);
+    const x = -this.cardWidth / 2 + this.slotOffset; // Position at the left side of the card
+    
+    // Create slots
+    for (let i = 0; i < powerSlots; i++) {
+      const y = startY + (i * (this.slotSize + this.slotSpacing));
+      const slot = this.scene.add.image(x, y, 'round_wood');
+      slot.setScale(this.slotScale); // Smaller than the main wooden circle
+      this.container.add(slot);
+    }
+  }
+  
+  /**
    * Render the construction slots at the bottom of the card
    */
   private renderConstructionSlots(): void {
@@ -114,17 +143,38 @@ export class CardRenderer {
     if (constructionSlots <= 0) return;
     
     // Slot configuration
-    const slotSize = 40; // Size of each slot
-    const slotSpacing = 5; // Space between slots
-    const totalWidth = (slotSize * constructionSlots) + (slotSpacing * (constructionSlots - 1));
-    const startX = -(totalWidth / 2) + (slotSize / 2);
-    const y = this.cardHeight / 2 - 10; // Position at the bottom of the card
+    const totalWidth = (this.slotSize * constructionSlots) + (this.slotSpacing * (constructionSlots - 1));
+    const startX = -(totalWidth / 2) + (this.slotSize / 2);
+    const y = this.cardHeight / 2 - this.slotOffset; // Position at the bottom of the card
     
     // Create slots
     for (let i = 0; i < constructionSlots; i++) {
-      const x = startX + (i * (slotSize + slotSpacing));
+      const x = startX + (i * (this.slotSize + this.slotSpacing));
       const slot = this.scene.add.image(x, y, 'round_wood');
-      slot.setScale(0.5); // Smaller than the main wooden circle
+      slot.setScale(this.slotScale); // Smaller than the main wooden circle
+      this.container.add(slot);
+    }
+  }
+  
+  /**
+   * Render the invention slots on the right side of the card
+   */
+  private renderInventionSlots(): void {
+    // Get the number of invention slots from the card
+    const inventionSlots = this.card.slots?.invention || 0;
+    
+    if (inventionSlots <= 0) return;
+    
+    // Slot configuration
+    const totalHeight = (this.slotSize * inventionSlots) + (this.slotSpacing * (inventionSlots - 1));
+    const startY = -(totalHeight / 2) + (this.slotSize / 2);
+    const x = this.cardWidth / 2 - this.slotOffset; // Position at the right side of the card
+    
+    // Create slots
+    for (let i = 0; i < inventionSlots; i++) {
+      const y = startY + (i * (this.slotSize + this.slotSpacing));
+      const slot = this.scene.add.image(x, y, 'round_wood');
+      slot.setScale(this.slotScale); // Smaller than the main wooden circle
       this.container.add(slot);
     }
   }

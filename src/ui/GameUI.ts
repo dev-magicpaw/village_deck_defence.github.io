@@ -102,11 +102,12 @@ export class GameUI {
   private createEntityInfoPanel(): void {
     const { width, height } = this.scene.cameras.main;
     const topPanelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
+    const bottomPanelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
     const rightPanelWidth = width * GameUI.INFO_PANEL_WIDTH_PROPORTION;
     
     const panelX = width - rightPanelWidth;
     const panelY = topPanelHeight;
-    const panelHeight = height - topPanelHeight;
+    const panelHeight = height - topPanelHeight - bottomPanelHeight;
     
     // Create the panel background using 9-slice
     const infoPanel = this.scene.add['nineslice'](
@@ -144,14 +145,12 @@ export class GameUI {
    */
   public getHandPanelDimensions(): { x: number, y: number, width: number, height: number } {
     const { width, height } = this.scene.cameras.main;
-    const topPanelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
     const bottomPanelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
-    const rightPanelWidth = width * GameUI.INFO_PANEL_WIDTH_PROPORTION;
     
     return {
       x: 0,
       y: height - bottomPanelHeight,
-      width: width - rightPanelWidth,
+      width: width,
       height: bottomPanelHeight
     };
   }

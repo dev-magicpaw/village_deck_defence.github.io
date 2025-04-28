@@ -15,10 +15,10 @@ export class PlayerHandRenderer {
   private panelHeight: number;
   private panelX: number;
   private panelY: number;
+  private panelMarginX: number = 20;
   private cardWidth: number = 150;
   private cardHeight: number = 200;
   private cardSpacing: number = 20;
-  private buttonWidth: number = 220;
   private deckHandMargin: number = 50;
   
   /**
@@ -65,14 +65,14 @@ export class PlayerHandRenderer {
     );
     this.handPanel.setOrigin(0, 0);
     
-    // Create discard and draw button
+    // Create discard and draw button with same dimensions as cards
     this.discardButton = this.scene.add['nineslice'](
-      this.panelX + 20,
+      this.panelX + this.panelMarginX,
       this.panelY + this.panelHeight / 2,
       'panel_wood_paper',
       undefined,
-      this.buttonWidth,
-      80,
+      this.cardWidth,
+      this.cardHeight,
       20,
       20,
       20,
@@ -82,14 +82,14 @@ export class PlayerHandRenderer {
     
     // Add button text
     const buttonText = this.scene.add.text(
-      this.panelX + 20 + this.buttonWidth / 2,
+      this.panelX + 20 + this.cardWidth / 2,
       this.panelY + this.panelHeight / 2,
-      'Discard the rest\nand draw new hand',
+      'Discard\nthe rest\nand draw\nnew hand',
       {
-        fontSize: '16px',
+        fontSize: '18px',
         color: '#000000',
         align: 'center',
-        wordWrap: { width: this.buttonWidth - 20 }
+        wordWrap: { width: this.cardWidth - 30 }
       }
     );
     buttonText.setOrigin(0.5, 0.5);
@@ -122,8 +122,9 @@ export class PlayerHandRenderer {
     // Get cards from player hand
     const cards = this.playerHand.getCards();
     
-    // Calculate starting X position (after the button with some margin)
-    const startX = this.panelX + this.buttonWidth + this.deckHandMargin;
+    // Add +0.5 * cardWidth since card origin is 0.5
+    // Add +1 * cardWidth for the discard button
+    const startX = this.panelX + this.panelMarginX + this.cardWidth + 0.5 * this.cardWidth + this.deckHandMargin;
     
     // Render each card
     cards.forEach((card, index) => {

@@ -47,7 +47,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('resource_power', 'assets/images/fantasyIconPack/64/SwordT1.png');
 
     // Load sticker configs
-    this.load.json('stickers', 'src/config/stickers.json');
+    this.load.json('stickers', 'config/stickers.json');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/SwordPlus1.png');

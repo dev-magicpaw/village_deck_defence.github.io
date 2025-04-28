@@ -1,32 +1,34 @@
-import { trackEvent } from '../game';
+/**
+ * Track an event in the analytics system
+ * @param eventName Name of the event
+ * @param eventParams Optional event parameters
+ */
+function trackEvent(eventName: string, eventParams?: Record<string, any>): void {
+  // In a real implementation, this would send data to an analytics service
+  console.log(`Analytics event: ${eventName}`, eventParams);
+}
 
 /**
- * Service for tracking analytics events
+ * Service to track game analytics
  */
 export class AnalyticsService {
   /**
-   * Track a card play event
-   * @param cardId ID of the card played
-   * @param resource Resource the card was used for (power, construction, invention)
-   * @param turnNumber Turn number of the card play 
+   * Track a game start event
+   * @param deckSize Size of the starting deck
    */
-  public static trackCardPlayed(cardId: string, resource: string, turnNumber: number): void {
-    trackEvent('card_played', {
-      card_id: cardId,
-      resource: resource,
-      turn_number: turnNumber
-    });
+  public static trackGameStart(deckSize: number): void {
+    trackEvent('game_start', { deck_size: deckSize });
   }
-
+  
   /**
-   * Track a building construction event
-   * @param buildingId ID of the building constructed
-   * @param turnNumber Turn number of the building construction
+   * Track a turn start event
+   * @param turnNumber Turn number
+   * @param playerCards Number of cards in player's hand
    */
-  public static trackBuildingBuilt(buildingId: string, turnNumber: number): void {
-    trackEvent('building_built', {
-      building_id: buildingId,
-      turn_number: turnNumber
+  public static trackTurnStart(turnNumber: number, playerCards: number): void {
+    trackEvent('turn_start', { 
+      turn_number: turnNumber,
+      player_cards: playerCards
     });
   }
 
@@ -34,58 +36,42 @@ export class AnalyticsService {
    * Track a sticker application event
    * @param stickerId ID of the sticker applied
    * @param targetCardId ID of the card the sticker was applied to
-   * @param trackType Track type the sticker was applied to
+   * @param slotIndex Index of the slot the sticker was applied to
    * @param turnNumber Turn number of the sticker application
    */
-  public static trackStickerApplied(stickerId: string, targetCardId: string, trackType: string, turnNumber: number): void {
+  public static trackStickerApplied(stickerId: string, targetCardId: string, slotIndex: number, turnNumber: number): void {
     trackEvent('sticker_applied', {
       sticker_id: stickerId,
       target_card_id: targetCardId,
-      track_type: trackType,
+      slot_index: slotIndex,
       turn_number: turnNumber
     });
   }
-
+  
   /**
-   * Track an adventure completion event
-   * @param adventureId ID of the adventure completed
-   * @param difficulty Difficulty level of the adventure
-   * @param success Whether the adventure was successful
-   * @param rewardChosen Reward chosen (if successful)
-   * @param turnNumber Turn number of the adventure completion
+   * Track a card draw event
+   * @param cardId ID of the card drawn
+   * @param turnNumber Turn number of the card draw
    */
-  public static trackAdventureCompleted(
-    adventureId: string, 
-    difficulty: string, 
-    success: boolean, 
-    turnNumber: number,
-    rewardChosen?: string
-  ): void {
-    trackEvent('adventure_completed', {
-      adventure_id: adventureId,
-      difficulty,
-      success,
-      reward_chosen: rewardChosen || 'none',
+  public static trackCardDrawn(cardId: string, turnNumber: number): void {
+    trackEvent('card_drawn', {
+      card_id: cardId,
       turn_number: turnNumber
     });
   }
-
+  
   /**
-   * Track a deck shuffle event
-   * @param dayNumber Current day number after shuffle
-   * @param deckSize Number of cards in deck after shuffle
-   * @param cardsDiscarded Number of cards in discard pile before shuffle
-   * @param turnNumber Turn number of the deck shuffle
+   * Track a game end event
+   * @param turnCount Number of turns the game lasted
+   * @param result Game result (win/loss/draw)
    */
-  public static trackShuffle(dayNumber: number, deckSize: number, cardsDiscarded: number, turnNumber: number): void {
-    trackEvent('deck_shuffled', {
-      day_number: dayNumber,
-      deck_size: deckSize,
-      cards_discarded: cardsDiscarded,
-      turn_number: turnNumber
+  public static trackGameEnd(turnCount: number, result: string): void {
+    trackEvent('game_end', {
+      turn_count: turnCount,
+      result: result
     });
   }
-
+  
   /**
    * Track invasion progress
    * @param distanceRemaining Distance remaining until invasion

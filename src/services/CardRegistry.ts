@@ -1,5 +1,4 @@
 import { Card as CardClass, CardConfig, convertCardJsonToConfig } from '../entities/Card';
-import { ResourceType } from '../entities/Types';
 import { Card as CardInterface } from '../types/game';
 
 /**
@@ -77,59 +76,28 @@ export class CardRegistry {
    * @returns Card interface object
    */
   public convertCardClassToInterface(card: CardClass): CardInterface {
-    // Get the card config to access maxSlots information
+    // Get the card config to access slot information
     const config = this._cardConfigs.get(card.id);
+    
+    // Convert stickers in slots to their IDs
+    const stickerIds: string[] = [];
+    if (card.slots) {
+      card.slots.forEach(slot => {
+        if (slot.sticker) {
+          stickerIds.push(slot.sticker.id);
+        }
+      });
+    }
     
     return {
       id: card.id,
       name: card.name,
       race: card.race.toString(),
-      tracks: {
-        power: this.getTrackValue(card, ResourceType.Power),
-        construction: this.getTrackValue(card, ResourceType.Construction),
-        invention: this.getTrackValue(card, ResourceType.Invention)
-      },
-      // Add slots property based on maxSlots in the config
-      slots: config ? {
-        power: config.maxSlots[ResourceType.Power],
-        construction: config.maxSlots[ResourceType.Construction],
-        invention: config.maxSlots[ResourceType.Invention]
-      } : {
-        power: 0,
-        construction: 0,
-        invention: 0
-      },
-      // Add startingStickers property from the config
-      startingStickers: config ? {
-        power: config.startingStickers[ResourceType.Power],
-        construction: config.startingStickers[ResourceType.Construction],
-        invention: config.startingStickers[ResourceType.Invention]
-      } : {
-        power: [],
-        construction: [],
-        invention: []
-      }
+      slotCount: card.slotCount,
+      startingStickers: stickerIds
     };
   }
-  
-  /**
-   * Get the track value (count of non-null stickers) for a card
-   * @param card Card class instance
-   * @param resourceType Resource type to get track for
-   * @returns Number of stickers in the track
-   */
-  private getTrackValue(card: CardClass, resourceType: ResourceType): number {
-    // This is a mock implementation - in a real implementation, we would
-    // access the private _tracks property of the Card class
-    // For now, we'll return a default value based on the resource type
-    const defaultValues: Record<ResourceType, number> = {
-      [ResourceType.Power]: 1,
-      [ResourceType.Construction]: 1,
-      [ResourceType.Invention]: 1
-    };
-    
-    return defaultValues[resourceType];
-  }
+
   
   /**
    * Clear the card registry

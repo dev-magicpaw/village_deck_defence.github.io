@@ -86,12 +86,8 @@ export class CardRenderer {
     cardName.setOrigin(0.5, 0.5);
     this.container.add(cardName);
     
-    // Do not add race text
-    
     // Add slots
-    this.renderPowerSlots();
-    this.renderConstructionSlots();
-    this.renderInventionSlots();
+    this.renderSlots();
     
     // Make card interactive
     this.cardBackground.setInteractive({ useHandCursor: true })
@@ -112,102 +108,44 @@ export class CardRenderer {
   }
   
   /**
-   * Render the power slots on the left side of the card
+   * Render all slots horizontally at the bottom of the card
    */
-  private renderPowerSlots(): void {
-    // Get the number of power slots from the card
-    const powerSlots = this.card.slots?.power || 0;
+  private renderSlots(): void {
+    // Get the number of slots from the card
+    const slotCount = this.card.slotCount || 0;
     
-    if (powerSlots <= 0) return;
+    if (slotCount <= 0) return;
     
     // Slot configuration
-    const totalHeight = (this.slotSize * powerSlots) + (this.slotSpacing * (powerSlots - 1));
-    const startY = -(totalHeight / 2) + (this.slotSize / 2);
-    const x = -this.cardWidth / 2 + this.slotOffset; // Position at the left side of the card
-    
-    // Create slots
-    for (let i = 0; i < powerSlots; i++) {
-      const y = startY + (i * (this.slotSize + this.slotSpacing));
-      const slot = this.scene.add.image(x, y, this.slotImage);
-      slot.setScale(this.slotScale); // Smaller than the main wooden circle
-      this.container.add(slot);
-
-      // Add sticker if exists in startingStickers
-      this.renderStickerInSlot('power', i, x, y);
-    }
-  }
-  
-  /**
-   * Render the construction slots at the bottom of the card
-   */
-  private renderConstructionSlots(): void {
-    // Get the number of construction slots from the card
-    const constructionSlots = this.card.slots?.construction || 0;
-    
-    if (constructionSlots <= 0) return;
-    
-    // Slot configuration
-    const totalWidth = (this.slotSize * constructionSlots) + (this.slotSpacing * (constructionSlots - 1));
+    const totalWidth = (this.slotSize * slotCount) + (this.slotSpacing * (slotCount - 1));
     const startX = -(totalWidth / 2) + (this.slotSize / 2);
     const y = this.cardHeight / 2 - this.slotOffset; // Position at the bottom of the card
     
     // Create slots
-    for (let i = 0; i < constructionSlots; i++) {
+    for (let i = 0; i < slotCount; i++) {
       const x = startX + (i * (this.slotSize + this.slotSpacing));
       const slot = this.scene.add.image(x, y, this.slotImage);
       slot.setScale(this.slotScale); // Smaller than the main wooden circle
       this.container.add(slot);
 
       // Add sticker if exists in startingStickers
-      this.renderStickerInSlot('construction', i, x, y);
-    }
-  }
-  
-  /**
-   * Render the invention slots on the right side of the card
-   */
-  private renderInventionSlots(): void {
-    // Get the number of invention slots from the card
-    const inventionSlots = this.card.slots?.invention || 0;
-    
-    if (inventionSlots <= 0) return;
-    
-    // Slot configuration
-    const totalHeight = (this.slotSize * inventionSlots) + (this.slotSpacing * (inventionSlots - 1));
-    const startY = -(totalHeight / 2) + (this.slotSize / 2);
-    const x = this.cardWidth / 2 - this.slotOffset; // Position at the right side of the card
-    
-    // Create slots
-    for (let i = 0; i < inventionSlots; i++) {
-      const y = startY + (i * (this.slotSize + this.slotSpacing));
-      const slot = this.scene.add.image(x, y, this.slotImage);
-      slot.setScale(this.slotScale); // Smaller than the main wooden circle
-      this.container.add(slot);
-
-      // Add sticker if exists in startingStickers
-      this.renderStickerInSlot('invention', i, x, y);
+      this.renderStickerInSlot(i, x, y);
     }
   }
 
   /**
    * Render a sticker in a specific slot if it exists in startingStickers
-   * @param slotType Type of slot ('power', 'construction', or 'invention')
    * @param slotIndex Index of the slot
    * @param x X position of the slot
    * @param y Y position of the slot
    */
-  private renderStickerInSlot(slotType: string, slotIndex: number, x: number, y: number): void {
+  private renderStickerInSlot(slotIndex: number, x: number, y: number): void {
     // Check if there are starting stickers for this card
     if (!this.card.startingStickers) return;
-
-    // Get stickers array for this slot type
-    const stickers = this.card.startingStickers[slotType as keyof typeof this.card.startingStickers];
     
     // Check if sticker exists at this slot index
-    if (stickers && slotIndex < stickers.length && stickers[slotIndex]) {
-      const stickerId = stickers[slotIndex];
-      // Extract sticker value from sticker ID (e.g., "sticker_power_1" -> "1")
-      const value = stickerId.split('_').pop();
+    if (slotIndex < this.card.startingStickers.length && this.card.startingStickers[slotIndex]) {
+      const stickerId = this.card.startingStickers[slotIndex];
       
       // For the image key, use the sticker ID directly as it matches the loaded asset name
       const stickerImage = this.scene.add.image(x, y, stickerId);

@@ -2,21 +2,8 @@ export interface Card {
   id: string;
   name: string;
   race?: string;
-  tracks?: {
-    power: number;
-    construction: number;
-    invention: number;
-  };
-  slots?: {
-    power: number;
-    construction: number;
-    invention: number;
-  };
-  startingStickers?: {
-    power: string[];
-    construction: string[];
-    invention: string[];
-  };
+  slotCount?: number;
+  startingStickers?: string[];
 }
 
 export interface Building {

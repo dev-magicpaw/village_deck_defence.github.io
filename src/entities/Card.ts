@@ -3,7 +3,7 @@ import {
   CardSticker,
   StickerFactory
 } from './Sticker';
-import { Race, ResourceType } from './Types';
+import { Race } from './Types';
 
 export interface CardConfig {
     id: string;
@@ -11,21 +11,8 @@ export interface CardConfig {
     description: string;
     image: string;
     race: Race;
-    startingStickers: {
-        [ResourceType.Power]: string[];
-        [ResourceType.Construction]: string[];
-        [ResourceType.Invention]: string[];
-    };
-    maxSlots: { 
-        [ResourceType.Power]: number;
-        [ResourceType.Construction]: number;
-        [ResourceType.Invention]: number;
-    };
-}
-
-export interface CardTrack {
-  type: ResourceType;
-  slots: CardSlot[];
+    startingStickers: string[];
+    maxSlotCount: number;
 }
 
 export interface CardSlot {
@@ -41,7 +28,7 @@ export class Card {
   public readonly id: string;
   public readonly name: string;
   public readonly race: Race;
-  private _tracks: CardTrack[];
+  private _slots: CardSlot[];
 
   /**
    * Create a new Card instance
@@ -51,37 +38,19 @@ export class Card {
     this.id = config.id;
     this.name = config.name;
     this.race = config.race;
-    this._tracks = [];
-    this._tracks.push(this.buildTrack(
-      ResourceType.Power, 
-      config.maxSlots[ResourceType.Power], 
-      config.startingStickers[ResourceType.Power]
-    ));
-    this._tracks.push(this.buildTrack(
-      ResourceType.Construction, 
-      config.maxSlots[ResourceType.Construction], 
-      config.startingStickers[ResourceType.Construction]
-    ));
-    this._tracks.push(this.buildTrack(
-      ResourceType.Invention, 
-      config.maxSlots[ResourceType.Invention], 
-      config.startingStickers[ResourceType.Invention]
-    ));
+    this._slots = this.buildSlots(config.maxSlotCount, config.startingStickers);
   }
 
-  private buildTrack(type: ResourceType, maxSlots: number, startingStickers: string[]): CardTrack {
-    const track: CardTrack = {
-      type,
-      slots: []
-    };
-    for (let i = 0; i < maxSlots; i++) {
-      track.slots.push({
+  private buildSlots(maxSlotCount: number, startingStickers: string[]): CardSlot[] {
+    const slots: CardSlot[] = [];
+    for (let i = 0; i < maxSlotCount; i++) {
+      slots.push({
         id: i,
         sticker: i < startingStickers.length ? this.createStickerFromId(startingStickers[i]) : null,
         replaceable: false
       });
     }
-    return track;
+    return slots;
   }
 
   /**
@@ -98,44 +67,76 @@ export class Card {
     return StickerFactory.fromConfig(stickerConfig);
   }
 
+  /**
+   * Get all slots on the card
+   */
+  public get slots(): CardSlot[] {
+    return this._slots;
+  }
+
+  /**
+   * Get the total number of slots on the card
+   */
+  public get slotCount(): number {
+    return this._slots.length;
+  }
+
   public static fromConfig(config: CardConfig): Card {
     return new Card(config);
   }
 }
 
 /**
- * Helper function to convert string race to Race enum
- */
-export function stringToRace(raceStr: string): Race {
-  const raceMap: Record<string, Race> = {
-    'Elf': Race.Elf,
-    'Dwarf': Race.Dwarf,
-    'Human': Race.Human,
-    'Gnome': Race.Gnome
-  };
-  
-  return raceMap[raceStr] || Race.Human; // Default to Human if not found
-}
-
-/**
  * Function to convert card JSON data to CardConfig
  */
 export function convertCardJsonToConfig(cardJson: any): CardConfig {
+  // Collect all stickers from different types into a single array
+  const startingStickers: string[] = [];
+  
+  // Legacy format support
+  if (cardJson.startingStickers) {
+    if (cardJson.startingStickers.power) {
+      startingStickers.push(...cardJson.startingStickers.power);
+    }
+    if (cardJson.startingStickers.construction) {
+      startingStickers.push(...cardJson.startingStickers.construction);
+    }
+    if (cardJson.startingStickers.invention) {
+      startingStickers.push(...cardJson.startingStickers.invention);
+    }
+  }
+  
+  // Calculate total max slot count from legacy format if needed
+  let maxSlotCount = cardJson.maxSlotCount || 0;
+  if (!maxSlotCount && cardJson.maxSlots) {
+    maxSlotCount = (cardJson.maxSlots.power || 0) + 
+                  (cardJson.maxSlots.construction || 0) + 
+                  (cardJson.maxSlots.invention || 0);
+  }
+  
   return {
     id: cardJson.id,
     name: cardJson.name,
     description: cardJson.description,
     image: cardJson.image,
     race: stringToRace(cardJson.race),
-    startingStickers: {
-      [ResourceType.Power]: cardJson.startingStickers.power || [],
-      [ResourceType.Construction]: cardJson.startingStickers.construction || [],
-      [ResourceType.Invention]: cardJson.startingStickers.invention || []
-    },
-    maxSlots: {
-      [ResourceType.Power]: cardJson.maxSlots.power || 0,
-      [ResourceType.Construction]: cardJson.maxSlots.construction || 0,
-      [ResourceType.Invention]: cardJson.maxSlots.invention || 0
-    }
+    startingStickers: startingStickers,
+    maxSlotCount: maxSlotCount
   };
+}
+
+// Helper function to convert a string race to Race enum
+function stringToRace(race: string): Race {
+  switch (race.toLowerCase()) {
+    case 'human':
+      return Race.Human;
+    case 'elf':
+      return Race.Elf;
+    case 'dwarf':
+      return Race.Dwarf;
+    case 'gnome':
+      return Race.Gnome;
+    default:
+      return Race.Human;
+  }
 } 

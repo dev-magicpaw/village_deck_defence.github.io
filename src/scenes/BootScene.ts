@@ -69,7 +69,8 @@ export class BootScene extends Phaser.Scene {
     this.initializeStickerRegistry();
     
     // Transition to the level select scene
-    this.scene.start('LevelSelectScene');
+    // this.scene.start('LevelSelectScene');
+    this.scene.start('GameScene');
   }
   
   /**

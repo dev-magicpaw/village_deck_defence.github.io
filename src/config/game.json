@@ -1,0 +1,8 @@
+{
+    "starting_cards": [
+        {"card_elven_apprentice": 1},
+        {"card_dwarf_miner": 1},
+        {"card_human_villager": 7},
+        {"card_gnome_student": 1}
+    ]
+}

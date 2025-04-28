@@ -62,6 +62,14 @@ export class CardRenderer {
     );
     this.cardBackground.setOrigin(0.5, 0.5);
     
+    // Add elements to container - background first
+    this.container.add(this.cardBackground);
+    
+    // Add wooden circle in the middle of the card
+    const woodCircle = this.scene.add.image(0, 0, 'round_wood');
+    woodCircle.setScale(0.5); // Adjust scale to fit card
+    this.container.add(woodCircle);
+    
     // Card name
     const cardName = this.scene.add.text(
       0,
@@ -75,67 +83,9 @@ export class CardRenderer {
       }
     );
     cardName.setOrigin(0.5, 0.5);
+    this.container.add(cardName);
     
-    // Add race text if available
-    if (this.card.race) {
-      const raceText = this.scene.add.text(
-        0,
-        -this.cardHeight / 2 + 55,
-        this.card.race,
-        {
-          fontSize: '14px',
-          color: '#333333',
-          align: 'center'
-        }
-      );
-      raceText.setOrigin(0.5, 0.5);
-      this.container.add(raceText);
-    }
-    
-    // Add basic track info if available
-    if (this.card.tracks) {
-      const tracksY = -this.cardHeight / 2 + 85;
-      const trackSpacing = 25;
-      
-      // Power track
-      if (this.card.tracks.power > 0) {
-        const powerIcon = this.scene.add.image(-50, tracksY, 'resource_power');
-        powerIcon.setScale(0.4);
-        const powerText = this.scene.add.text(-30, tracksY, `${this.card.tracks.power}`, {
-          fontSize: '16px',
-          color: '#cc0000'
-        });
-        powerText.setOrigin(0, 0.5);
-        this.container.add(powerIcon);
-        this.container.add(powerText);
-      }
-      
-      // Construction track
-      if (this.card.tracks.construction > 0) {
-        const constructionIcon = this.scene.add.image(-50, tracksY + trackSpacing, 'resource_construction');
-        constructionIcon.setScale(0.4);
-        const constructionText = this.scene.add.text(-30, tracksY + trackSpacing, `${this.card.tracks.construction}`, {
-          fontSize: '16px',
-          color: '#6b4c2a'
-        });
-        constructionText.setOrigin(0, 0.5);
-        this.container.add(constructionIcon);
-        this.container.add(constructionText);
-      }
-      
-      // Invention track
-      if (this.card.tracks.invention > 0) {
-        const inventionIcon = this.scene.add.image(-50, tracksY + trackSpacing * 2, 'resource_invention');
-        inventionIcon.setScale(0.4);
-        const inventionText = this.scene.add.text(-30, tracksY + trackSpacing * 2, `${this.card.tracks.invention}`, {
-          fontSize: '16px',
-          color: '#6666cc'
-        });
-        inventionText.setOrigin(0, 0.5);
-        this.container.add(inventionIcon);
-        this.container.add(inventionText);
-      }
-    }
+    // Do not add race text
     
     // Make card interactive
     this.cardBackground.setInteractive({ useHandCursor: true })
@@ -153,10 +103,6 @@ export class CardRenderer {
     this.cardBackground.on('pointerout', () => {
       this.container.setScale(1);
     });
-    
-    // Add elements to container
-    this.container.add(this.cardBackground);
-    this.container.add(cardName);
   }
   
   /**

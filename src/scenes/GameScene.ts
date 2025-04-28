@@ -26,7 +26,18 @@ export class GameScene extends Phaser.Scene {
     placeholderText.setOrigin(0.5);
     
     // Add back button
-    const backButton = this.add.rectangle(100, 50, 150, 40, 0xaa0000);
+    const backButton = this.add['nineslice'](
+      100, 
+      50, 
+      'panel_metal_corners_metal', // texture key
+      undefined, // frame
+      150, // width
+      40, // height
+      20, // leftWidth
+      20, // rightWidth
+      20, // topHeight
+      20  // bottomHeight
+    );
     const backText = this.add.text(100, 50, 'Back to Menu', {
       fontSize: '16px',
       color: '#ffffff'
@@ -48,11 +59,11 @@ export class GameScene extends Phaser.Scene {
       
     // Button hover effects
     backButton.on('pointerover', () => {
-      backButton.fillColor = 0xff0000;
+      backButton.setScale(1.05);
     });
     
     backButton.on('pointerout', () => {
-      backButton.fillColor = 0xaa0000;
+      backButton.setScale(1.0);
     });
     
     // Track scene load for analytics

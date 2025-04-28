@@ -42,6 +42,8 @@ export class BootScene extends Phaser.Scene {
     // Load essential assets
     this.load.image('logo', 'assets/images/logo.png');
     this.load.image('panel_wood_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_dark_corners_b.png');
+    this.load.image('panel_metal_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_dark.png');
+
     this.load.image('resource_construction', 'assets/images/fantasyIconPack/64/HammerT1.png');
     this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/TomeYellow.png');
     this.load.image('resource_power', 'assets/images/fantasyIconPack/64/SwordT1.png');

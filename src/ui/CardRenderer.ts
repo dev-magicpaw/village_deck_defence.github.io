@@ -65,11 +65,6 @@ export class CardRenderer {
     // Add elements to container - background first
     this.container.add(this.cardBackground);
     
-    // Add wooden circle in the middle of the card
-    const woodCircle = this.scene.add.image(0, 0, 'round_wood');
-    woodCircle.setScale(0.5); // Adjust scale to fit card
-    this.container.add(woodCircle);
-    
     // Card name
     const cardName = this.scene.add.text(
       0,
@@ -87,6 +82,9 @@ export class CardRenderer {
     
     // Do not add race text
     
+    // Add construction slots at the bottom
+    this.renderConstructionSlots();
+    
     // Make card interactive
     this.cardBackground.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
@@ -103,6 +101,32 @@ export class CardRenderer {
     this.cardBackground.on('pointerout', () => {
       this.container.setScale(1);
     });
+  }
+  
+  /**
+   * Render the construction slots at the bottom of the card
+   */
+  private renderConstructionSlots(): void {
+    // Get the number of construction slots from the card
+    const constructionSlots = this.card.slots?.construction || 0;
+    console.log('constructionSlots', constructionSlots);
+    
+    if (constructionSlots <= 0) return;
+    
+    // Slot configuration
+    const slotSize = 40; // Size of each slot
+    const slotSpacing = 5; // Space between slots
+    const totalWidth = (slotSize * constructionSlots) + (slotSpacing * (constructionSlots - 1));
+    const startX = -(totalWidth / 2) + (slotSize / 2);
+    const y = this.cardHeight / 2 - 10; // Position at the bottom of the card
+    
+    // Create slots
+    for (let i = 0; i < constructionSlots; i++) {
+      const x = startX + (i * (slotSize + slotSpacing));
+      const slot = this.scene.add.image(x, y, 'round_wood');
+      slot.setScale(0.5); // Smaller than the main wooden circle
+      this.container.add(slot);
+    }
   }
   
   /**

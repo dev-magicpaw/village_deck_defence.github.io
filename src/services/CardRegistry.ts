@@ -77,6 +77,9 @@ export class CardRegistry {
    * @returns Card interface object
    */
   public convertCardClassToInterface(card: CardClass): CardInterface {
+    // Get the card config to access maxSlots information
+    const config = this._cardConfigs.get(card.id);
+    
     return {
       id: card.id,
       name: card.name,
@@ -85,6 +88,16 @@ export class CardRegistry {
         power: this.getTrackValue(card, ResourceType.Power),
         construction: this.getTrackValue(card, ResourceType.Construction),
         invention: this.getTrackValue(card, ResourceType.Invention)
+      },
+      // Add slots property based on maxSlots in the config
+      slots: config ? {
+        power: config.maxSlots[ResourceType.Power],
+        construction: config.maxSlots[ResourceType.Construction],
+        invention: config.maxSlots[ResourceType.Invention]
+      } : {
+        power: 0,
+        construction: 0,
+        invention: 0
       }
     };
   }

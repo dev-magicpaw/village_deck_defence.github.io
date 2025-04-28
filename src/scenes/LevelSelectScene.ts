@@ -16,7 +16,7 @@ export class LevelSelectScene extends Phaser.Scene {
     const playButton = this.add['nineslice'](
       width / 2, 
       height / 2 + 280, 
-      'button_wood_corners_metal', // texture key
+      'panel_wood_corners_metal', // texture key
       undefined, // frame
       200, // width
       50, // height

@@ -98,6 +98,16 @@ export class CardRegistry {
         power: 0,
         construction: 0,
         invention: 0
+      },
+      // Add startingStickers property from the config
+      startingStickers: config ? {
+        power: config.startingStickers[ResourceType.Power],
+        construction: config.startingStickers[ResourceType.Construction],
+        invention: config.startingStickers[ResourceType.Invention]
+      } : {
+        power: [],
+        construction: [],
+        invention: []
       }
     };
   }

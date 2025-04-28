@@ -24,7 +24,7 @@ export class PlayerHandRenderer {
   private cardWidth: number = 150;
   private cardHeight: number = 200;
   private cardSpacing: number = 30;
-  private deckHandMargin: number = 50;
+  private deckHandMargin: number = 60;
   
   /**
    * Create a new player hand renderer

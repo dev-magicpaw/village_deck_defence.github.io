@@ -12,11 +12,11 @@ export interface Card {
     construction: number;
     invention: number;
   };
-  startingStickers?: Array<{
-    type: string;
-    value: number;
-    slotIndex: number;
-  }>;
+  startingStickers?: {
+    power: string[];
+    construction: string[];
+    invention: string[];
+  };
 }
 
 export interface Building {

@@ -13,10 +13,12 @@ export class CardRenderer {
   private card: Card;
   private onClickCallback?: (index: number) => void;
   private index: number;
-  private slotSize: number = 40;
-  private slotScale: number = 0.5;
+  private slotSize: number = 30;
+  private slotScale: number = 0.7;
   private slotSpacing: number = 5;
-  private slotOffset: number = 10;
+  private slotImage: string = 'round_metal';
+  private slotOffset: number = 20;
+  private stickerScale: number = 0.4;
   
   /**
    * Create a new card renderer
@@ -126,9 +128,12 @@ export class CardRenderer {
     // Create slots
     for (let i = 0; i < powerSlots; i++) {
       const y = startY + (i * (this.slotSize + this.slotSpacing));
-      const slot = this.scene.add.image(x, y, 'round_wood');
+      const slot = this.scene.add.image(x, y, this.slotImage);
       slot.setScale(this.slotScale); // Smaller than the main wooden circle
       this.container.add(slot);
+
+      // Add sticker if exists in startingStickers
+      this.renderStickerInSlot('power', i, x, y);
     }
   }
   
@@ -138,7 +143,6 @@ export class CardRenderer {
   private renderConstructionSlots(): void {
     // Get the number of construction slots from the card
     const constructionSlots = this.card.slots?.construction || 0;
-    console.log('constructionSlots', constructionSlots);
     
     if (constructionSlots <= 0) return;
     
@@ -150,9 +154,12 @@ export class CardRenderer {
     // Create slots
     for (let i = 0; i < constructionSlots; i++) {
       const x = startX + (i * (this.slotSize + this.slotSpacing));
-      const slot = this.scene.add.image(x, y, 'round_wood');
+      const slot = this.scene.add.image(x, y, this.slotImage);
       slot.setScale(this.slotScale); // Smaller than the main wooden circle
       this.container.add(slot);
+
+      // Add sticker if exists in startingStickers
+      this.renderStickerInSlot('construction', i, x, y);
     }
   }
   
@@ -173,9 +180,39 @@ export class CardRenderer {
     // Create slots
     for (let i = 0; i < inventionSlots; i++) {
       const y = startY + (i * (this.slotSize + this.slotSpacing));
-      const slot = this.scene.add.image(x, y, 'round_wood');
+      const slot = this.scene.add.image(x, y, this.slotImage);
       slot.setScale(this.slotScale); // Smaller than the main wooden circle
       this.container.add(slot);
+
+      // Add sticker if exists in startingStickers
+      this.renderStickerInSlot('invention', i, x, y);
+    }
+  }
+
+  /**
+   * Render a sticker in a specific slot if it exists in startingStickers
+   * @param slotType Type of slot ('power', 'construction', or 'invention')
+   * @param slotIndex Index of the slot
+   * @param x X position of the slot
+   * @param y Y position of the slot
+   */
+  private renderStickerInSlot(slotType: string, slotIndex: number, x: number, y: number): void {
+    // Check if there are starting stickers for this card
+    if (!this.card.startingStickers) return;
+
+    // Get stickers array for this slot type
+    const stickers = this.card.startingStickers[slotType as keyof typeof this.card.startingStickers];
+    
+    // Check if sticker exists at this slot index
+    if (stickers && slotIndex < stickers.length && stickers[slotIndex]) {
+      const stickerId = stickers[slotIndex];
+      // Extract sticker value from sticker ID (e.g., "sticker_power_1" -> "1")
+      const value = stickerId.split('_').pop();
+      
+      // For the image key, use the sticker ID directly as it matches the loaded asset name
+      const stickerImage = this.scene.add.image(x, y, stickerId);
+      stickerImage.setScale(this.stickerScale);
+      this.container.add(stickerImage);
     }
   }
   

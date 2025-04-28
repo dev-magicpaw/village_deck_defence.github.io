@@ -1,0 +1,296 @@
+import Phaser from 'phaser';
+import { PlayerHand } from '../entities/PlayerHand';
+import { Card } from '../types/game';
+
+/**
+ * Renders a player's hand in the UI
+ */
+export class PlayerHandRenderer {
+  private scene: Phaser.Scene;
+  private playerHand: PlayerHand;
+  private cardObjects: Phaser.GameObjects.Container[] = [];
+  private handPanel!: Phaser.GameObjects.NineSlice;
+  private discardButton!: Phaser.GameObjects.NineSlice;
+  private panelWidth: number;
+  private panelHeight: number;
+  private panelX: number;
+  private panelY: number;
+  private cardWidth: number = 150;
+  private cardHeight: number = 200;
+  private cardSpacing: number = 20;
+  private buttonWidth: number = 220;
+  private deckHandMargin: number = 50;
+  
+  /**
+   * Create a new player hand renderer
+   * @param scene The Phaser scene to render in
+   * @param playerHand The player's hand to render
+   * @param panelX X position of the panel
+   * @param panelY Y position of the panel
+   * @param panelWidth Width of the panel
+   * @param panelHeight Height of the panel
+   */
+  constructor(
+    scene: Phaser.Scene, 
+    playerHand: PlayerHand,
+    panelX: number,
+    panelY: number,
+    panelWidth: number,
+    panelHeight: number
+  ) {
+    this.scene = scene;
+    this.playerHand = playerHand;
+    this.panelX = panelX;
+    this.panelY = panelY;
+    this.panelWidth = panelWidth;
+    this.panelHeight = panelHeight;
+  }
+  
+  /**
+   * Initialize the hand panel and button
+   */
+  public init(): void {
+    // Create the hand panel
+    this.handPanel = this.scene.add['nineslice'](
+      this.panelX,
+      this.panelY,
+      'panel_metal_corners_metal',
+      undefined,
+      this.panelWidth,
+      this.panelHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.handPanel.setOrigin(0, 0);
+    
+    // Create discard and draw button
+    this.discardButton = this.scene.add['nineslice'](
+      this.panelX + 20,
+      this.panelY + this.panelHeight / 2,
+      'panel_wood_paper',
+      undefined,
+      this.buttonWidth,
+      80,
+      20,
+      20,
+      20,
+      20
+    );
+    this.discardButton.setOrigin(0, 0.5);
+    
+    // Add button text
+    const buttonText = this.scene.add.text(
+      this.panelX + 20 + this.buttonWidth / 2,
+      this.panelY + this.panelHeight / 2,
+      'Discard the rest\nand draw new hand',
+      {
+        fontSize: '16px',
+        color: '#000000',
+        align: 'center',
+        wordWrap: { width: this.buttonWidth - 20 }
+      }
+    );
+    buttonText.setOrigin(0.5, 0.5);
+    
+    // Make button interactive
+    this.discardButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        this.discardAndDrawNewHand();
+      });
+      
+    // Button hover effects
+    this.discardButton.on('pointerover', () => {
+      this.discardButton.setScale(1.05);
+      buttonText.setScale(1.05);
+    });
+    
+    this.discardButton.on('pointerout', () => {
+      this.discardButton.setScale(1);
+      buttonText.setScale(1);
+    });
+  }
+  
+  /**
+   * Render the player's hand cards
+   */
+  public render(): void {
+    // Clear old card objects
+    this.clearCardObjects();
+    
+    // Get cards from player hand
+    const cards = this.playerHand.getCards();
+    
+    // Calculate starting X position (after the button with some margin)
+    const startX = this.panelX + this.buttonWidth + this.deckHandMargin;
+    
+    // Render each card
+    cards.forEach((card, index) => {
+      const cardX = startX + index * (this.cardWidth + this.cardSpacing);
+      const cardY = this.panelY + this.panelHeight / 2;
+      
+      this.createCardObject(card, cardX, cardY, index);
+    });
+  }
+  
+  /**
+   * Create a visual card object
+   * @param card Card data to render
+   * @param x X position
+   * @param y Y position
+   * @param index Card index in hand
+   */
+  private createCardObject(card: Card, x: number, y: number, index: number): void {
+    // Create a container for the card and its elements
+    const container = this.scene.add.container(x, y);
+    
+    // Card background
+    const cardBackground = this.scene.add['nineslice'](
+      0,
+      0,
+      'panel_wood_paper_damaged',
+      undefined,
+      this.cardWidth,
+      this.cardHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    cardBackground.setOrigin(0.5, 0.5);
+    
+    // Card name
+    const cardName = this.scene.add.text(
+      0,
+      -this.cardHeight / 2 + 30,
+      card.name,
+      {
+        fontSize: '18px',
+        color: '#000000',
+        align: 'center',
+        wordWrap: { width: this.cardWidth - 20 }
+      }
+    );
+    cardName.setOrigin(0.5, 0.5);
+    
+    // Add race text if available
+    if (card.race) {
+      const raceText = this.scene.add.text(
+        0,
+        -this.cardHeight / 2 + 55,
+        card.race,
+        {
+          fontSize: '14px',
+          color: '#333333',
+          align: 'center'
+        }
+      );
+      raceText.setOrigin(0.5, 0.5);
+      container.add(raceText);
+    }
+    
+    // Add basic track info if available
+    if (card.tracks) {
+      const tracksY = -this.cardHeight / 2 + 85;
+      const trackSpacing = 25;
+      
+      // Power track
+      if (card.tracks.power > 0) {
+        const powerIcon = this.scene.add.image(-50, tracksY, 'resource_power');
+        powerIcon.setScale(0.4);
+        const powerText = this.scene.add.text(-30, tracksY, `${card.tracks.power}`, {
+          fontSize: '16px',
+          color: '#cc0000'
+        });
+        powerText.setOrigin(0, 0.5);
+        container.add(powerIcon);
+        container.add(powerText);
+      }
+      
+      // Construction track
+      if (card.tracks.construction > 0) {
+        const constructionIcon = this.scene.add.image(-50, tracksY + trackSpacing, 'resource_construction');
+        constructionIcon.setScale(0.4);
+        const constructionText = this.scene.add.text(-30, tracksY + trackSpacing, `${card.tracks.construction}`, {
+          fontSize: '16px',
+          color: '#6b4c2a'
+        });
+        constructionText.setOrigin(0, 0.5);
+        container.add(constructionIcon);
+        container.add(constructionText);
+      }
+      
+      // Invention track
+      if (card.tracks.invention > 0) {
+        const inventionIcon = this.scene.add.image(-50, tracksY + trackSpacing * 2, 'resource_invention');
+        inventionIcon.setScale(0.4);
+        const inventionText = this.scene.add.text(-30, tracksY + trackSpacing * 2, `${card.tracks.invention}`, {
+          fontSize: '16px',
+          color: '#6666cc'
+        });
+        inventionText.setOrigin(0, 0.5);
+        container.add(inventionIcon);
+        container.add(inventionText);
+      }
+    }
+    
+    // Make card interactive
+    cardBackground.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        this.onCardClick(index);
+      });
+    
+    // Hover effects
+    cardBackground.on('pointerover', () => {
+      container.setScale(1.05);
+    });
+    
+    cardBackground.on('pointerout', () => {
+      container.setScale(1);
+    });
+    
+    // Add elements to container
+    container.add(cardBackground);
+    container.add(cardName);
+    
+    // Add container to tracked objects
+    this.cardObjects.push(container);
+  }
+  
+  /**
+   * Handle card click
+   * @param index Index of the clicked card
+   */
+  private onCardClick(index: number): void {
+    // Here we would implement card selection/play logic
+    console.log(`Card ${index} clicked`);
+    
+    // This could emit an event or call a handler function passed in constructor
+  }
+  
+  /**
+   * Remove all card visual objects
+   */
+  private clearCardObjects(): void {
+    this.cardObjects.forEach(container => {
+      container.destroy();
+    });
+    this.cardObjects = [];
+  }
+  
+  /**
+   * Handle discard and draw new hand button click
+   */
+  private discardAndDrawNewHand(): void {
+    this.playerHand.discardAndDraw();
+    this.render();
+  }
+  
+  /**
+   * Update the visual representation after hand changes
+   */
+  public update(): void {
+    this.render();
+  }
+} 

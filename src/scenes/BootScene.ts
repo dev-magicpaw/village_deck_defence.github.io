@@ -50,13 +50,18 @@ export class BootScene extends Phaser.Scene {
     this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/TomeYellow.png');
     this.load.image('resource_power', 'assets/images/fantasyIconPack/64/SwordT1.png');
 
-    // Load sticker configs
+    // Load configuration files
     this.load.json('stickers', 'config/stickers.json');
+    this.load.json('cards', 'config/cards.json'); 
+    this.load.json('game', 'config/game.json');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/SwordPlus1.png');
+    this.load.image('sticker_power_3', 'assets/images/stickers/SwordPlus3.png');
     this.load.image('sticker_construction_1', 'assets/images/stickers/HammerPlus1.png');
+    this.load.image('sticker_construction_3', 'assets/images/stickers/HammerPlus1.png');
     this.load.image('sticker_invention_1', 'assets/images/stickers/TomeYellowPlus1.png');
+    this.load.image('sticker_invention_3', 'assets/images/stickers/TomeYellowPlus3.png');
   }
 
   create(): void {

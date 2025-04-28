@@ -12,5 +12,75 @@
           "value": 1
         }
       ]
+    },
+    {
+      "id": "sticker_power_3",
+      "name": "Power 3",
+      "description": "Adds 3 power",
+      "image": "sticker_power_3",
+      "type": "Power",
+      "effects": [
+        {
+          "type": "Resource",
+          "resourceType": "Power",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "sticker_construction_1",
+      "name": "Construction 1",
+      "description": "Adds 1 construction",
+      "image": "sticker_construction_1",
+      "type": "Construction",
+      "effects": [
+        {
+          "type": "Resource",
+          "resourceType": "Construction",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "sticker_construction_3",
+      "name": "Construction 3",
+      "description": "Adds 3 construction",
+      "image": "sticker_construction_3",
+      "type": "Construction",
+      "effects": [
+        {
+          "type": "Resource",
+          "resourceType": "Construction",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "sticker_invention_1",
+      "name": "Invention 1",
+      "description": "Adds 1 invention",
+      "image": "sticker_invention_1",
+      "type": "Invention",
+      "effects": [
+        {
+          "type": "Resource",
+          "resourceType": "Invention",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "sticker_invention_3",
+      "name": "Invention 3",
+      "description": "Adds 3 invention",
+      "image": "sticker_invention_3",
+      "type": "Invention",
+      "effects": [
+        {
+          "type": "Resource",
+          "resourceType": "Invention",
+          "value": 3
+        }
+      ]
     }
 ]

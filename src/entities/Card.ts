@@ -1,7 +1,7 @@
+import { StickerRegistry } from '../services/StickerRegistry';
 import {
   CardSticker,
-  StickerFactory,
-  StickerRegistry
+  StickerFactory
 } from './Sticker';
 import { Race, ResourceType } from './Types';
 

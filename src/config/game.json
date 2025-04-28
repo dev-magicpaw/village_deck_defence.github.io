@@ -4,5 +4,8 @@
         {"card_dwarf_miner": 1},
         {"card_human_villager": 7},
         {"card_gnome_student": 1}
-    ]
+    ],
+    "invasion_speed_per_turn": 10,
+    "invasion_distance": 100,
+    "invasion_difficulty": 20
 }

@@ -48,6 +48,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('panel_metal_corners_nice', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_detail_a.png');
     this.load.image('round_wood', 'assets/images/ui-pack-adventure/PNG/Default/round_brown_dark.png');
     this.load.image('round_metal', 'assets/images/ui-pack-adventure/PNG/Default/round_grey_dark.png');
+    this.load.image('round_wood_paper', 'assets/images/ui-pack-adventure/PNG/Default/round_brown.png');
 
     this.load.image('resource_construction', 'assets/images/fantasyIconPack/64/HammerT1.png');
     this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/TomeYellow.png');
@@ -55,8 +56,8 @@ export class BootScene extends Phaser.Scene {
 
     // Load configuration files
     this.load.json('stickers', 'config/stickers.json');
-    this.load.json('cards', 'config/cards.json'); 
-    this.load.json('game', 'config/game.json');
+    this.load.json('cardsConfig', 'config/cards.json'); 
+    this.load.json('gameConfig', 'config/game.json');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/SwordPlus1.png');

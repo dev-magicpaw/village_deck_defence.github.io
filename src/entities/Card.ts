@@ -90,38 +90,14 @@ export class Card {
  * Function to convert card JSON data to CardConfig
  */
 export function convertCardJsonToConfig(cardJson: any): CardConfig {
-  // Collect all stickers from different types into a single array
-  const startingStickers: string[] = [];
-  
-  // Legacy format support
-  if (cardJson.startingStickers) {
-    if (cardJson.startingStickers.power) {
-      startingStickers.push(...cardJson.startingStickers.power);
-    }
-    if (cardJson.startingStickers.construction) {
-      startingStickers.push(...cardJson.startingStickers.construction);
-    }
-    if (cardJson.startingStickers.invention) {
-      startingStickers.push(...cardJson.startingStickers.invention);
-    }
-  }
-  
-  // Calculate total max slot count from legacy format if needed
-  let maxSlotCount = cardJson.maxSlotCount || 0;
-  if (!maxSlotCount && cardJson.maxSlots) {
-    maxSlotCount = (cardJson.maxSlots.power || 0) + 
-                  (cardJson.maxSlots.construction || 0) + 
-                  (cardJson.maxSlots.invention || 0);
-  }
-  
   return {
     id: cardJson.id,
     name: cardJson.name,
     description: cardJson.description,
     image: cardJson.image,
     race: stringToRace(cardJson.race),
-    startingStickers: startingStickers,
-    maxSlotCount: maxSlotCount
+    startingStickers: [...cardJson.startingStickers],
+    maxSlotCount: cardJson.maxSlotCount
   };
 }
 

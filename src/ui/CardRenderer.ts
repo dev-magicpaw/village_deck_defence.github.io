@@ -14,10 +14,10 @@ export class CardRenderer {
   private onClickCallback?: (index: number) => void;
   private index: number;
   private slotSize: number = 30;
-  private slotScale: number = 0.7;
-  private slotSpacing: number = 5;
-  private slotImage: string = 'round_metal';
-  private slotOffset: number = 20;
+  private slotScale: number = 0.8;
+  private slotSpacing: number = 25;
+  private slotImage: string = 'round_wood';
+  private slotOffset: number = 10;
   private stickerScale: number = 0.4;
   
   /**
@@ -142,6 +142,7 @@ export class CardRenderer {
   private renderStickerInSlot(slotIndex: number, x: number, y: number): void {
     // Check if there are starting stickers for this card
     if (!this.card.startingStickers) return;
+    console.log(this.card.startingStickers);
     
     // Check if sticker exists at this slot index
     if (slotIndex < this.card.startingStickers.length && this.card.startingStickers[slotIndex]) {

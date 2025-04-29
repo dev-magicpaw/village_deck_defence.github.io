@@ -76,25 +76,17 @@ export class CardRegistry {
    * @returns Card interface object
    */
   public convertCardClassToInterface(card: CardClass): CardInterface {
-    // Get the card config to access slot information
     const config = this._cardConfigs.get(card.id);
     
-    // Convert stickers in slots to their IDs
-    const stickerIds: string[] = [];
-    if (card.slots) {
-      card.slots.forEach(slot => {
-        if (slot.sticker) {
-          stickerIds.push(slot.sticker.id);
-        }
-      });
+    if (!config) {
+      throw new Error("Config not found");
     }
-    
     return {
       id: card.id,
       name: card.name,
       race: card.race.toString(),
       slotCount: card.slotCount,
-      startingStickers: stickerIds
+      startingStickers: config.startingStickers
     };
   }
 

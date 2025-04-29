@@ -13,6 +13,10 @@ export class StickerShopRenderer {
   private isVisible: boolean = false;
   private shopPanel: Phaser.GameObjects.NineSlice | null = null;
   private stickerRenderers: StickerInShopRenderer[] = [];
+  private selectedSticker: StickerConfig | null = null;
+  private applyButton: Phaser.GameObjects.NineSlice | null = null;
+  private applyButtonText: Phaser.GameObjects.Text | null = null;
+  private onApplyCallback?: (stickerConfig: StickerConfig) => void;
   
   // Panel dimensions and position
   private panelX: number;
@@ -32,19 +36,22 @@ export class StickerShopRenderer {
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
+   * @param onApplyCallback Callback for when a sticker is applied
    */
   constructor(
     scene: Phaser.Scene,
     panelX: number,
     panelY: number,
     panelWidth: number,
-    panelHeight: number
+    panelHeight: number,
+    onApplyCallback?: (stickerConfig: StickerConfig) => void
   ) {
     this.scene = scene;
     this.panelX = panelX;
     this.panelY = panelY;
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
+    this.onApplyCallback = onApplyCallback;
     
     // Get the sticker registry
     this.stickerRegistry = StickerRegistry.getInstance();
@@ -115,9 +122,99 @@ export class StickerShopRenderer {
     this.displayContainer.add(this.shopPanel);
     this.displayContainer.add(titleText);
     this.displayContainer.add(closeButton);
+
+    // Create apply button
+    this.createApplyButton();
     
     // Render all stickers
     this.renderStickers();
+  }
+  
+  /**
+   * Create the Apply button at the bottom of the shop
+   */
+  private createApplyButton(): void {
+    // Create the apply button using panel_wood_arrows texture with 9-slice scaling
+    const buttonWidth = 150;
+    const buttonHeight = 50;
+    const buttonX = this.panelX + (this.panelWidth - buttonWidth) / 2;
+    const buttonY = this.panelY + this.panelHeight - buttonHeight - 30;
+    
+    this.applyButton = this.scene.add['nineslice'](
+      buttonX + buttonWidth / 2,
+      buttonY + buttonHeight / 2,
+      'panel_wood_arrows',
+      undefined,
+      buttonWidth,
+      buttonHeight,
+      10,
+      10,
+      10,
+      10
+    );
+    this.applyButton.setOrigin(0.5, 0.5);
+    
+    // Create button text
+    this.applyButtonText = this.scene.add.text(
+      buttonX + buttonWidth / 2,
+      buttonY + buttonHeight / 2,
+      'Apply',
+      {
+        fontSize: '20px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }
+    );
+    this.applyButtonText.setOrigin(0.5, 0.5);
+    
+    // Initially disable the button
+    this.setApplyButtonState(false);
+    
+    // Make button interactive
+    this.applyButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        if (this.selectedSticker && this.onApplyCallback) {
+          this.onApplyCallback(this.selectedSticker);
+          this.hide();
+        }
+      });
+    
+    // Add hover effects
+    this.applyButton.on('pointerover', () => {
+      if (this.selectedSticker) {
+        this.applyButton?.setScale(1.05);
+        this.applyButtonText?.setScale(1.1);
+      }
+    });
+    
+    this.applyButton.on('pointerout', () => {
+      this.applyButton?.setScale(1);
+      this.applyButtonText?.setScale(1);
+    });
+    
+    // Add to display container
+    this.displayContainer.add(this.applyButton);
+    this.displayContainer.add(this.applyButtonText);
+  }
+  
+  /**
+   * Set the state of the apply button (enabled/disabled)
+   * @param enabled Whether the button should be enabled
+   */
+  private setApplyButtonState(enabled: boolean): void {
+    if (this.applyButton && this.applyButtonText) {
+      if (enabled) {
+        // Enable the button
+        this.applyButton.clearTint();
+        this.applyButton.setInteractive({ useHandCursor: true });
+        this.applyButtonText.setColor('#ffffff');
+      } else {
+        // Disable the button
+        this.applyButton.setTint(0x555555);
+        this.applyButton.disableInteractive();
+        this.applyButtonText.setColor('#888888');
+      }
+    }
   }
   
   /**
@@ -177,8 +274,17 @@ export class StickerShopRenderer {
    * @param stickerConfig The clicked sticker configuration
    */
   private onStickerClick(stickerConfig: StickerConfig): void {
-    console.log(`Sticker ${stickerConfig.name} clicked`);
-    // TODO: Implement sticker purchase logic
+    // Select the sticker
+    this.selectedSticker = stickerConfig;
+    console.log(`Sticker ${stickerConfig.name} selected`);
+    
+    // Highlight the selected sticker and unhighlight others
+    this.stickerRenderers.forEach(renderer => {
+      renderer.setSelected(renderer.getStickerConfig().id === stickerConfig.id);
+    });
+    
+    // Enable the apply button
+    this.setApplyButtonState(true);
   }
   
   /**
@@ -190,11 +296,29 @@ export class StickerShopRenderer {
   }
   
   /**
-   * Hide the sticker shop
+   * Hide the sticker shop and deselect any selected sticker
    */
   public hide(): void {
     this.isVisible = false;
     this.displayContainer.setVisible(false);
+    
+    // Deselect sticker when closing the shop
+    this.deselectSticker();
+  }
+  
+  /**
+   * Deselect the currently selected sticker
+   */
+  private deselectSticker(): void {
+    this.selectedSticker = null;
+    
+    // Remove highlight from all stickers
+    this.stickerRenderers.forEach(renderer => {
+      renderer.setSelected(false);
+    });
+    
+    // Disable the apply button
+    this.setApplyButtonState(false);
   }
   
   /**
@@ -242,6 +366,19 @@ export class StickerShopRenderer {
     if (this.shopPanel) {
       this.shopPanel.destroy();
     }
+    if (this.applyButton) {
+      this.applyButton.destroy();
+    }
+    if (this.applyButtonText) {
+      this.applyButtonText.destroy();
+    }
     this.displayContainer.destroy();
+  }
+  
+  /**
+   * Get the currently selected sticker
+   */
+  public getSelectedSticker(): StickerConfig | null {
+    return this.selectedSticker;
   }
 } 

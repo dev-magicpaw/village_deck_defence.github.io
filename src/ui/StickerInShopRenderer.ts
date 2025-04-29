@@ -10,6 +10,8 @@ export class StickerInShopRenderer {
   private container: Phaser.GameObjects.Container;
   private size: number;
   private onClickCallback?: (stickerConfig: StickerConfig) => void;
+  private background!: Phaser.GameObjects.Image;
+  private isSelected: boolean = false;
   
   /**
    * Create a new sticker renderer
@@ -45,11 +47,11 @@ export class StickerInShopRenderer {
    */
   private createStickerVisual(): void {
     // Create the background using round_metal image
-    const background = this.scene.add.image(0, 0, 'round_metal');
-    background.setDisplaySize(this.size, this.size);
+    this.background = this.scene.add.image(0, 0, 'round_metal');
+    this.background.setDisplaySize(this.size, this.size);
     
     const stickerImage = this.scene.add.image(0, 0, this.stickerConfig.image);
-    this.container.add(background);
+    this.container.add(this.background);
     this.container.add(stickerImage);
     
     // Add cost display with both text and invention resource icon
@@ -81,7 +83,7 @@ export class StickerInShopRenderer {
     this.container.add(costContainer);
     
     // Make sticker interactive
-    background.setInteractive({ useHandCursor: true })
+    this.background.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         if (this.onClickCallback) {
           this.onClickCallback(this.stickerConfig);
@@ -89,13 +91,42 @@ export class StickerInShopRenderer {
       });
     
     // Hover effects
-    background.on('pointerover', () => {
-      this.container.setScale(1.1);
+    this.background.on('pointerover', () => {
+      if (!this.isSelected) {
+        this.container.setScale(1.1);
+      }
     });
     
-    background.on('pointerout', () => {
-      this.container.setScale(1);
+    this.background.on('pointerout', () => {
+      if (!this.isSelected) {
+        this.container.setScale(1);
+      }
     });
+  }
+  
+  /**
+   * Set whether this sticker is selected
+   * @param selected Whether the sticker should be selected
+   */
+  public setSelected(selected: boolean): void {
+    this.isSelected = selected;
+    
+    if (selected) {
+      // Apply selection visual effect
+      this.background.setTint(0x00ffff); // Cyan tint to indicate selection
+      this.container.setScale(1.15); // Slightly larger scale
+    } else {
+      // Remove selection visual effect
+      this.background.clearTint();
+      this.container.setScale(1); // Normal scale
+    }
+  }
+  
+  /**
+   * Get the sticker configuration
+   */
+  public getStickerConfig(): StickerConfig {
+    return this.stickerConfig;
   }
   
   /**

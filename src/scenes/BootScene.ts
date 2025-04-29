@@ -44,12 +44,15 @@ export class BootScene extends Phaser.Scene {
     this.load.image('logo', 'assets/images/logo.png');
     this.load.image('panel_wood_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_dark_corners_b.png');
     this.load.image('panel_metal_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_dark.png');
+    this.load.image('panel_metal_corners_metal_nice', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_detail_a.png');
     this.load.image('panel_wood_paper_damaged', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_damaged.png');
     this.load.image('panel_wood_paper', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown.png');
     this.load.image('panel_metal_corners_nice', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_detail_a.png');
     this.load.image('round_wood', 'assets/images/ui-pack-adventure/PNG/Default/round_brown_dark.png');
     this.load.image('round_metal', 'assets/images/ui-pack-adventure/PNG/Default/round_grey_dark.png');
     this.load.image('round_wood_paper', 'assets/images/ui-pack-adventure/PNG/Default/round_brown.png');
+    this.load.image('round_metal_cross', 'assets/images/ui-pack-adventure/PNG/Default/checkbox_grey_cross.png');
+    
 
     this.load.image('resource_construction', 'assets/images/fantasyIconPack/64/HammerT1.png');
     this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/TomeYellow.png');
@@ -62,12 +65,12 @@ export class BootScene extends Phaser.Scene {
     this.load.json('buildingsConfig', 'config/buildings.json');
     
     // Load individual sticker images
-    this.load.image('sticker_power_1', 'assets/images/stickers/SwordPlus1.png');
-    this.load.image('sticker_power_3', 'assets/images/stickers/SwordPlus3.png');
+    this.load.image('sticker_power_1', 'assets/images/stickers/Sword1.png');
+    this.load.image('sticker_power_3', 'assets/images/stickers/Sword3.png');
     this.load.image('sticker_construction_1', 'assets/images/stickers/Hammer1.png');
-    this.load.image('sticker_construction_3', 'assets/images/stickers/HammerPlus1.png');
-    this.load.image('sticker_invention_1', 'assets/images/stickers/TomeYellowPlus1.png');
-    this.load.image('sticker_invention_3', 'assets/images/stickers/TomeYellowPlus3.png');
+    this.load.image('sticker_construction_3', 'assets/images/stickers/Hammer3.png');
+    this.load.image('sticker_invention_1', 'assets/images/stickers/TomeYellow1.png');
+    this.load.image('sticker_invention_3', 'assets/images/stickers/TomeYellow3.png');
   }
 
   create(): void {

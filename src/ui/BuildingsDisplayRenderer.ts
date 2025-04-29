@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BuildingService } from '../services/BuildingService';
 import { Building } from '../types/game';
+import { StickerShopRenderer } from './StickerShopRenderer';
 
 /**
  * Renders constructed buildings in the display panel
@@ -11,6 +12,8 @@ export class BuildingsDisplayRenderer {
   private displayContainer: Phaser.GameObjects.Container;
   private buildings: Building[] = [];
   private buildingCards: Phaser.GameObjects.Container[] = [];
+  private stickerShopRenderer: StickerShopRenderer | null = null;
+  private stickerShopBuildingId: string = '';
   
   // Building card visual properties
   private cardWidth: number = 150;
@@ -49,8 +52,25 @@ export class BuildingsDisplayRenderer {
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
     
+    // Get the sticker shop building ID from the game config
+    const gameConfig = this.scene.cache.json.get('gameConfig');
+    if (gameConfig && gameConfig.sticker_shop_building_id) {
+      this.stickerShopBuildingId = gameConfig.sticker_shop_building_id;
+    }
+    
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
+    
+    // Create the sticker shop renderer with exact same dimensions
+    // It will be initialized last to be rendered on top
+    this.stickerShopRenderer = new StickerShopRenderer(
+      this.scene,
+      this.panelX,
+      this.panelY,
+      this.panelWidth,
+      this.panelHeight
+    );
+    this.stickerShopRenderer.init();
   }
   
   /**
@@ -158,9 +178,12 @@ export class BuildingsDisplayRenderer {
    * @param building The clicked building
    */
   private onBuildingClick(building: Building): void {
-    // For now, just log that building was clicked
     console.log(`Building ${building.name} clicked`);
-    // Future functionality can be added here
+    
+    // Check if this is the sticker shop building
+    if (building.id === this.stickerShopBuildingId && this.stickerShopRenderer) {
+      this.stickerShopRenderer.show();
+    }
   }
   
   /**
@@ -190,6 +213,9 @@ export class BuildingsDisplayRenderer {
    */
   public destroy(): void {
     this.clearBuildingCards();
+    if (this.stickerShopRenderer) {
+      this.stickerShopRenderer.destroy();
+    }
     this.displayContainer.destroy();
   }
 } 

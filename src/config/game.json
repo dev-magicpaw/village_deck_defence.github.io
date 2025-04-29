@@ -8,5 +8,6 @@
     "invasion_speed_per_turn": 10,
     "invasion_distance": 100,
     "invasion_difficulty": 20,
-    "player_hand_size": 5
+    "player_hand_size": 5,
+    "sticker_shop_building_id":"workshop"
 }

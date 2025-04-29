@@ -18,7 +18,7 @@ export class CardRenderer {
   private slotSpacing: number = 25;
   private slotImage: string = 'round_wood';
   private slotOffset: number = 10;
-  private stickerScale: number = 0.4;
+  private stickerScale: number = 0.6;
   
   /**
    * Create a new card renderer

@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { BuildingService } from '../services/BuildingService';
+import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
 
 export class GameUI {
   static readonly INVASION_PANEL_HEIGHT_PROPORTION: number = 0.08;
@@ -6,9 +8,12 @@ export class GameUI {
   static readonly INFO_PANEL_WIDTH_PROPORTION: number = 0.3;
 
   private scene: Phaser.Scene;
+  private buildingsDisplayRenderer?: BuildingsDisplayRenderer;
+  private buildingService?: BuildingService;
   
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, buildingService?: BuildingService) {
     this.scene = scene;
+    this.buildingService = buildingService;
   }
   
   /**
@@ -84,16 +89,22 @@ export class GameUI {
     // Set the origin to the top-left corner
     displayPanel.setOrigin(0, 0);
     
-    // Add the display space information text
-    const displayInfoText = this.scene.add.text(panelX + panelWidth / 2, panelY + panelHeight / 2, 
-      'Display space.\nBy default displays the village with all constructed buildings.\nIf an architect is selected, construction options are displayed here.\nIf Workshop is selected, sticker options are displayed here.\nIf Adventure guild is selected, the possible adventures\n(easy/medium/hard) are displayed here.',
-      {
-        fontSize: '18px',
-        color: '#ffffff',
-        align: 'center'
-      }
-    );
-    displayInfoText.setOrigin(0.5, 0.5);
+    // Initialize buildings display if building service is available
+    if (this.buildingService) {
+      this.buildingsDisplayRenderer = new BuildingsDisplayRenderer(
+        this.scene,
+        this.buildingService,
+        panelX,
+        panelY,
+        panelWidth,
+        panelHeight
+      );
+      
+      this.buildingsDisplayRenderer.init();
+      this.buildingsDisplayRenderer.render();
+    } else {
+      throw new Error("No building service");
+    }
   }
   
   /**
@@ -153,5 +164,33 @@ export class GameUI {
       width: width,
       height: bottomPanelHeight
     };
+  }
+  
+  /**
+   * Get display panel dimensions
+   * @returns Object with panel dimensions and position
+   */
+  public getDisplayPanelDimensions(): { x: number, y: number, width: number, height: number } {
+    const { width, height } = this.scene.cameras.main;
+    const topPanelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
+    const bottomPanelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
+    const rightPanelWidth = width * GameUI.INFO_PANEL_WIDTH_PROPORTION;
+    
+    return {
+      x: 0,
+      y: topPanelHeight,
+      width: width - rightPanelWidth,
+      height: height - topPanelHeight - bottomPanelHeight
+    };
+  }
+  
+  /**
+   * Update the UI components
+   */
+  public update(): void {
+    // Update buildings display if it exists
+    if (this.buildingsDisplayRenderer) {
+      this.buildingsDisplayRenderer.update();
+    }
   }
 } 

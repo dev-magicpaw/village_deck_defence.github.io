@@ -64,7 +64,7 @@ export class BootScene extends Phaser.Scene {
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/SwordPlus1.png');
     this.load.image('sticker_power_3', 'assets/images/stickers/SwordPlus3.png');
-    this.load.image('sticker_construction_1', 'assets/images/stickers/HammerPlus1.png');
+    this.load.image('sticker_construction_1', 'assets/images/stickers/Hammer1.png');
     this.load.image('sticker_construction_3', 'assets/images/stickers/HammerPlus1.png');
     this.load.image('sticker_invention_1', 'assets/images/stickers/TomeYellowPlus1.png');
     this.load.image('sticker_invention_3', 'assets/images/stickers/TomeYellowPlus3.png');

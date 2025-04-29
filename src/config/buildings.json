@@ -1,7 +1,7 @@
 [
     {
-        "id": "architect_bureau",
-        "name": "Architect Burea",
+        "id": "architect",
+        "name": "Architect",
         "description": "Allows to construct other buildings in the village",
         "image": "src/assets/images/cards/card_human_villager.png",
         "constructed_from_start": true

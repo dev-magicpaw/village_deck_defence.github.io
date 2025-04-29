@@ -55,7 +55,7 @@ export class GameScene extends Phaser.Scene {
     this.buildingService.initializeBuildings();
     
     // Initialize the UI manager
-    this.gameUI = new GameUI(this);
+    this.gameUI = new GameUI(this, this.buildingService);
     
     // Create UI panels (except player hand which is handled separately)
     this.gameUI.createUI();
@@ -149,5 +149,20 @@ export class GameScene extends Phaser.Scene {
     // Initialize and render the hand
     this.playerHandRenderer.init();
     this.playerHandRenderer.render();
+  }
+  
+  /**
+   * Update game state
+   */
+  update(): void {
+    // Update UI components
+    if (this.gameUI) {
+      this.gameUI.update();
+    }
+    
+    // Update player hand renderer
+    if (this.playerHandRenderer) {
+      this.playerHandRenderer.update();
+    }
   }
 } 

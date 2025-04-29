@@ -11,7 +11,8 @@
           "resourceType": "Power",
           "value": 1
         }
-      ]
+      ],
+      "cost": 5
     },
     {
       "id": "sticker_power_3",
@@ -25,7 +26,8 @@
           "resourceType": "Power",
           "value": 3
         }
-      ]
+      ],
+      "cost": 15
     },
     {
       "id": "sticker_construction_1",
@@ -40,6 +42,8 @@
           "value": 1
         }
       ]
+      ,
+      "cost": 4
     },
     {
       "id": "sticker_construction_3",
@@ -53,7 +57,8 @@
           "resourceType": "Construction",
           "value": 3
         }
-      ]
+      ],
+      "cost": 12
     },
     {
       "id": "sticker_invention_1",
@@ -67,7 +72,8 @@
           "resourceType": "Invention",
           "value": 1
         }
-      ]
+      ],
+      "cost": 3
     },
     {
       "id": "sticker_invention_3",
@@ -81,6 +87,7 @@
           "resourceType": "Invention",
           "value": 3
         }
-      ]
+      ],
+      "cost": 6
     }
 ]

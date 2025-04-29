@@ -19,6 +19,7 @@ export interface StickerConfig {
   image: string;
   type: StickerType;
   effects: StickerEffect[];
+  cost: number;
 }
 
 export interface StickerEffect {
@@ -39,6 +40,7 @@ export interface CardSticker {
   image: string;
   type: StickerType;
   effects: StickerEffect[];
+  cost: number;
 }
 
 /**
@@ -52,7 +54,8 @@ export class StickerFactory {
       description: stickerConfig.description,
       image: stickerConfig.image,
       type: stickerConfig.type,
-      effects: stickerConfig.effects
+      effects: stickerConfig.effects,
+      cost: stickerConfig.cost
     };
   }
 } 

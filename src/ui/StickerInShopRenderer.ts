@@ -52,6 +52,34 @@ export class StickerInShopRenderer {
     this.container.add(background);
     this.container.add(stickerImage);
     
+    // Add cost display with both text and invention resource icon
+    const costContainer = this.scene.add.container(0, this.size/2 + 10);
+    
+    // Cost background
+    const costBackground = this.scene.add.rectangle(0, 0, 60, 22, 0x000000, 0.7);
+    costBackground.setOrigin(0.5, 0);
+    
+    // Cost text (just the number)
+    const costText = this.scene.add.text(0, 2, `${this.stickerConfig.cost}`, {
+      fontSize: '18px',
+      color: '#ffffff',
+      fontStyle: 'bold'
+    });
+    costText.setOrigin(1, 0);
+    
+    // Invention resource icon
+    const resourceIcon = this.scene.add.image(5, 10, 'resource_invention');
+    resourceIcon.setOrigin(0, 0.5);
+    resourceIcon.setScale(0.5); // Scale down the icon to fit nicely
+    
+    // Add elements to the cost container
+    costContainer.add(costBackground);
+    costContainer.add(costText);
+    costContainer.add(resourceIcon);
+    
+    // Add cost container to the main container
+    this.container.add(costContainer);
+    
     // Make sticker interactive
     background.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {

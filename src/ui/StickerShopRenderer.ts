@@ -229,7 +229,9 @@ export class StickerShopRenderer {
    * Update the shop when stickers change
    */
   public update(): void {
-    // Nothing to update for now
+    if (this.isVisible) {
+      this.renderStickers();
+    }
   }
   
   /**

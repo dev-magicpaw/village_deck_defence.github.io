@@ -42,12 +42,12 @@ export class BootScene extends Phaser.Scene {
     
     // Load essential assets
     this.load.image('logo', 'assets/images/logo.png');
-    this.load.image('panel_wood_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_dark_corners_b.png');
     this.load.image('panel_metal_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_dark.png');
     this.load.image('panel_metal_corners_metal_nice', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_detail_a.png');
+    this.load.image('panel_metal_corners_nice', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_detail_a.png');
+    this.load.image('panel_wood_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_dark_corners_b.png');
     this.load.image('panel_wood_paper_damaged', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown_damaged.png');
     this.load.image('panel_wood_paper', 'assets/images/ui-pack-adventure/PNG/Default/panel_brown.png');
-    this.load.image('panel_metal_corners_nice', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_detail_a.png');
     this.load.image('round_wood', 'assets/images/ui-pack-adventure/PNG/Default/round_brown_dark.png');
     this.load.image('round_metal', 'assets/images/ui-pack-adventure/PNG/Default/round_grey_dark.png');
     this.load.image('round_wood_paper', 'assets/images/ui-pack-adventure/PNG/Default/round_brown.png');

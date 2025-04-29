@@ -1,8 +1,8 @@
 import {
-    ResourceStickerEffect,
-    StickerConfig,
-    StickerEffectType,
-    StickerType
+  ResourceStickerEffect,
+  StickerConfig,
+  StickerEffectType,
+  StickerType
 } from '../entities/Sticker';
 import { ResourceType } from '../entities/Types';
 
@@ -75,7 +75,8 @@ export class StickerRegistry {
       description: stickerJson.description,
       image: stickerJson.image,
       type: typeMap[stickerJson.type],
-      effects
+      effects,
+      cost: stickerJson.cost
     };
   }
 

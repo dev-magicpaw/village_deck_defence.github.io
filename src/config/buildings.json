@@ -1,0 +1,14 @@
+[
+    {
+        "id": "architect_bureau",
+        "name": "Architect Burea",
+        "description": "Allows to construct other buildings in the village",
+        "image": "src/assets/images/cards/card_human_villager.png"
+    },
+    {
+        "id": "workshop",
+        "name": "Workshop",
+        "description": "Allows to purchase stickers",
+        "image": "src/assets/images/cards/card_human_villager.png"
+    }
+]

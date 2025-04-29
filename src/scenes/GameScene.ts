@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
 import { PlayerHand } from '../entities/PlayerHand';
 import { trackEvent } from '../game';
+import { BuildingRegistry } from '../services/BuildingRegistry';
 import { CardRegistry } from '../services/CardRegistry';
 import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
-import { Card } from '../types/game';
+import { Building, Card } from '../types/game';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
 
@@ -24,6 +25,8 @@ export class GameScene extends Phaser.Scene {
   private invasionService!: InvasionService;
   private gameConfig!: GameConfig;
   private cardRegistry!: CardRegistry;
+  private buildingRegistry!: BuildingRegistry;
+  private constructedBuildings: Building[] = [];
 
   constructor() {
     super({ key: 'GameScene' });
@@ -33,6 +36,7 @@ export class GameScene extends Phaser.Scene {
     // Load game configuration
     this.load.json('gameConfig', 'config/game.json');
     this.load.json('cardsConfig', 'config/cards.json');
+    this.load.json('buildingsConfig', 'config/buildings.json');
   }
 
   create(): void {
@@ -44,6 +48,9 @@ export class GameScene extends Phaser.Scene {
     
     // Initialize the deck and hand
     this.initializePlayerDeck();
+    
+    // Initialize buildings
+    this.initializeBuildings();
     
     // Initialize the UI manager
     this.gameUI = new GameUI(this);
@@ -71,8 +78,31 @@ export class GameScene extends Phaser.Scene {
     // Initialize the card registry
     this.cardRegistry = CardRegistry.getInstance();
     this.cardRegistry.loadCards(this.cache.json.get('cardsConfig'));
+    
+    // Initialize the building registry
+    this.buildingRegistry = BuildingRegistry.getInstance();
+    this.buildingRegistry.loadBuildings(this.cache.json.get('buildingsConfig'));
   }
   
+  /**
+   * Initialize the buildings that are constructed from start
+   */
+  private initializeBuildings(): void {
+    // Get all building IDs
+    const buildingIds = this.buildingRegistry.getAllBuildingIds();
+    
+    // Add initially constructed buildings to the constructed buildings list
+    buildingIds.forEach(buildingId => {
+      const buildingConfig = this.buildingRegistry.getBuildingConfig(buildingId);
+      if (buildingConfig && buildingConfig.constructed_from_start) {
+        const building = this.buildingRegistry.createBuildingInterface(buildingId);
+        if (building) {
+          this.constructedBuildings.push(building);
+        }
+      }
+    });    
+  }
+
   /**
    * Initialize the invasion service
    */
@@ -136,5 +166,39 @@ export class GameScene extends Phaser.Scene {
     // Initialize and render the hand
     this.playerHandRenderer.init();
     this.playerHandRenderer.render();
+  }
+  
+  /**
+   * Get the list of constructed buildings
+   */
+  public getConstructedBuildings(): Building[] {
+    return [...this.constructedBuildings];
+  }
+  
+  /**
+   * Check if a building with the given ID is constructed
+   */
+  public isBuildingConstructed(buildingId: string): boolean {
+    return this.constructedBuildings.some(building => building.id === buildingId);
+  }
+  
+  /**
+   * Construct a new building
+   */
+  public constructBuilding(buildingId: string): boolean {
+    // Check if already constructed
+    if (this.isBuildingConstructed(buildingId)) {
+      return false;
+    }
+    
+    // Create the building
+    const building = this.buildingRegistry.createBuildingInterface(buildingId);
+    if (!building) {
+      return false;
+    }
+    
+    // Add to constructed buildings
+    this.constructedBuildings.push(building);
+    return true;
   }
 } 

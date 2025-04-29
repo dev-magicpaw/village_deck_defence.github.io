@@ -142,7 +142,6 @@ export class CardRenderer {
   private renderStickerInSlot(slotIndex: number, x: number, y: number): void {
     // Check if there are starting stickers for this card
     if (!this.card.startingStickers) return;
-    console.log(this.card.startingStickers);
     
     // Check if sticker exists at this slot index
     if (slotIndex < this.card.startingStickers.length && this.card.startingStickers[slotIndex]) {

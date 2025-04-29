@@ -9,8 +9,8 @@ export interface Card {
 export interface Building {
   id: string;
   name: string;
-  constructionCost: number;
-  effect: string;
+  description: string;
+  image: string;
 }
 
 export interface Adventure {

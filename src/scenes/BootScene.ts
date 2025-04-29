@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { BuildingRegistry } from '../services/BuildingRegistry';
 import { StickerRegistry } from '../services/StickerRegistry';
 
 export class BootScene extends Phaser.Scene {
@@ -58,6 +59,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('stickers', 'config/stickers.json');
     this.load.json('cardsConfig', 'config/cards.json'); 
     this.load.json('gameConfig', 'config/game.json');
+    this.load.json('buildingsConfig', 'config/buildings.json');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/SwordPlus1.png');
@@ -69,8 +71,9 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Initialize sticker registry with loaded data
+    // Initialize registries with loaded data
     this.initializeStickerRegistry();
+    this.initializeBuildingRegistry();
     
     // Transition to the level select scene
     // this.scene.start('LevelSelectScene');
@@ -85,9 +88,21 @@ export class BootScene extends Phaser.Scene {
     if (stickerData) {
       const registry = StickerRegistry.getInstance();
       registry.loadStickers(stickerData);
-      console.log('Sticker registry initialized with', stickerData.length, 'stickers');
     } else {
       console.error('Failed to load stickers.json');
+    }
+  }
+
+  /**
+   * Load building configs into the global registry
+   */
+  private initializeBuildingRegistry(): void {
+    const buildingData = this.cache.json.get('buildingsConfig');
+    if (buildingData) {
+      const registry = BuildingRegistry.getInstance();
+      registry.loadBuildings(buildingData);
+    } else {
+      console.error('Failed to load buildings.json');
     }
   }
 } 

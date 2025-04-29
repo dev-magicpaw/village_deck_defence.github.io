@@ -3,12 +3,14 @@
         "id": "architect_bureau",
         "name": "Architect Burea",
         "description": "Allows to construct other buildings in the village",
-        "image": "src/assets/images/cards/card_human_villager.png"
+        "image": "src/assets/images/cards/card_human_villager.png",
+        "constructed_from_start": true
     },
     {
         "id": "workshop",
         "name": "Workshop",
         "description": "Allows to purchase stickers",
-        "image": "src/assets/images/cards/card_human_villager.png"
+        "image": "src/assets/images/cards/card_human_villager.png",
+        "constructed_from_start": true
     }
 ]

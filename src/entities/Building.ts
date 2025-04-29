@@ -1,4 +1,3 @@
-
 export interface BuildingConfig {
   id: string;
   name: string;

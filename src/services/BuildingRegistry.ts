@@ -80,7 +80,7 @@ export class BuildingRegistry {
       id: building.id,
       name: building.name,
       description: building.description,
-      image: building.image,
+      image: building.image
     };
   }
   

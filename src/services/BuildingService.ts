@@ -18,20 +18,17 @@ export class BuildingService {
 
   /**
    * Initialize buildings from configuration
-   * Adds buildings that are constructed from start to the constructed buildings list
+   * Immediately constructs buildings that are marked as constructed_from_start
    */
   public initializeBuildings(): void {
     // Get all building IDs
     const buildingIds = this.buildingRegistry.getAllBuildingIds();
     
-    // Add initially constructed buildings to the constructed buildings list
+    // Process all building configs and construct those marked as constructed_from_start
     buildingIds.forEach(buildingId => {
       const buildingConfig = this.buildingRegistry.getBuildingConfig(buildingId);
       if (buildingConfig && buildingConfig.constructed_from_start) {
-        const building = this.buildingRegistry.createBuildingInterface(buildingId);
-        if (building) {
-          this.constructedBuildings.push(building);
-        }
+        this.constructBuilding(buildingId);
       }
     });
   }

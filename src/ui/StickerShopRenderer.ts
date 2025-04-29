@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
 import { StickerRegistry } from '../services/StickerRegistry';
+import { StickerInShopRenderer } from './StickerInShopRenderer';
 
 /**
  * Renders the sticker shop when the sticker shop building is clicked
@@ -11,7 +12,7 @@ export class StickerShopRenderer {
   private displayContainer: Phaser.GameObjects.Container;
   private isVisible: boolean = false;
   private shopPanel: Phaser.GameObjects.NineSlice | null = null;
-  private stickerContainers: Phaser.GameObjects.Container[] = [];
+  private stickerRenderers: StickerInShopRenderer[] = [];
   
   // Panel dimensions and position
   private panelX: number;
@@ -123,8 +124,8 @@ export class StickerShopRenderer {
    * Render all available stickers in a grid layout
    */
   private renderStickers(): void {
-    // Clear existing sticker containers
-    this.clearStickerContainers();
+    // Clear existing sticker renderers
+    this.clearStickerRenderers();
     
     // Get all sticker configurations from the registry
     const stickerConfigs: StickerConfig[] = [];
@@ -156,70 +157,19 @@ export class StickerShopRenderer {
       const x = startX + col * (this.stickerSize + this.stickerSpacing);
       const y = startY + row * (this.stickerSize + this.stickerSpacing);
       
-      // Create sticker display
-      const stickerContainer = this.createStickerDisplay(stickerConfig, x, y);
-      this.stickerContainers.push(stickerContainer);
-      this.displayContainer.add(stickerContainer);
+      // Create sticker renderer
+      const stickerRenderer = new StickerInShopRenderer(
+        this.scene,
+        stickerConfig,
+        x,
+        y,
+        this.stickerSize,
+        (config) => this.onStickerClick(config)
+      );
+      
+      this.stickerRenderers.push(stickerRenderer);
+      this.displayContainer.add(stickerRenderer.getContainer());
     });
-  }
-  
-  /**
-   * Create a visual display for a sticker
-   * @param stickerConfig The sticker configuration
-   * @param x X position of the sticker
-   * @param y Y position of the sticker
-   * @returns Container with the sticker display
-   */
-  private createStickerDisplay(
-    stickerConfig: StickerConfig,
-    x: number,
-    y: number
-  ): Phaser.GameObjects.Container {
-    // Create a container for the sticker
-    const container = this.scene.add.container(x, y);
-    
-    // Create the background using round_metal image
-    const background = this.scene.add.image(0, 0, 'round_metal');
-    background.setDisplaySize(this.stickerSize, this.stickerSize);
-    
-    // Add sticker image
-    const stickerImage = this.scene.add.image(0, -10, stickerConfig.image);
-    stickerImage.setScale(0.8);
-    
-    // Add sticker name
-    const nameText = this.scene.add.text(
-      0,
-      this.stickerSize / 2 - 25,
-      stickerConfig.name,
-      {
-        fontSize: '14px',
-        color: '#ffffff',
-        align: 'center'
-      }
-    );
-    nameText.setOrigin(0.5, 0.5);
-    
-    // Add elements to container
-    container.add(background);
-    container.add(stickerImage);
-    container.add(nameText);
-    
-    // Make sticker interactive
-    background.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.onStickerClick(stickerConfig);
-      });
-    
-    // Hover effects
-    background.on('pointerover', () => {
-      container.setScale(1.1);
-    });
-    
-    background.on('pointerout', () => {
-      container.setScale(1);
-    });
-    
-    return container;
   }
   
   /**
@@ -266,13 +216,13 @@ export class StickerShopRenderer {
   }
   
   /**
-   * Clear all sticker containers
+   * Clear all sticker renderers
    */
-  private clearStickerContainers(): void {
-    this.stickerContainers.forEach(container => {
-      container.destroy();
+  private clearStickerRenderers(): void {
+    this.stickerRenderers.forEach(renderer => {
+      renderer.destroy();
     });
-    this.stickerContainers = [];
+    this.stickerRenderers = [];
   }
   
   /**
@@ -286,7 +236,7 @@ export class StickerShopRenderer {
    * Destroy this renderer and all its visual elements
    */
   public destroy(): void {
-    this.clearStickerContainers();
+    this.clearStickerRenderers();
     if (this.shopPanel) {
       this.shopPanel.destroy();
     }

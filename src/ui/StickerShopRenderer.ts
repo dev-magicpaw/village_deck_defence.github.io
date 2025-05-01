@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
+import { ResourceService } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
 import { GameUI } from './GameUI';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
@@ -18,10 +19,12 @@ export class StickerShopRenderer {
   private applyButton: Phaser.GameObjects.NineSlice | null = null;
   private applyButtonText: Phaser.GameObjects.Text | null = null;
   private onApplyCallback?: (stickerConfig: StickerConfig) => void;
+  private resourceService?: ResourceService;
   
   // Selection panel elements
   private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
   private selectionText: Phaser.GameObjects.Text | null = null;
+  private acquiredText: Phaser.GameObjects.Text | null = null;
   private selectAllButton: Phaser.GameObjects.NineSlice | null = null;
   private selectAllButtonText: Phaser.GameObjects.Text | null = null;
   
@@ -43,6 +46,7 @@ export class StickerShopRenderer {
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
+   * @param resourceService Optional resource service for tracking acquired resources
    * @param onApplyCallback Callback for when a sticker is applied
    */
   constructor(
@@ -51,6 +55,7 @@ export class StickerShopRenderer {
     panelY: number,
     panelWidth: number,
     panelHeight: number,
+    resourceService?: ResourceService,
     onApplyCallback?: (stickerConfig: StickerConfig) => void
   ) {
     this.scene = scene;
@@ -58,6 +63,7 @@ export class StickerShopRenderer {
     this.panelY = panelY;
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
+    this.resourceService = resourceService;
     this.onApplyCallback = onApplyCallback;
     
     // Get the sticker registry
@@ -271,6 +277,31 @@ export class StickerShopRenderer {
     );
     this.selectionText.setOrigin(0.5, 0.5);
     
+    // Add "Acquired: X" text with invention resource icon
+    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
+    const acquiredX = panelWidth / 2 - marginX // centered horizontaly. -marginX to give space for the image
+    const acquiredY = handPanelY + 50
+    this.acquiredText = this.scene.add.text(
+      acquiredX,
+      acquiredY,
+      `Acquired: ${acquiredInvention}`,
+      {
+        fontSize: '18px',
+        color: '#ffffff',
+        align: 'center'
+      }
+    );
+    this.acquiredText.setOrigin(0.5,1);
+    
+    // Add invention resource icon
+    const resourceIcon = this.scene.add.image(
+      panelWidth - marginX / 2, 
+      acquiredY + 5,
+      'resource_invention'
+    );
+    resourceIcon.setOrigin(1, 1);
+    resourceIcon.setScale(0.6); // Scale down the icon to fit nicely
+    
     // Create "Select All" button
     const buttonWidth = 120;
     const buttonHeight = 40;
@@ -325,6 +356,8 @@ export class StickerShopRenderer {
     // Add to display container
     this.displayContainer.add(this.resourcePanel);
     this.displayContainer.add(this.selectionText);
+    this.displayContainer.add(this.acquiredText);
+    this.displayContainer.add(resourceIcon);
     this.displayContainer.add(this.selectAllButton);
     this.displayContainer.add(this.selectAllButtonText);
   }
@@ -414,6 +447,11 @@ export class StickerShopRenderer {
     // Update the selection text when showing the shop
     if (this.selectionText) {
       this.selectionText.setText(`Selected: ${this.selectedSticker ? '1' : '0'}`);
+    }
+    
+    // Update the acquired invention text
+    if (this.acquiredText && this.resourceService) {
+      this.acquiredText.setText(`Acquired: ${this.resourceService.getInvention()}`);
     }
   }
   
@@ -505,6 +543,9 @@ export class StickerShopRenderer {
     }
     if (this.selectionText) {
       this.selectionText.destroy();
+    }
+    if (this.acquiredText) {
+      this.acquiredText.destroy();
     }
     if (this.selectAllButton) {
       this.selectAllButton.destroy();

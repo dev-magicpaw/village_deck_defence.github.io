@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BuildingService } from '../services/BuildingService';
+import { ResourceService } from '../services/ResourceService';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
 
 export class GameUI {
@@ -10,10 +11,12 @@ export class GameUI {
   private scene: Phaser.Scene;
   private buildingsDisplayRenderer?: BuildingsDisplayRenderer;
   private buildingService?: BuildingService;
+  private resourceService?: ResourceService;
   
-  constructor(scene: Phaser.Scene, buildingService?: BuildingService) {
+  constructor(scene: Phaser.Scene, buildingService?: BuildingService, resourceService?: ResourceService) {
     this.scene = scene;
     this.buildingService = buildingService;
+    this.resourceService = resourceService;
   }
   
   /**
@@ -97,7 +100,8 @@ export class GameUI {
         panelX,
         panelY,
         panelWidth,
-        panelHeight
+        panelHeight,
+        this.resourceService
       );
       
       this.buildingsDisplayRenderer.init();

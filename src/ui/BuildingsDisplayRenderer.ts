@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
+import { Building } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
-import { Building } from '../types/game';
+import { ResourceService } from '../services/ResourceService';
 import { StickerShopRenderer } from './StickerShopRenderer';
 
 /**
- * Renders constructed buildings in the display panel
+ * Component that renders the constructed buildings in the main display area
  */
 export class BuildingsDisplayRenderer {
   private scene: Phaser.Scene;
@@ -14,28 +15,30 @@ export class BuildingsDisplayRenderer {
   private buildingCards: Phaser.GameObjects.Container[] = [];
   private stickerShopRenderer: StickerShopRenderer | null = null;
   private stickerShopBuildingId: string = '';
+  private resourceService?: ResourceService;
   
-  // Building card visual properties
+  // Card visual properties
   private cardWidth: number = 150;
   private cardHeight: number = 200;
   private cardSpacing: number = 30;
   private panelMarginX: number = 30;
   private panelMarginY: number = 30;
   
-  // Panel dimensions
+  // Panel dimensions and position
   private panelX: number;
   private panelY: number;
   private panelWidth: number;
   private panelHeight: number;
   
   /**
-   * Create a new BuildingsDisplayRenderer
+   * Create a new buildings display renderer
    * @param scene The Phaser scene to render in
    * @param buildingService The building service to get buildings from
    * @param panelX X position of the panel
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
+   * @param resourceService Optional resource service for tracking resources
    */
   constructor(
     scene: Phaser.Scene,
@@ -43,7 +46,8 @@ export class BuildingsDisplayRenderer {
     panelX: number,
     panelY: number,
     panelWidth: number,
-    panelHeight: number
+    panelHeight: number,
+    resourceService?: ResourceService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -51,6 +55,7 @@ export class BuildingsDisplayRenderer {
     this.panelY = panelY;
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
+    this.resourceService = resourceService;
     
     // Get the sticker shop building ID from the game config
     const gameConfig = this.scene.cache.json.get('gameConfig');
@@ -68,7 +73,8 @@ export class BuildingsDisplayRenderer {
       this.panelX,
       this.panelY,
       this.panelWidth,
-      this.panelHeight
+      this.panelHeight,
+      this.resourceService
     );
     this.stickerShopRenderer.init();
   }

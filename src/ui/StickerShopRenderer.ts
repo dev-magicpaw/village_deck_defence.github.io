@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
 import { StickerRegistry } from '../services/StickerRegistry';
+import { GameUI } from './GameUI';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
 
 /**
@@ -17,6 +18,12 @@ export class StickerShopRenderer {
   private applyButton: Phaser.GameObjects.NineSlice | null = null;
   private applyButtonText: Phaser.GameObjects.Text | null = null;
   private onApplyCallback?: (stickerConfig: StickerConfig) => void;
+  
+  // Selection panel elements
+  private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
+  private selectionText: Phaser.GameObjects.Text | null = null;
+  private selectAllButton: Phaser.GameObjects.NineSlice | null = null;
+  private selectAllButtonText: Phaser.GameObjects.Text | null = null;
   
   // Panel dimensions and position
   private panelX: number;
@@ -126,6 +133,9 @@ export class StickerShopRenderer {
     // Create apply button
     this.createApplyButton();
     
+    // Create the resource panel that covers the "Discard and draw" button
+    this.createResourcePanel();
+    
     // Render all stickers
     this.renderStickers();
   }
@@ -218,6 +228,108 @@ export class StickerShopRenderer {
   }
   
   /**
+   * Creates the resource panel that covers the "Discard and draw" button
+   */
+  private createResourcePanel(): void {
+    // Standard card dimensions from PlayerHandRenderer
+    const cardWidth = 150;
+    // Use the player hand panel height dimensions from GameUI class calculation
+    const { width, height } = this.scene.cameras.main;
+    const panelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
+    const marginX = 20;
+    const panelWidth = cardWidth + 2 * marginX
+    
+    // Calculate the position based on the player hand panel
+    const handPanelY = height - panelHeight;
+    
+    // Create selection panel with the same dimensions as the discard button
+    this.resourcePanel = this.scene.add['nineslice'](
+      0,
+      handPanelY,
+      'panel_metal_corners_metal_nice',
+      undefined,
+      panelWidth,
+      panelHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.resourcePanel.setOrigin(0, 0);
+    this.resourcePanel.setTint(0x666666); // Same dark grey tint as main panel
+    
+    // Add "Selected: X" text
+    this.selectionText = this.scene.add.text(
+      marginX + cardWidth / 2,
+      handPanelY + panelHeight / 2 - 30,
+      'Selected: 0',
+      {
+        fontSize: '18px',
+        color: '#ffffff',
+        align: 'center'
+      }
+    );
+    this.selectionText.setOrigin(0.5, 0.5);
+    
+    // Create "Select All" button
+    const buttonWidth = 120;
+    const buttonHeight = 40;
+    const buttonX = marginX + (cardWidth - buttonWidth) / 2;
+    const buttonY = handPanelY + panelHeight / 2 + 30;
+    
+    this.selectAllButton = this.scene.add['nineslice'](
+      buttonX + buttonWidth / 2,
+      buttonY,
+      'panel_wood_arrows',
+      undefined,
+      buttonWidth,
+      buttonHeight,
+      10,
+      10,
+      10,
+      10
+    );
+    this.selectAllButton.setOrigin(0.5, 0.5);
+    
+    // Create button text
+    this.selectAllButtonText = this.scene.add.text(
+      buttonX + buttonWidth / 2,
+      buttonY,
+      'Select All',
+      {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }
+    );
+    this.selectAllButtonText.setOrigin(0.5, 0.5);
+    
+    // Make button interactive
+    this.selectAllButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        // Currently does nothing per requirements
+        console.log('Select All button clicked');
+      });
+    
+    // Add hover effects
+    this.selectAllButton.on('pointerover', () => {
+      this.selectAllButton?.setScale(1.05);
+      this.selectAllButtonText?.setScale(1.05);
+    });
+    
+    this.selectAllButton.on('pointerout', () => {
+      this.selectAllButton?.setScale(1);
+      this.selectAllButtonText?.setScale(1);
+    });
+    
+    // Add to display container
+    this.displayContainer.add(this.resourcePanel);
+    this.displayContainer.add(this.selectionText);
+    this.displayContainer.add(this.selectAllButton);
+    this.displayContainer.add(this.selectAllButtonText);
+  }
+  
+  /**
    * Render all available stickers in a grid layout
    */
   private renderStickers(): void {
@@ -285,6 +397,11 @@ export class StickerShopRenderer {
     
     // Enable the apply button
     this.setApplyButtonState(true);
+    
+    // Update selection text
+    if (this.selectionText) {
+      this.selectionText.setText('Selected: 1');
+    }
   }
   
   /**
@@ -293,6 +410,11 @@ export class StickerShopRenderer {
   public show(): void {
     this.isVisible = true;
     this.displayContainer.setVisible(true);
+    
+    // Update the selection text when showing the shop
+    if (this.selectionText) {
+      this.selectionText.setText(`Selected: ${this.selectedSticker ? '1' : '0'}`);
+    }
   }
   
   /**
@@ -310,15 +432,21 @@ export class StickerShopRenderer {
    * Deselect the currently selected sticker
    */
   private deselectSticker(): void {
+    // Deselect the sticker in data
     this.selectedSticker = null;
     
-    // Remove highlight from all stickers
+    // Unhighlight all stickers
     this.stickerRenderers.forEach(renderer => {
       renderer.setSelected(false);
     });
     
     // Disable the apply button
     this.setApplyButtonState(false);
+    
+    // Update selection text
+    if (this.selectionText) {
+      this.selectionText.setText('Selected: 0');
+    }
   }
   
   /**
@@ -371,6 +499,18 @@ export class StickerShopRenderer {
     }
     if (this.applyButtonText) {
       this.applyButtonText.destroy();
+    }
+    if (this.resourcePanel) {
+      this.resourcePanel.destroy();
+    }
+    if (this.selectionText) {
+      this.selectionText.destroy();
+    }
+    if (this.selectAllButton) {
+      this.selectAllButton.destroy();
+    }
+    if (this.selectAllButtonText) {
+      this.selectAllButtonText.destroy();
     }
     this.displayContainer.destroy();
   }

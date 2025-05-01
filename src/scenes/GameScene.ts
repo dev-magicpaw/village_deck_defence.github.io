@@ -161,7 +161,6 @@ export class GameScene extends Phaser.Scene {
     
     // Initialize and render the hand
     this.playerHandRenderer.init();
-    this.playerHandRenderer.render();
   }
   
   /**

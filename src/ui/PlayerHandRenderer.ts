@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { PlayerHand } from '../entities/PlayerHand';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
+import { Card } from '../types/game';
 import { CARD_HEIGHT, CARD_WIDTH, CardRenderer } from './CardRenderer';
 
 /**
@@ -27,6 +28,7 @@ export class PlayerHandRenderer {
   private cardHeight: number = CARD_HEIGHT;
   private cardSpacing: number = 30;
   private deckHandMargin: number = 60;
+  private currentCards: Card[] = [];
   
   /**
    * Create a new player hand renderer
@@ -57,6 +59,19 @@ export class PlayerHandRenderer {
     this.panelHeight = panelHeight;
     this.invasionService = invasionService;
     this.resourceService = resourceService;
+    
+    // Subscribe to the hand's change events
+    this.playerHand.on(PlayerHand.Events.CARDS_CHANGED, this.onCardsChanged, this);
+  }
+  
+  /**
+   * Handler for when cards in the hand change
+   * @param cards Updated cards array
+   */
+  private onCardsChanged(cards: Card[]): void {
+    // Update the UI to reflect the new cards
+    this.renderCards();
+    this.updateButtonVisibility();
   }
   
   /**
@@ -165,6 +180,9 @@ export class PlayerHandRenderer {
     
     // Update button visibility based on deck state
     this.updateButtonVisibility();
+    
+    // Do initial render of cards
+    this.renderCards();
   }
   
   /**
@@ -196,34 +214,91 @@ export class PlayerHandRenderer {
   
   /**
    * Render the player's hand cards
+   * @deprecated Use renderCards() instead, which is more efficient
    */
   public render(): void {
-    // Clear old card objects
-    this.clearCardObjects();
-    
+    this.renderCards();
+  }
+  
+  /**
+   * Efficiently render the player's hand cards by minimizing object creation/destruction
+   */
+  private renderCards(): void {
     // Get cards from player hand
-    const cards = this.playerHand.getCards();
+    const newCards = this.playerHand.getCards();
+    
+    // Check if the cards have actually changed
+    if (this.areCardsEqual(this.currentCards, newCards)) {
+      return;
+    }
+    
+    // Update current cards
+    this.currentCards = [...newCards];
     
     // Add +0.5 * cardWidth since card origin is 0.5
     // Add +1 * cardWidth for the discard button
     const startX = this.panelX + this.panelMarginX + this.cardWidth + 0.5 * this.cardWidth + this.deckHandMargin;
     
-    // Render each card
-    cards.forEach((card, index) => {
-      const cardX = startX + index * (this.cardWidth + this.cardSpacing);
+    // Determine how many renderers we need to create or remove
+    const currentCount = this.cardRenderers.length;
+    const newCount = newCards.length;
+    
+    // If we have more renderers than we need, destroy the excess ones
+    if (currentCount > newCount) {
+      for (let i = newCount; i < currentCount; i++) {
+        this.cardRenderers[i].destroy();
+      }
+      // Remove the destroyed renderers from the array
+      this.cardRenderers.splice(newCount, currentCount - newCount);
+    }
+    
+    // Update existing renderers and create new ones as needed
+    for (let i = 0; i < newCount; i++) {
+      const cardX = startX + i * (this.cardWidth + this.cardSpacing);
       const cardY = this.panelY + this.panelHeight / 2;
       
-      const cardRenderer = new CardRenderer(
-        this.scene,
-        card,
-        cardX,
-        cardY,
-        index,
-        (cardIndex) => this.onCardClick(cardIndex)
-      );
-      
-      this.cardRenderers.push(cardRenderer);
-    });
+      if (i < currentCount) {
+        // Update existing card renderer position
+        this.cardRenderers[i].setPosition(cardX, cardY);
+        
+        // Update the card data if it's different from the current one
+        this.cardRenderers[i].updateCard(newCards[i], i);
+      } else {
+        // Create new card renderer
+        const cardRenderer = new CardRenderer(
+          this.scene,
+          newCards[i],
+          cardX,
+          cardY,
+          i,
+          (cardIndex) => this.onCardClick(cardIndex)
+        );
+        
+        this.cardRenderers.push(cardRenderer);
+      }
+    }
+  }
+  
+  /**
+   * Compare two arrays of cards to see if they are equal
+   * @param cards1 First array of cards
+   * @param cards2 Second array of cards
+   * @returns True if the arrays contain the same cards in the same order
+   */
+  private areCardsEqual(cards1: Card[], cards2: Card[]): boolean {
+    if (cards1.length !== cards2.length) {
+      return false;
+    }
+    
+    // For now, just check if the arrays have the same length and cards have the same IDs
+    // This could be expanded to do a more detailed comparison if needed
+    for (let i = 0; i < cards1.length; i++) {
+      if (cards1[i].id !== cards2[i].id) {
+        return false;
+      }
+    }
+    
+    return true;
   }
   
   /**
@@ -245,6 +320,7 @@ export class PlayerHandRenderer {
       renderer.destroy();
     });
     this.cardRenderers = [];
+    this.currentCards = [];
   }
   
   /**
@@ -271,7 +347,7 @@ export class PlayerHandRenderer {
    */
   private discardAndDrawNewHand(): void {
     this.playerHand.discardAndDraw();
-    this.render();
+    // The rendering will be handled by the onCardsChanged event handler
     this.updateButtonVisibility();
   }
   
@@ -294,16 +370,32 @@ export class PlayerHandRenderer {
     this.playerHand.shuffleDiscardIntoTheDeck();
     this.playerHand.drawUpToLimit();
     
-    // 3. Update UI
-    this.render();
+    // 3. The updating of UI is handled by events now
     this.updateButtonVisibility();
   }
   
   /**
-   * Update the visual representation after hand changes
+   * Update only what's necessary (button visibility)
    */
   public update(): void {
-    this.render();
     this.updateButtonVisibility();
+  }
+  
+  /**
+   * Clean up resources when the renderer is no longer needed
+   */
+  public destroy(): void {
+    // Unsubscribe from events
+    this.playerHand.off(PlayerHand.Events.CARDS_CHANGED, this.onCardsChanged, this);
+    
+    // Clear card objects
+    this.clearCardObjects();
+    
+    // Destroy UI elements
+    this.handPanel.destroy();
+    this.discardButton.destroy();
+    this.discardButtonText.destroy();
+    this.endDayButton.destroy();
+    this.endDayButtonText.destroy();
   }
 } 

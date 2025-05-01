@@ -25,6 +25,8 @@ export class CardRenderer {
   private slotImage: string = 'round_wood';
   private slotOffset: number = 10;
   private stickerScale: number = 0.6;
+  private nameText?: Phaser.GameObjects.Text;
+  private slotObjects: Phaser.GameObjects.GameObject[] = [];
   
   /**
    * Create a new card renderer
@@ -78,7 +80,7 @@ export class CardRenderer {
     this.container.add(this.cardBackground);
     
     // Card name
-    const cardName = this.scene.add.text(
+    this.nameText = this.scene.add.text(
       0,
       -this.cardHeight / 2 + 30,
       this.card.name,
@@ -89,8 +91,8 @@ export class CardRenderer {
         wordWrap: { width: this.cardWidth - 20 }
       }
     );
-    cardName.setOrigin(0.5, 0.5);
-    this.container.add(cardName);
+    this.nameText.setOrigin(0.5, 0.5);
+    this.container.add(this.nameText);
     
     // Add slots
     this.renderSlots();
@@ -117,6 +119,9 @@ export class CardRenderer {
    * Render all slots horizontally at the bottom of the card
    */
   private renderSlots(): void {
+    // Clear any existing slot objects before rendering
+    this.clearSlotObjects();
+    
     // Get the number of slots from the card
     const slotCount = this.card.slotCount || 0;
     
@@ -133,6 +138,7 @@ export class CardRenderer {
       const slot = this.scene.add.image(x, y, this.slotImage);
       slot.setScale(this.slotScale); // Smaller than the main wooden circle
       this.container.add(slot);
+      this.slotObjects.push(slot);
 
       // Add sticker if exists in startingStickers
       this.renderStickerInSlot(i, x, y);
@@ -157,7 +163,39 @@ export class CardRenderer {
       const stickerImage = this.scene.add.image(x, y, stickerId);
       stickerImage.setScale(this.stickerScale);
       this.container.add(stickerImage);
+      this.slotObjects.push(stickerImage);
     }
+  }
+  
+  /**
+   * Clear all slot objects
+   */
+  private clearSlotObjects(): void {
+    // Remove all slot objects from the container and destroy them
+    this.slotObjects.forEach(obj => {
+      this.container.remove(obj);
+      obj.destroy();
+    });
+    this.slotObjects = [];
+  }
+  
+  /**
+   * Update the card data and refresh the visual without destroying it
+   * @param card New card data
+   * @param index New index for the card
+   */
+  public updateCard(card: Card, index: number): void {
+    // Update the card data and index
+    this.card = card;
+    this.index = index;
+    
+    // Update card name text
+    if (this.nameText) {
+      this.nameText.setText(this.card.name);
+    }
+    
+    // Re-render the slots with the new card data
+    this.renderSlots();
   }
   
   /**

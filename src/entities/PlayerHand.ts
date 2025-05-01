@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { DeckService } from '../services/DeckService';
 import { Card } from '../types/game';
 
@@ -8,6 +9,14 @@ export class PlayerHand {
   private _cards: Card[] = [];
   private _handLimit: number;
   private _deckService: DeckService<Card>;
+  private _events: Phaser.Events.EventEmitter;
+  
+  /**
+   * Event names for PlayerHand
+   */
+  public static Events = {
+    CARDS_CHANGED: 'cards_changed',
+  };
   
   /**
    * Create a new PlayerHand
@@ -17,6 +26,7 @@ export class PlayerHand {
   constructor(deckService: DeckService<Card>, handLimit: number) {
     this._deckService = deckService;
     this._handLimit = handLimit;
+    this._events = new Phaser.Events.EventEmitter();
   }
   
   /**
@@ -28,7 +38,10 @@ export class PlayerHand {
     if (cardsNeeded <= 0) return 0;
     
     const drawnCards = this._deckService.drawFromDeck(cardsNeeded);
-    this._cards.push(...drawnCards);
+    if (drawnCards.length > 0) {
+      this._cards.push(...drawnCards);
+      this._events.emit(PlayerHand.Events.CARDS_CHANGED, this._cards);
+    }
     
     return drawnCards.length;
   }
@@ -55,7 +68,12 @@ export class PlayerHand {
       this._deckService.discard(card);
     });
     
+    const hadCards = this._cards.length > 0;
     this._cards = [];
+    
+    if (hadCards) {
+      this._events.emit(PlayerHand.Events.CARDS_CHANGED, this._cards);
+    }
   }
   
   /**
@@ -80,6 +98,7 @@ export class PlayerHand {
     const [discardedCard] = this._cards.splice(index, 1);
     this._deckService.discard(discardedCard);
     
+    this._events.emit(PlayerHand.Events.CARDS_CHANGED, this._cards);
     return discardedCard;
   }
   
@@ -94,6 +113,7 @@ export class PlayerHand {
     }
     
     const [playedCard] = this._cards.splice(index, 1);
+    this._events.emit(PlayerHand.Events.CARDS_CHANGED, this._cards);
     return playedCard;
   }
   
@@ -124,5 +144,25 @@ export class PlayerHand {
    */
   public setHandLimit(limit: number): void {
     this._handLimit = limit;
+  }
+
+  /**
+   * Add event listener for hand events
+   * @param event Event name
+   * @param fn Event handler function
+   * @param context Context for the event handler
+   */
+  public on(event: string, fn: Function, context?: any): Phaser.Events.EventEmitter {
+    return this._events.on(event, fn, context);
+  }
+  
+  /**
+   * Remove event listener
+   * @param event Event name
+   * @param fn Event handler function
+   * @param context Context for the event handler
+   */
+  public off(event: string, fn?: Function, context?: any): Phaser.Events.EventEmitter {
+    return this._events.off(event, fn, context);
   }
 } 

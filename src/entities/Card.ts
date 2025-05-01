@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { StickerRegistry } from '../services/StickerRegistry';
 import {
   CardSticker,
@@ -26,6 +27,7 @@ export interface CardSlot {
  */
 export class Card {
   public readonly id: string;
+  public readonly unique_id: string;
   public readonly name: string;
   public readonly race: Race;
   private _slots: CardSlot[];
@@ -36,6 +38,7 @@ export class Card {
    */
   constructor(config: CardConfig) {
     this.id = config.id;
+    this.unique_id = uuidv4();
     this.name = config.name;
     this.race = config.race;
     this._slots = this.buildSlots(config.maxSlotCount, config.startingStickers);

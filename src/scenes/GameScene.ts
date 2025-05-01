@@ -6,6 +6,7 @@ import { BuildingService } from '../services/BuildingService';
 import { CardRegistry } from '../services/CardRegistry';
 import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
+import { ResourceService } from '../services/ResourceService';
 import { Card } from '../types/game';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
@@ -24,6 +25,7 @@ export class GameScene extends Phaser.Scene {
   private playerHand!: PlayerHand;
   private playerHandRenderer!: PlayerHandRenderer;
   private invasionService!: InvasionService;
+  private resourceService!: ResourceService;
   private gameConfig!: GameConfig;
   private cardRegistry!: CardRegistry;
   private buildingRegistry!: BuildingRegistry;
@@ -46,6 +48,9 @@ export class GameScene extends Phaser.Scene {
     
     // Initialize the invasion service
     this.initializeInvasionService();
+    
+    // Initialize the resource service
+    this.initializeResourceService();
     
     // Initialize the deck and hand
     this.initializePlayerDeck();
@@ -97,6 +102,13 @@ export class GameScene extends Phaser.Scene {
   }
   
   /**
+   * Initialize the resource service
+   */
+  private initializeResourceService(): void {
+    this.resourceService = new ResourceService();
+  }
+  
+  /**
    * Initialize the player's deck based on game config
    */
   private initializePlayerDeck(): void {
@@ -143,7 +155,8 @@ export class GameScene extends Phaser.Scene {
       dimensions.y,
       dimensions.width,
       dimensions.height,
-      this.invasionService
+      this.invasionService,
+      this.resourceService
     );
     
     // Initialize and render the hand

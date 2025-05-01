@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { PlayerHand } from '../entities/PlayerHand';
 import { InvasionService } from '../services/InvasionService';
+import { ResourceService } from '../services/ResourceService';
 import { CardRenderer } from './CardRenderer';
 
 /**
@@ -16,6 +17,7 @@ export class PlayerHandRenderer {
   private endDayButton!: Phaser.GameObjects.NineSlice;
   private endDayButtonText!: Phaser.GameObjects.Text;
   private invasionService?: InvasionService;
+  private resourceService?: ResourceService;
   private panelWidth: number;
   private panelHeight: number;
   private panelX: number;
@@ -35,6 +37,7 @@ export class PlayerHandRenderer {
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
    * @param invasionService Optional invasion service for day progression
+   * @param resourceService Optional resource service for resetting resources
    */
   constructor(
     scene: Phaser.Scene, 
@@ -43,7 +46,8 @@ export class PlayerHandRenderer {
     panelY: number,
     panelWidth: number,
     panelHeight: number,
-    invasionService?: InvasionService
+    invasionService?: InvasionService,
+    resourceService?: ResourceService
   ) {
     this.scene = scene;
     this.playerHand = playerHand;
@@ -52,6 +56,7 @@ export class PlayerHandRenderer {
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
     this.invasionService = invasionService;
+    this.resourceService = resourceService;
   }
   
   /**
@@ -274,6 +279,11 @@ export class PlayerHandRenderer {
    * Handle End the Day button click
    */
   private endDay(): void {
+    // 0. Reset all resources if service exists
+    if (this.resourceService) {
+      this.resourceService.resetResources();
+    }
+    
     // 1. Progress the invasion if service exists
     if (this.invasionService) {
       this.invasionService.progressInvasion();

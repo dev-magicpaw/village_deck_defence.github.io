@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { PlayerHand } from '../entities/PlayerHand';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
-import { CardRenderer } from './CardRenderer';
+import { CARD_HEIGHT, CARD_WIDTH, CardRenderer } from './CardRenderer';
 
 /**
  * Renders a player's hand in the UI
@@ -23,8 +23,8 @@ export class PlayerHandRenderer {
   private panelX: number;
   private panelY: number;
   private panelMarginX: number = 20;
-  private cardWidth: number = 150;
-  private cardHeight: number = 200;
+  private cardWidth: number = CARD_WIDTH;
+  private cardHeight: number = CARD_HEIGHT;
   private cardSpacing: number = 30;
   private deckHandMargin: number = 60;
   

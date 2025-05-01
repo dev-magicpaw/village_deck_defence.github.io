@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
 import { ResourceService } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
-import { GameUI } from './GameUI';
+import { GameUI } from '../ui/GameUI';
+import { CARD_WIDTH } from './CardRenderer';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
 
 /**
@@ -237,8 +238,7 @@ export class StickerShopRenderer {
    * Creates the resource panel that covers the "Discard and draw" button
    */
   private createResourcePanel(): void {
-    // Standard card dimensions from PlayerHandRenderer
-    const cardWidth = 150;
+    const cardWidth = CARD_WIDTH;
     // Use the player hand panel height dimensions from GameUI class calculation
     const { width, height } = this.scene.cameras.main;
     const panelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;

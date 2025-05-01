@@ -2,12 +2,18 @@ import Phaser from 'phaser';
 import { Card } from '../types/game';
 
 /**
+ * Card dimensions constants
+ */
+export const CARD_WIDTH = 150;
+export const CARD_HEIGHT = 200;
+
+/**
  * Renders an individual card in the UI
  */
 export class CardRenderer {
   private scene: Phaser.Scene;
-  private cardWidth: number = 150;
-  private cardHeight: number = 200;
+  private cardWidth: number = CARD_WIDTH;
+  private cardHeight: number = CARD_HEIGHT;
   private container!: Phaser.GameObjects.Container;
   private cardBackground!: Phaser.GameObjects.NineSlice;
   private card: Card;

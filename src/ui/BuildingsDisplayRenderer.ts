@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Building } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
+import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 
 /**
@@ -18,8 +19,8 @@ export class BuildingsDisplayRenderer {
   private resourceService?: ResourceService;
   
   // Card visual properties
-  private cardWidth: number = 150;
-  private cardHeight: number = 200;
+  private cardWidth: number = CARD_WIDTH;
+  private cardHeight: number = CARD_HEIGHT;
   private cardSpacing: number = 30;
   private panelMarginX: number = 30;
   private panelMarginY: number = 30;

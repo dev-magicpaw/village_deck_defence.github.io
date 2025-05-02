@@ -407,6 +407,31 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   }
   
   /**
+   * Select all cards that have invention value greater than or equal to the specified minimum value
+   * @param minValue Minimum invention value for selection
+   */
+  // TODO this should get unique_card ids to select and unique_card ids to deselect
+  public selectCardsByInventionValue(minValue: number = 1): void {
+    // Clear current selection
+    this.selectedCards.clear();
+    
+    // Select all cards with invention value >= minValue
+    this.currentCards.forEach((card, index) => {
+      if (card.getInventionValue() >= minValue) {
+        this.selectedCards.add(card.unique_id);
+        // Update visual selection state
+        this.cardRenderers[index].setSelected(true);
+      } else {
+        // Ensure cards with lower invention are not selected
+        this.cardRenderers[index].setSelected(false);
+      }
+    });
+    
+    // Emit selection changed event
+    this.emit(PlayerHandRendererEvents.SELECTION_CHANGED);
+  }
+  
+  /**
    * Remove all card visual objects
    */
   private clearCardObjects(): void {

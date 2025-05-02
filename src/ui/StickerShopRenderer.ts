@@ -391,27 +391,8 @@ export class StickerShopRenderer {
     this.selectAllButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         // Select all cards in the player hand with at least 1 invention value
-        const playerHand = this.playerHandRenderer['playerHand'];
-        const currentCards = this.playerHandRenderer['currentCards'];
-        const selectedCards = this.playerHandRenderer['selectedCards'];
-        
-        // Clear current selection
-        selectedCards.clear();
-        
-        // Select all cards with invention value >= 1
-        currentCards.forEach((card, index) => {
-          if (card.getInventionValue() >= 1) {
-            selectedCards.add(card.unique_id);
-            // Update visual selection state
-            this.playerHandRenderer['cardRenderers'][index].setSelected(true);
-          } else {
-            // Ensure cards with 0 invention are not selected
-            this.playerHandRenderer['cardRenderers'][index].setSelected(false);
-          }
-        });
-        
-        // Trigger selection changed event
-        this.playerHandRenderer.emit(PlayerHandRendererEvents.SELECTION_CHANGED);
+        // TODO: This should decide here, which cards to select / deselect and provide the respective unique_card ids to the playerHandRenderer
+        this.playerHandRenderer.selectCardsByInventionValue(1);
         console.log('Select All button clicked - selected cards with invention value >= 1');
       });
     

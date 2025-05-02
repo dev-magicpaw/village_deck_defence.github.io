@@ -472,13 +472,16 @@ export class StickerShopRenderer {
     const startX = this.panelX + this.panelPadding + this.stickerSize / 2;
     const startY = this.panelY + 70 + this.stickerSize / 2;
     
+    // Increased vertical spacing between rows to prevent overlap
+    const rowSpacing = this.stickerSize + this.stickerSpacing + 50;
+    
     // Render each sticker
     stickerConfigs.forEach((stickerConfig, index) => {
       const row = Math.floor(index / maxStickersPerRow);
       const col = index % maxStickersPerRow;
       
       const x = startX + col * (this.stickerSize + this.stickerSpacing);
-      const y = startY + row * (this.stickerSize + this.stickerSpacing);
+      const y = startY + row * rowSpacing;
       
       // Create sticker renderer
       const stickerRenderer = new StickerInShopRenderer(

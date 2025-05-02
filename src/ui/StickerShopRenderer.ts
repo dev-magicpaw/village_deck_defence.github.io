@@ -392,8 +392,23 @@ export class StickerShopRenderer {
       .on('pointerdown', () => {
         // Select all cards in the player hand with at least 1 invention value
         // TODO: This should decide here, which cards to select / deselect and provide the respective unique_card ids to the playerHandRenderer
-        this.playerHandRenderer.selectCardsByInventionValue(1);
-        console.log('Select All button clicked - selected cards with invention value >= 1');
+        
+        // Get all cards from the player hand renderer
+        const cards = this.playerHandRenderer['currentCards'];
+        const idsToSelect: string[] = [];
+        const idsToDeselect: string[] = [];
+        
+        // Determine which cards to select and deselect based on invention value
+        cards.forEach(card => {
+          if (card.getInventionValue() >= 1) {
+            idsToSelect.push(card.unique_id);
+          } else {
+            idsToDeselect.push(card.unique_id);
+          }
+        });
+        
+        // Pass the IDs to the player hand renderer
+        this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);        
       });
     
     // Add hover effects

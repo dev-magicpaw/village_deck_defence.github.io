@@ -405,26 +405,30 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   public getSelectedCardIds(): string[] {
     return Array.from(this.selectedCards);
   }
-  
   /**
-   * Select all cards that have invention value greater than or equal to the specified minimum value
-   * @param minValue Minimum invention value for selection
+   * Select and deselect cards by their unique IDs
+   * @param idsToSelect Array of card unique IDs to select
+   * @param idsToDeselect Array of card unique IDs to deselect
    */
-  // TODO this should get unique_card ids to select and unique_card ids to deselect
-  public selectCardsByInventionValue(minValue: number = 1): void {
-    // Clear current selection
-    this.selectedCards.clear();
+  public selectAndDeselectCardsByIds(idsToSelect: string[], idsToDeselect: string[]): void {
+    // Create Set for faster lookups
+    const selectSet = new Set(idsToSelect);
+    const deselectSet = new Set(idsToDeselect);
     
-    // Select all cards with invention value >= minValue
+    // Remove cards to deselect from selection
+    deselectSet.forEach(id => {
+      this.selectedCards.delete(id);
+    });
+    
+    // Add cards to select to selection
+    selectSet.forEach(id => {
+      this.selectedCards.add(id);
+    });
+    
+    // Update visual state of all card renderers
     this.currentCards.forEach((card, index) => {
-      if (card.getInventionValue() >= minValue) {
-        this.selectedCards.add(card.unique_id);
-        // Update visual selection state
-        this.cardRenderers[index].setSelected(true);
-      } else {
-        // Ensure cards with lower invention are not selected
-        this.cardRenderers[index].setSelected(false);
-      }
+      const isSelected = this.selectedCards.has(card.unique_id);
+      this.cardRenderers[index].setSelected(isSelected);
     });
     
     // Emit selection changed event

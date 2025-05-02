@@ -1,4 +1,4 @@
-import { Card } from '../types/game';
+import { Card } from '../entities/Card';
 
 /**
  * A generic service for managing card decks in the game

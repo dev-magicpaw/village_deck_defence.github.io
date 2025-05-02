@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
+import { Card } from '../entities/Card';
 import { DeckService } from '../services/DeckService';
-import { Card } from '../types/game';
 
 /**
  * Class representing a player's hand of cards

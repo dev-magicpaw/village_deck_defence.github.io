@@ -84,6 +84,23 @@ export class Card {
     return this._slots.length;
   }
 
+  /**
+   * Calculate the total invention value of this card
+   * This includes the base value plus any contributions from stickers
+   */
+  public getInventionValue(): number {    
+    let total = 0;
+    // Add invention values from stickers
+    this._slots.forEach(slot => {
+      if (slot.sticker) {
+        // If the sticker has an invention value, add it
+        total += slot.sticker.getInventionValue();
+      }
+    });
+    
+    return total;
+  }
+
   public static fromConfig(config: CardConfig): Card {
     return new Card(config);
   }
@@ -100,7 +117,7 @@ export function convertCardJsonToConfig(cardJson: any): CardConfig {
     image: cardJson.image,
     race: stringToRace(cardJson.race),
     startingStickers: [...cardJson.startingStickers],
-    maxSlotCount: cardJson.maxSlotCount
+    maxSlotCount: cardJson.maxSlotCount,
   };
 }
 

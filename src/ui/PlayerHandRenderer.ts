@@ -1,14 +1,22 @@
 import Phaser from 'phaser';
+import { Card } from '../entities/Card';
 import { PlayerHand } from '../entities/PlayerHand';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
-import { Card } from '../types/game';
+import { StickerShopService } from '../services/StickerShopService';
 import { CARD_HEIGHT, CARD_WIDTH, CardRenderer } from './CardRenderer';
+
+/**
+ * Events emitted by the PlayerHandRenderer
+ */
+export enum PlayerHandRendererEvents {
+  SELECTION_CHANGED = 'selection-changed'
+}
 
 /**
  * Renders a player's hand in the UI
  */
-export class PlayerHandRenderer {
+export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private scene: Phaser.Scene;
   private playerHand: PlayerHand;
   private cardRenderers: CardRenderer[] = [];
@@ -17,8 +25,9 @@ export class PlayerHandRenderer {
   private discardButtonText!: Phaser.GameObjects.Text;
   private endDayButton!: Phaser.GameObjects.NineSlice;
   private endDayButtonText!: Phaser.GameObjects.Text;
-  private invasionService?: InvasionService;
-  private resourceService?: ResourceService;
+  private invasionService: InvasionService;
+  private resourceService: ResourceService;
+  private stickerShopService: StickerShopService;
   private panelWidth: number;
   private panelHeight: number;
   private panelX: number;
@@ -29,6 +38,8 @@ export class PlayerHandRenderer {
   private cardSpacing: number = 30;
   private deckHandMargin: number = 60;
   private currentCards: Card[] = [];
+  private selectedCards: Set<string> = new Set(); // Track selected cards by unique_id
+  private isShopOpen: boolean = false; // Track if sticker shop is open
   
   /**
    * Create a new player hand renderer
@@ -38,8 +49,9 @@ export class PlayerHandRenderer {
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
-   * @param invasionService Optional invasion service for day progression
-   * @param resourceService Optional resource service for resetting resources
+   * @param invasionService Invasion service for day progression
+   * @param resourceService Resource service for resetting resources
+   * @param stickerShopService Sticker shop service for shop state
    */
   constructor(
     scene: Phaser.Scene, 
@@ -48,9 +60,11 @@ export class PlayerHandRenderer {
     panelY: number,
     panelWidth: number,
     panelHeight: number,
-    invasionService?: InvasionService,
-    resourceService?: ResourceService
+    invasionService: InvasionService,
+    resourceService: ResourceService,
+    stickerShopService: StickerShopService
   ) {
+    super();
     this.scene = scene;
     this.playerHand = playerHand;
     this.panelX = panelX;
@@ -59,9 +73,32 @@ export class PlayerHandRenderer {
     this.panelHeight = panelHeight;
     this.invasionService = invasionService;
     this.resourceService = resourceService;
+    this.stickerShopService = stickerShopService;
     
     // Subscribe to the hand's change events
     this.playerHand.on(PlayerHand.Events.CARDS_CHANGED, this.onCardsChanged, this);
+    
+    // Subscribe to sticker shop state changes if service is provided
+    if (this.stickerShopService) {
+      this.stickerShopService.on(
+        StickerShopService.Events.SHOP_STATE_CHANGED,
+        this.onShopStateChanged,
+        this
+      );
+    }
+  }
+  
+  /**
+   * Handler for sticker shop state changes
+   * @param isOpen Whether the shop is open
+   */
+  private onShopStateChanged(isOpen: boolean): void {
+    this.isShopOpen = isOpen;
+    
+    // If shop is closing, deselect all cards
+    if (!isOpen) {
+      this.clearCardSelection();
+    }
   }
   
   /**
@@ -263,6 +300,10 @@ export class PlayerHandRenderer {
         
         // Update the card data if it's different from the current one
         this.cardRenderers[i].updateCard(newCards[i], i);
+        
+        // Update selection state
+        const isSelected = this.selectedCards.has(newCards[i].unique_id);
+        this.cardRenderers[i].setSelected(isSelected);
       } else {
         // Create new card renderer
         const cardRenderer = new CardRenderer(
@@ -273,6 +314,10 @@ export class PlayerHandRenderer {
           i,
           (cardIndex) => this.onCardClick(cardIndex)
         );
+        
+        // Set initial selection state
+        const isSelected = this.selectedCards.has(newCards[i].unique_id);
+        cardRenderer.setSelected(isSelected);
         
         this.cardRenderers.push(cardRenderer);
       }
@@ -306,10 +351,64 @@ export class PlayerHandRenderer {
    * @param index Index of the clicked card
    */
   private onCardClick(index: number): void {
-    // Here we would implement card selection/play logic
-    console.log(`Card ${index} clicked`);
+    if (this.isShopOpen && index >= 0 && index < this.currentCards.length) {
+      const card = this.currentCards[index];
+      const uniqueId = card.unique_id;
+      
+      // Toggle selection state
+      if (this.selectedCards.has(uniqueId)) {
+        this.selectedCards.delete(uniqueId);
+        this.cardRenderers[index].setSelected(false);
+      } else {
+        this.selectedCards.add(uniqueId);
+        this.cardRenderers[index].setSelected(true);
+      }
+      
+      // Emit event that selection has changed - don't pass the value
+      this.emit(PlayerHandRendererEvents.SELECTION_CHANGED);
+    } else {
+      // Default behavior when shop is not open
+      console.log(`Card ${index} clicked`);
+    }
+  }
+  
+  /**
+   * Calculate the total invention value of selected cards
+   * @returns The total invention value of selected cards
+   */
+  public getSelectedInventionValue(): number {
+    let total = 0;
     
-    // This could emit an event or call a handler function passed in constructor
+    this.currentCards.forEach(card => {
+      if (this.selectedCards.has(card.unique_id)) {
+        // Use the Card's getInventionValue method
+        total += card.getInventionValue();
+      }
+    });
+    
+    return total;
+  }
+  
+  /**
+   * Clear selection from all cards
+   */
+  public clearCardSelection(): void {
+    this.selectedCards.clear();
+    
+    // Update visual state of all card renderers
+    this.cardRenderers.forEach(renderer => {
+      renderer.setSelected(false);
+    });
+    
+    // Emit event that selection has changed
+    this.emit(PlayerHandRendererEvents.SELECTION_CHANGED);
+  }
+  
+  /**
+   * Get array of selected card unique IDs
+   */
+  public getSelectedCardIds(): string[] {
+    return Array.from(this.selectedCards);
   }
   
   /**
@@ -387,6 +486,15 @@ export class PlayerHandRenderer {
   public destroy(): void {
     // Unsubscribe from events
     this.playerHand.off(PlayerHand.Events.CARDS_CHANGED, this.onCardsChanged, this);
+    
+    // Unsubscribe from sticker shop events if service exists
+    if (this.stickerShopService) {
+      this.stickerShopService.off(
+        StickerShopService.Events.SHOP_STATE_CHANGED,
+        this.onShopStateChanged,
+        this
+      );
+    }
     
     // Clear card objects
     this.clearCardObjects();

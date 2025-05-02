@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Card } from '../entities/Card';
 import { PlayerHand } from '../entities/PlayerHand';
 import { trackEvent } from '../game';
 import { BuildingRegistry } from '../services/BuildingRegistry';
@@ -8,7 +9,6 @@ import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
-import { Card } from '../types/game';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
 
@@ -64,14 +64,20 @@ export class GameScene extends Phaser.Scene {
     // Initialize the sticker shop service
     this.stickerShopService = new StickerShopService();
     
-    // Initialize the UI manager
-    this.gameUI = new GameUI(this, this.buildingService, this.resourceService, this.stickerShopService);
-    
-    // Create UI panels (except player hand which is handled separately)
-    this.gameUI.createUI();
-    
-    // Initialize the player hand UI
+    // Initialize the player hand UI first so we can pass it to the UI manager
     this.initializePlayerHandUI();
+    
+    // Initialize the UI manager with player hand renderer
+    this.gameUI = new GameUI(
+      this, 
+      this.buildingService, 
+      this.resourceService, 
+      this.stickerShopService,
+      this.playerHandRenderer
+    );
+    
+    // Create UI panels 
+    this.gameUI.createUI();
     
     // Track scene load for analytics
     trackEvent('scene_enter', {
@@ -127,8 +133,8 @@ export class GameScene extends Phaser.Scene {
       const count = cardEntry[cardId];
       
       for (let i = 0; i < count; i++) {
-        // Use the new createCardInterface method
-        const card = this.cardRegistry.createCardInterface(cardId);
+        // Use the new createCardInstance method
+        const card = this.cardRegistry.createCardInstance(cardId);
         if (card) {
           this.playerDeck.addToDeck(card, 'bottom');
         }
@@ -149,8 +155,15 @@ export class GameScene extends Phaser.Scene {
    * Initialize the player hand UI
    */
   private initializePlayerHandUI(): void {
-    // Get hand panel dimensions from UI manager
-    const dimensions = this.gameUI.getHandPanelDimensions();
+    // Get hand panel dimensions 
+    const { width, height } = this.cameras.main;
+    const panelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
+    const dimensions = {
+      x: 0,
+      y: height - panelHeight,
+      width: width,
+      height: panelHeight
+    };
     
     // Create the hand renderer
     this.playerHandRenderer = new PlayerHandRenderer(
@@ -161,7 +174,8 @@ export class GameScene extends Phaser.Scene {
       dimensions.width,
       dimensions.height,
       this.invasionService,
-      this.resourceService
+      this.resourceService,
+      this.stickerShopService
     );
     
     // Initialize and render the hand

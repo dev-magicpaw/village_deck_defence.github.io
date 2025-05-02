@@ -40,3 +40,4 @@ The goal is to build up your village's defenses before the invasion arrives.
 ## Used assets:
 - https://kenney.nl/assets/ui-pack-adventure
 - https://assetstore.unity.com/packages/2d/gui/icons/painterly-fantasy-icon-pack-285865
+- https://assetstore.unity.com/packages/2d/gui/card-shirts-lite-165698

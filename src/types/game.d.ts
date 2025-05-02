@@ -1,11 +1,3 @@
-export interface Card {
-  id: string;
-  name: string;
-  race?: string;
-  slotCount?: number;
-  startingStickers?: string[];
-}
-
 export interface Building {
   id: string;
   name: string;

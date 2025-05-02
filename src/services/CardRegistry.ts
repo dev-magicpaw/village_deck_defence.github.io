@@ -1,5 +1,4 @@
-import { Card as CardClass, CardConfig, convertCardJsonToConfig } from '../entities/Card';
-import { Card as CardInterface } from '../types/game';
+import { Card, CardConfig, convertCardJsonToConfig } from '../entities/Card';
 
 /**
  * Global registry for card configurations and instances
@@ -45,51 +44,25 @@ export class CardRegistry {
    * @param cardId The card ID
    * @returns A new Card instance or null if card ID not found
    */
-  public createCard(cardId: string): CardClass | null {
+  public createCard(cardId: string): Card | null {
     const config = this._cardConfigs.get(cardId);
     if (!config) {
       console.error(`Card not found in registry: ${cardId}`);
       return null;
     }
     
-    return CardClass.fromConfig(config);
+    return Card.fromConfig(config);
   }
   
   /**
-   * Create a new Card interface compatible object from a card ID
+   * Create a simplified card instance from a card ID
+   * This is used by services that expect the card properties directly
    * @param cardId The card ID
-   * @returns A new Card interface object or null if card ID not found
+   * @returns A new Card instance or null if card ID not found
    */
-  public createCardInterface(cardId: string): CardInterface | null {
-    const cardClass = this.createCard(cardId);
-    if (!cardClass) {
-      return null;
-    }
-    
-    // Convert Card class to Card interface format
-    return this.convertCardClassToInterface(cardClass);
+  public createCardInstance(cardId: string): Card | null {
+    return this.createCard(cardId);
   }
-  
-  /**
-   * Convert a Card class instance to Card interface format
-   * @param card Card class instance
-   * @returns Card interface object
-   */
-  public convertCardClassToInterface(card: CardClass): CardInterface {
-    const config = this._cardConfigs.get(card.id);
-    
-    if (!config) {
-      throw new Error("Config not found");
-    }
-    return {
-      id: card.id,
-      name: card.name,
-      race: card.race.toString(),
-      slotCount: card.slotCount,
-      startingStickers: config.startingStickers
-    };
-  }
-
   
   /**
    * Clear the card registry

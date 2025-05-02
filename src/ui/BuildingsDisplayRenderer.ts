@@ -4,6 +4,7 @@ import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
+import { PlayerHandRenderer } from './PlayerHandRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 
 /**
@@ -19,6 +20,7 @@ export class BuildingsDisplayRenderer {
   private stickerShopBuildingId: string = '';
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
+  private playerHandRenderer: PlayerHandRenderer;
   
   // Card visual properties
   private cardWidth: number = CARD_WIDTH;
@@ -43,6 +45,7 @@ export class BuildingsDisplayRenderer {
    * @param panelHeight Height of the panel
    * @param resourceService Resource service for tracking resources
    * @param stickerShopService Sticker shop service for managing the shop state
+   * @param playerHandRenderer Player hand renderer for card selection
    */
   constructor(
     scene: Phaser.Scene,
@@ -52,7 +55,8 @@ export class BuildingsDisplayRenderer {
     panelWidth: number,
     panelHeight: number,
     resourceService: ResourceService,
-    stickerShopService: StickerShopService
+    stickerShopService: StickerShopService,
+    playerHandRenderer: PlayerHandRenderer
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -62,6 +66,7 @@ export class BuildingsDisplayRenderer {
     this.panelHeight = panelHeight;
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
+    this.playerHandRenderer = playerHandRenderer;
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
@@ -94,7 +99,8 @@ export class BuildingsDisplayRenderer {
         this.panelHeight,
         this.resourceService,
         onApplyCallback,
-        this.stickerShopService
+        this.stickerShopService,
+        this.playerHandRenderer
       );
       this.stickerShopRenderer.init();
     } 

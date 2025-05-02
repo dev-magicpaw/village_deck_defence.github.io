@@ -3,6 +3,7 @@ import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
+import { PlayerHandRenderer } from './PlayerHandRenderer';
 
 export class GameUI {
   static readonly INVASION_PANEL_HEIGHT_PROPORTION: number = 0.08;
@@ -14,12 +15,20 @@ export class GameUI {
   private buildingService: BuildingService;
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
+  private playerHandRenderer: PlayerHandRenderer;
   
-  constructor(scene: Phaser.Scene, buildingService: BuildingService, resourceService: ResourceService, stickerShopService: StickerShopService) {
+  constructor(
+    scene: Phaser.Scene, 
+    buildingService: BuildingService, 
+    resourceService: ResourceService, 
+    stickerShopService: StickerShopService,
+    playerHandRenderer: PlayerHandRenderer
+  ) {
     this.scene = scene;
     this.buildingService = buildingService;
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
+    this.playerHandRenderer = playerHandRenderer;
   }
   
   /**
@@ -105,7 +114,8 @@ export class GameUI {
         panelWidth,
         panelHeight,
         this.resourceService,
-        this.stickerShopService
+        this.stickerShopService,
+        this.playerHandRenderer
       );
       
       this.buildingsDisplayRenderer.init();

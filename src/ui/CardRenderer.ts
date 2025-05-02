@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Card } from '../types/game';
+import { Card } from '../entities/Card';
 
 /**
  * Card dimensions constants
@@ -27,6 +27,8 @@ export class CardRenderer {
   private stickerScale: number = 0.6;
   private nameText?: Phaser.GameObjects.Text;
   private slotObjects: Phaser.GameObjects.GameObject[] = [];
+  private selectionGlow?: Phaser.GameObjects.Graphics;
+  private isSelected: boolean = false;
   
   /**
    * Create a new card renderer
@@ -61,6 +63,32 @@ export class CardRenderer {
    * Create the visual elements of the card
    */
   private createCardVisual(): void {
+    // Create selection glow (initially invisible)
+    this.selectionGlow = this.scene.add.graphics();
+    this.selectionGlow.setVisible(false);
+    
+    // Draw blue glow effect
+    this.selectionGlow.fillStyle(0x00aaff, 0.3); // Light blue with transparency
+    this.selectionGlow.fillRoundedRect(
+      -this.cardWidth/2 - 10, 
+      -this.cardHeight/2 - 10, 
+      this.cardWidth + 20, 
+      this.cardHeight + 20, 
+      16
+    );
+    
+    // Add a stroke for additional glow effect
+    this.selectionGlow.lineStyle(3, 0x00aaff, 0.7);
+    this.selectionGlow.strokeRoundedRect(
+      -this.cardWidth/2 - 10, 
+      -this.cardHeight/2 - 10, 
+      this.cardWidth + 20, 
+      this.cardHeight + 20, 
+      16
+    );
+    
+    this.container.add(this.selectionGlow);
+    
     // Card background
     this.cardBackground = this.scene.add['nineslice'](
       0,
@@ -116,6 +144,27 @@ export class CardRenderer {
   }
   
   /**
+   * Set whether this card is selected
+   * @param selected Whether the card should be selected
+   */
+  public setSelected(selected: boolean): void {
+    this.isSelected = selected;
+    
+    // Show/hide the selection glow
+    if (this.selectionGlow) {
+      this.selectionGlow.setVisible(selected);
+    }
+  }
+  
+  /**
+   * Check if the card is currently selected
+   * @returns True if the card is selected
+   */
+  public isCardSelected(): boolean {
+    return this.isSelected;
+  }
+  
+  /**
    * Render all slots horizontally at the bottom of the card
    */
   private renderSlots(): void {
@@ -152,14 +201,15 @@ export class CardRenderer {
    * @param y Y position of the slot
    */
   private renderStickerInSlot(slotIndex: number, x: number, y: number): void {
-    // Check if there are starting stickers for this card
-    if (!this.card.startingStickers) return;
+    // Check if there are slots for this card and a sticker in this slot
+    if (!this.card.slots || slotIndex >= this.card.slots.length) return;
     
-    // Check if sticker exists at this slot index
-    if (slotIndex < this.card.startingStickers.length && this.card.startingStickers[slotIndex]) {
-      const stickerId = this.card.startingStickers[slotIndex];
+    const slot = this.card.slots[slotIndex];
+    if (slot && slot.sticker) {
+      // For the image key, use the sticker ID
+      const stickerId = slot.sticker.id;
       
-      // For the image key, use the sticker ID directly as it matches the loaded asset name
+      // Create sticker image
       const stickerImage = this.scene.add.image(x, y, stickerId);
       stickerImage.setScale(this.stickerScale);
       this.container.add(stickerImage);

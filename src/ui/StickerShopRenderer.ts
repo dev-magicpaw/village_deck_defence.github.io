@@ -5,6 +5,7 @@ import { StickerRegistry } from '../services/StickerRegistry';
 import { StickerShopService } from '../services/StickerShopService';
 import { GameUI } from '../ui/GameUI';
 import { CARD_WIDTH } from './CardRenderer';
+import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
 
 /**
@@ -23,6 +24,8 @@ export class StickerShopRenderer {
   private onApplyCallback?: (stickerConfig: StickerConfig) => void;
   private resourceService?: ResourceService;
   private stickerShopService: StickerShopService;
+  private playerHandRenderer: PlayerHandRenderer;
+  private inventionIcon: Phaser.GameObjects.Image | null = null;
   
   // Selection panel elements
   private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
@@ -52,6 +55,7 @@ export class StickerShopRenderer {
    * @param resourceService Optional resource service for tracking acquired resources
    * @param onApplyCallback Callback for when a sticker is applied
    * @param stickerShopService Service managing the shop state
+   * @param playerHandRenderer The player hand renderer for card selection
    */
   constructor(
     scene: Phaser.Scene,
@@ -61,7 +65,8 @@ export class StickerShopRenderer {
     panelHeight: number,
     resourceService: ResourceService,
     onApplyCallback: (stickerConfig: StickerConfig) => void,
-    stickerShopService: StickerShopService
+    stickerShopService: StickerShopService,
+    playerHandRenderer: PlayerHandRenderer
   ) {
     this.scene = scene;
     this.panelX = panelX;
@@ -71,6 +76,7 @@ export class StickerShopRenderer {
     this.resourceService = resourceService;
     this.onApplyCallback = onApplyCallback;
     this.stickerShopService = stickerShopService;
+    this.playerHandRenderer = playerHandRenderer;
     
     // Get the sticker registry
     this.stickerRegistry = StickerRegistry.getInstance();
@@ -88,6 +94,20 @@ export class StickerShopRenderer {
       this.onShopStateChanged,
       this
     );
+    
+    // Subscribe to player hand card selection changes
+    this.playerHandRenderer.on(
+      PlayerHandRendererEvents.SELECTION_CHANGED,
+      this.onCardSelectionChanged,
+      this
+    );
+  }
+  
+  /**
+   * Handler for card selection changes
+   */
+  private onCardSelectionChanged(): void {
+    this.updateSelectionText();
   }
   
   /**
@@ -286,10 +306,11 @@ export class StickerShopRenderer {
     this.resourcePanel.setOrigin(0, 0);
     this.resourcePanel.setTint(0x666666); // Same dark grey tint as main panel
     
-    // Add "Selected: X" text
+    // Add "Selected: X" text with the invention resource icon
+    const selectedY = handPanelY + panelHeight / 2 - 30;
     this.selectionText = this.scene.add.text(
-      marginX + cardWidth / 2,
-      handPanelY + panelHeight / 2 - 30,
+      marginX + cardWidth / 2 - 15, // Leave space for invention icon
+      selectedY,
       'Selected: 0',
       {
         fontSize: '18px',
@@ -298,6 +319,15 @@ export class StickerShopRenderer {
       }
     );
     this.selectionText.setOrigin(0.5, 0.5);
+    
+    // Add invention resource icon next to "Selected: X"
+    this.inventionIcon = this.scene.add.image(
+      marginX + cardWidth / 2 + 50,
+      selectedY,
+      'resource_invention'
+    );
+    this.inventionIcon.setOrigin(0, 0.5);
+    this.inventionIcon.setScale(0.6);
     
     // Add "Acquired: X" text with invention resource icon
     const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
@@ -360,7 +390,7 @@ export class StickerShopRenderer {
     // Make button interactive
     this.selectAllButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        // Currently does nothing per requirements
+        // For future implementation - not required now
         console.log('Select All button clicked');
       });
     
@@ -378,6 +408,7 @@ export class StickerShopRenderer {
     // Add to display container
     this.displayContainer.add(this.resourcePanel);
     this.displayContainer.add(this.selectionText);
+    this.displayContainer.add(this.inventionIcon);
     this.displayContainer.add(this.acquiredText);
     this.displayContainer.add(resourceIcon);
     this.displayContainer.add(this.selectAllButton);
@@ -550,6 +581,9 @@ export class StickerShopRenderer {
     if (this.selectAllButtonText) {
       this.selectAllButtonText.destroy();
     }
+    if (this.inventionIcon) {
+      this.inventionIcon.destroy();
+    }
     this.displayContainer.destroy();
   }
   
@@ -561,11 +595,11 @@ export class StickerShopRenderer {
   }
   
   /**
-   * Update the selection text when showing the shop
+   * Update the selection text to show total selected invention value
    */
   private updateSelectionText(): void {
     if (this.selectionText) {
-      this.selectionText.setText(`Selected: ${this.selectedSticker ? '1' : '0'}`);
+      this.selectionText.setText(`Selected: ${this.playerHandRenderer.getSelectedInventionValue()}`);
     }
   }
   

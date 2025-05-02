@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
+import { StickerShopService } from '../services/StickerShopService';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
 
 export class GameUI {
@@ -12,11 +13,15 @@ export class GameUI {
   private buildingsDisplayRenderer?: BuildingsDisplayRenderer;
   private buildingService?: BuildingService;
   private resourceService?: ResourceService;
+  private stickerShopService: StickerShopService;
   
+  // TODO: make resourceService? not optional
+  // TODO: make buildingService? not optional
   constructor(scene: Phaser.Scene, buildingService?: BuildingService, resourceService?: ResourceService) {
     this.scene = scene;
     this.buildingService = buildingService;
     this.resourceService = resourceService;
+    this.stickerShopService = new StickerShopService(); // TODO: get this in consturctor params
   }
   
   /**
@@ -70,10 +75,10 @@ export class GameUI {
     const bottomPanelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
     const rightPanelWidth = width * GameUI.INFO_PANEL_WIDTH_PROPORTION;
     
-    const panelWidth = width - rightPanelWidth;
-    const panelHeight = height - topPanelHeight - bottomPanelHeight;
     const panelX = 0;
     const panelY = topPanelHeight;
+    const panelWidth = width - rightPanelWidth;
+    const panelHeight = height - topPanelHeight - bottomPanelHeight;
     
     // Create the panel background using 9-slice
     const displayPanel = this.scene.add['nineslice'](
@@ -101,7 +106,8 @@ export class GameUI {
         panelY,
         panelWidth,
         panelHeight,
-        this.resourceService
+        this.resourceService,
+        this.stickerShopService
       );
       
       this.buildingsDisplayRenderer.init();

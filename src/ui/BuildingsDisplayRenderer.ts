@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Building } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
+import { StickerShopService } from '../services/StickerShopService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 
@@ -16,7 +17,8 @@ export class BuildingsDisplayRenderer {
   private buildingCards: Phaser.GameObjects.Container[] = [];
   private stickerShopRenderer: StickerShopRenderer | null = null;
   private stickerShopBuildingId: string = '';
-  private resourceService?: ResourceService;
+  private resourceService?: ResourceService; // TODO: make this not optional
+  private stickerShopService: StickerShopService;
   
   // Card visual properties
   private cardWidth: number = CARD_WIDTH;
@@ -40,6 +42,7 @@ export class BuildingsDisplayRenderer {
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
    * @param resourceService Optional resource service for tracking resources
+   * @param stickerShopService Optional sticker shop service for managing the shop state
    */
   constructor(
     scene: Phaser.Scene,
@@ -48,7 +51,8 @@ export class BuildingsDisplayRenderer {
     panelY: number,
     panelWidth: number,
     panelHeight: number,
-    resourceService?: ResourceService
+    resourceService?: ResourceService, // TODO: make this not optional
+    stickerShopService?: StickerShopService // TODO: make this not optional
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -56,36 +60,41 @@ export class BuildingsDisplayRenderer {
     this.panelY = panelY;
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
-    this.resourceService = resourceService;
-    
-    // Get the sticker shop building ID from the game config
-    const gameConfig = this.scene.cache.json.get('gameConfig');
-    if (gameConfig && gameConfig.sticker_shop_building_id) {
-      this.stickerShopBuildingId = gameConfig.sticker_shop_building_id;
-    }
+    this.resourceService = resourceService || undefined;
+    this.stickerShopService = stickerShopService || new StickerShopService();
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
-    
-    // Create the sticker shop renderer with exact same dimensions
-    // It will be initialized last to be rendered on top
-    this.stickerShopRenderer = new StickerShopRenderer(
-      this.scene,
-      this.panelX,
-      this.panelY,
-      this.panelWidth,
-      this.panelHeight,
-      this.resourceService
-    );
-    this.stickerShopRenderer.init();
   }
   
   /**
-   * Initialize the renderer
+   * Initialize the component and load the shop if needed
    */
   public init(): void {
-    // Nothing specific to initialize here
-    // We'll render buildings when render() is called
+    // Try to get the game config from the registry
+    let gameConfig = this.scene.game.registry.get('gameConfig');
+    if (!gameConfig) {
+      throw new Error('Game config not found in registry');
+    }
+        
+    this.stickerShopBuildingId = gameConfig.sticker_shop_building_id;
+    
+    // Create the sticker shop renderer with exact same dimensions
+    if (!this.stickerShopRenderer) {
+      this.stickerShopRenderer = new StickerShopRenderer(
+        this.scene,
+        this.panelX,
+        this.panelY,
+        this.panelWidth,
+        this.panelHeight,
+        this.resourceService,
+        undefined, // onApplyCallback
+        this.stickerShopService
+      );
+      this.stickerShopRenderer.init();
+    } 
+    
+    this.render();
   }
   
   /**

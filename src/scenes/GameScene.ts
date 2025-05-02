@@ -81,6 +81,7 @@ export class GameScene extends Phaser.Scene {
   private loadConfigurations(): void {
     // Get the game config
     this.gameConfig = this.cache.json.get('gameConfig');
+    this.game.registry.set('gameConfig', this.gameConfig);
     
     // Initialize the card registry
     this.cardRegistry = CardRegistry.getInstance();

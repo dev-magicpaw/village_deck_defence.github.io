@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
 import { ResourceService } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
+import { StickerShopService } from '../services/StickerShopService';
 import { GameUI } from '../ui/GameUI';
 import { CARD_WIDTH } from './CardRenderer';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
@@ -21,6 +22,7 @@ export class StickerShopRenderer {
   private applyButtonText: Phaser.GameObjects.Text | null = null;
   private onApplyCallback?: (stickerConfig: StickerConfig) => void;
   private resourceService?: ResourceService;
+  private stickerShopService: StickerShopService;
   
   // Selection panel elements
   private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
@@ -49,6 +51,7 @@ export class StickerShopRenderer {
    * @param panelHeight Height of the panel
    * @param resourceService Optional resource service for tracking acquired resources
    * @param onApplyCallback Callback for when a sticker is applied
+   * @param stickerShopService Service managing the shop state
    */
   constructor(
     scene: Phaser.Scene,
@@ -57,7 +60,8 @@ export class StickerShopRenderer {
     panelWidth: number,
     panelHeight: number,
     resourceService?: ResourceService,
-    onApplyCallback?: (stickerConfig: StickerConfig) => void
+    onApplyCallback?: (stickerConfig: StickerConfig) => void,
+    stickerShopService?: StickerShopService // TODO make this not optional
   ) {
     this.scene = scene;
     this.panelX = panelX;
@@ -66,6 +70,7 @@ export class StickerShopRenderer {
     this.panelHeight = panelHeight;
     this.resourceService = resourceService;
     this.onApplyCallback = onApplyCallback;
+    this.stickerShopService = stickerShopService || new StickerShopService();
     
     // Get the sticker registry
     this.stickerRegistry = StickerRegistry.getInstance();
@@ -76,6 +81,24 @@ export class StickerShopRenderer {
     
     // Set a high depth to ensure it renders on top of other UI elements
     this.displayContainer.setDepth(1000);
+    
+    // Subscribe to shop state changes
+    this.stickerShopService.on(
+      StickerShopService.Events.SHOP_STATE_CHANGED, 
+      this.onShopStateChanged,
+      this
+    );
+  }
+  
+  /**
+   * Handler for shop state changes
+   */
+  private onShopStateChanged(isOpen: boolean): void {
+    if (isOpen) {
+      this._show();
+    } else {
+      this._hide();
+    }
   }
   
   /**
@@ -120,7 +143,7 @@ export class StickerShopRenderer {
     closeButton.setScale(1.2);
     closeButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        this.hide();
+        this.stickerShopService.setShopState(false);
       });
     
     // Add hover effects for close button
@@ -192,7 +215,6 @@ export class StickerShopRenderer {
       .on('pointerdown', () => {
         if (this.selectedSticker && this.onApplyCallback) {
           this.onApplyCallback(this.selectedSticker);
-          this.hide();
         }
       });
     
@@ -438,64 +460,56 @@ export class StickerShopRenderer {
   }
   
   /**
-   * Show the sticker shop
+   * Show the sticker shop (for backward compatibility)
+   * @deprecated Use stickerShopService.setShopState(true) instead
    */
+  // TODO: remove this method
   public show(): void {
-    this.isVisible = true;
-    this.displayContainer.setVisible(true);
-    
-    // Update the selection text when showing the shop
-    if (this.selectionText) {
-      this.selectionText.setText(`Selected: ${this.selectedSticker ? '1' : '0'}`);
-    }
-    
-    // Update the acquired invention text
-    if (this.acquiredText && this.resourceService) {
-      this.acquiredText.setText(`Acquired: ${this.resourceService.getInvention()}`);
+    this.stickerShopService.setShopState(true);
+  }
+  
+  /**
+   * Internal method to show the shop UI
+   */
+  private _show(): void {
+    if (!this.isVisible) {
+      this.isVisible = true;
+      this.displayContainer.setVisible(true);
+      
+      // Update the selection text when showing the shop
+      this.updateSelectionText();
     }
   }
   
   /**
-   * Hide the sticker shop and deselect any selected sticker
+   * Hide the sticker shop (for backward compatibility)
+   * @deprecated Use stickerShopService.setShopState(false) instead
    */
+  // TODO: remove this method
   public hide(): void {
-    this.isVisible = false;
-    this.displayContainer.setVisible(false);
-    
-    // Deselect sticker when closing the shop
-    this.deselectSticker();
+    this.stickerShopService.setShopState(false);
   }
   
   /**
-   * Deselect the currently selected sticker
+   * Internal method to hide the shop UI
    */
-  private deselectSticker(): void {
-    // Deselect the sticker in data
-    this.selectedSticker = null;
-    
-    // Unhighlight all stickers
-    this.stickerRenderers.forEach(renderer => {
-      renderer.setSelected(false);
-    });
-    
-    // Disable the apply button
-    this.setApplyButtonState(false);
-    
-    // Update selection text
-    if (this.selectionText) {
-      this.selectionText.setText('Selected: 0');
-    }
-  }
-  
-  /**
-   * Toggle the visibility of the sticker shop
-   */
-  public toggle(): void {
+  private _hide(): void {
     if (this.isVisible) {
-      this.hide();
-    } else {
-      this.show();
+      this.isVisible = false;
+      this.displayContainer.setVisible(false);
+      
+      // Deselect sticker when closing the shop
+      this.deselectSticker();
     }
+  }
+  
+  /**
+   * Toggle the visibility of the sticker shop (for backward compatibility)
+   * @deprecated Use stickerShopService.toggleShopState() instead
+   */
+  // TODO: remove this method
+  public toggle(): void {
+    this.stickerShopService.toggleShopState();
   }
   
   /**
@@ -528,7 +542,17 @@ export class StickerShopRenderer {
    * Destroy this renderer and all its visual elements
    */
   public destroy(): void {
+    // Remove event listener
+    this.stickerShopService.off(
+      StickerShopService.Events.SHOP_STATE_CHANGED, 
+      this.onShopStateChanged,
+      this
+    );
+    
+    // Clear all sticker renderers
     this.clearStickerRenderers();
+    
+    // Destroy all UI elements
     if (this.shopPanel) {
       this.shopPanel.destroy();
     }
@@ -561,5 +585,35 @@ export class StickerShopRenderer {
    */
   public getSelectedSticker(): StickerConfig | null {
     return this.selectedSticker;
+  }
+  
+  /**
+   * Update the selection text when showing the shop
+   */
+  private updateSelectionText(): void {
+    if (this.selectionText) {
+      this.selectionText.setText(`Selected: ${this.selectedSticker ? '1' : '0'}`);
+    }
+  }
+  
+  /**
+   * Deselect the currently selected sticker
+   */
+  private deselectSticker(): void {
+    // Deselect the sticker in data
+    this.selectedSticker = null;
+    
+    // Unhighlight all stickers
+    this.stickerRenderers.forEach(renderer => {
+      renderer.setSelected(false);
+    });
+    
+    // Disable the apply button
+    this.setApplyButtonState(false);
+    
+    // Update selection text
+    if (this.selectionText) {
+      this.selectionText.setText('Selected: 0');
+    }
   }
 } 

@@ -59,6 +59,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/TomeYellow.png');
     this.load.image('resource_power', 'assets/images/fantasyIconPack/64/SwordT1.png');
 
+    // Load portraits
+    this.load.image('dwarf_builder', 'assets/images/portraits/dwarf_builder.png');
+    this.load.image('elf_scout', 'assets/images/portraits/elf_scout.png');
+    this.load.image('gnome_scolar', 'assets/images/portraits/gnome_scolar.png');
+    this.load.image('human_farmer', 'assets/images/portraits/human_farmer.png');
+
     // Load configuration files
     this.load.json('stickers', 'config/stickers.json');
     this.load.json('cardsConfig', 'config/cards.json'); 

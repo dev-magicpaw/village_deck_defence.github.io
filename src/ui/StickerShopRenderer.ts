@@ -323,11 +323,11 @@ export class StickerShopRenderer {
     
     // Add invention resource icon next to "Selected: X"
     this.inventionIcon = this.scene.add.image(
-      marginX + cardWidth / 2 + 50,
-      selectedY,
+      panelWidth - marginX / 2,
+      selectedY + 5,
       'resource_invention'
     );
-    this.inventionIcon.setOrigin(0, 0.5);
+    this.inventionIcon.setOrigin(1, 1);
     this.inventionIcon.setScale(0.6);
     
     // Add "Acquired: X" text with invention resource icon

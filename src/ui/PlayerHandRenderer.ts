@@ -99,6 +99,21 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     if (!isOpen) {
       this.clearCardSelection();
     }
+    
+    // Disable button interaction when shop is open
+    this.discardButton.disableInteractive();
+    this.endDayButton.disableInteractive();
+    
+    if (!isOpen) {
+      const deckService = this.playerHand['_deckService'];
+      const isDeckEmpty = deckService.isEmpty();
+      
+      if (!isDeckEmpty) {
+        this.discardButton.setInteractive({ useHandCursor: true });
+      } else {
+        this.endDayButton.setInteractive({ useHandCursor: true });
+      }
+    }
   }
   
   /**
@@ -148,11 +163,10 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     // Add button text with deck size
     this.updateDiscardButtonText();
     
-    // Make button interactive
-    this.discardButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.discardAndDrawNewHand();
-      });
+    // Set up discard button click handler (interactivity will be managed by updateButtonVisibility)
+    this.discardButton.on('pointerdown', () => {
+      this.discardAndDrawNewHand();
+    });
       
     // Button hover effects
     this.discardButton.on('pointerover', () => {
@@ -194,11 +208,10 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     );
     this.endDayButtonText.setOrigin(0.5, 0.5);
     
-    // Make End Day button interactive
-    this.endDayButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.endDay();
-      });
+    // Set up End Day button click handler (interactivity will be managed by updateButtonVisibility)
+    this.endDayButton.on('pointerdown', () => {
+      this.endDay();
+    });
       
     // End Day button hover effects
     this.endDayButton.on('pointerover', () => {
@@ -215,7 +228,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.endDayButton.setVisible(false);
     this.endDayButtonText.setVisible(false);
     
-    // Update button visibility based on deck state
+    // Update button visibility and interactivity based on deck state and shop state
     this.updateButtonVisibility();
     
     // Do initial render of cards
@@ -437,6 +450,19 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     // Update the discard button text if it's visible
     if (!isDeckEmpty) {
       this.updateDiscardButtonText();
+    }
+    
+    // Update interactivity based on visibility and shop state
+    this.discardButton.disableInteractive();
+    this.endDayButton.disableInteractive();
+    
+    // Only make buttons interactive if they're visible AND shop is closed
+    if (!this.isShopOpen) {
+      if (!isDeckEmpty) {
+        this.discardButton.setInteractive({ useHandCursor: true });
+      } else {
+        this.endDayButton.setInteractive({ useHandCursor: true });
+      }
     }
   }
   

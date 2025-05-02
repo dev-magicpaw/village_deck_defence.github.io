@@ -437,6 +437,19 @@ export class StickerShopRenderer {
       });
     }
     
+    // Sort stickers by cost (invention price) in ascending order
+    stickerConfigs.sort((a, b) => {
+      // First sort by cost
+      const costDiff = a.cost - b.cost;
+      
+      // If costs are equal, sort alphabetically by name
+      if (costDiff === 0) {
+        return a.name.localeCompare(b.name);
+      }
+      
+      return costDiff;
+    });
+    
     // Calculate layout for grid
     const maxStickersPerRow = Math.floor((this.panelWidth - this.panelPadding * 2) / 
                                          (this.stickerSize + this.stickerSpacing));

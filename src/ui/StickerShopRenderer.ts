@@ -483,11 +483,6 @@ export class StickerShopRenderer {
     
     // Enable the apply button
     this.setApplyButtonState(true);
-    
-    // Update selection text
-    if (this.selectionText) {
-      this.selectionText.setText('Selected: 1');
-    }
   }
   
   /**

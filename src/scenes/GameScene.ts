@@ -133,7 +133,6 @@ export class GameScene extends Phaser.Scene {
       const count = cardEntry[cardId];
       
       for (let i = 0; i < count; i++) {
-        // Use the new createCardInstance method
         const card = this.cardRegistry.createCardInstance(cardId);
         if (card) {
           this.playerDeck.addToDeck(card, 'bottom');

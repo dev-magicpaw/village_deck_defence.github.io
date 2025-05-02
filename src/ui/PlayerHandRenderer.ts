@@ -381,7 +381,6 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     
     this.currentCards.forEach(card => {
       if (this.selectedCards.has(card.unique_id)) {
-        // Use the Card's getInventionValue method
         total += card.getInventionValue();
       }
     });

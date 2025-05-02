@@ -11,17 +11,15 @@ export class GameUI {
 
   private scene: Phaser.Scene;
   private buildingsDisplayRenderer?: BuildingsDisplayRenderer;
-  private buildingService?: BuildingService;
-  private resourceService?: ResourceService;
+  private buildingService: BuildingService;
+  private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
   
-  // TODO: make resourceService? not optional
-  // TODO: make buildingService? not optional
-  constructor(scene: Phaser.Scene, buildingService?: BuildingService, resourceService?: ResourceService) {
+  constructor(scene: Phaser.Scene, buildingService: BuildingService, resourceService: ResourceService, stickerShopService: StickerShopService) {
     this.scene = scene;
     this.buildingService = buildingService;
     this.resourceService = resourceService;
-    this.stickerShopService = new StickerShopService(); // TODO: get this in consturctor params
+    this.stickerShopService = stickerShopService;
   }
   
   /**

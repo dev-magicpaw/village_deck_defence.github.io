@@ -7,6 +7,7 @@ import { CardRegistry } from '../services/CardRegistry';
 import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
+import { StickerShopService } from '../services/StickerShopService';
 import { Card } from '../types/game';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
@@ -30,6 +31,7 @@ export class GameScene extends Phaser.Scene {
   private cardRegistry!: CardRegistry;
   private buildingRegistry!: BuildingRegistry;
   private buildingService!: BuildingService;
+  private stickerShopService!: StickerShopService;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -59,8 +61,11 @@ export class GameScene extends Phaser.Scene {
     this.buildingService = new BuildingService();
     this.buildingService.initializeBuildings();
     
+    // Initialize the sticker shop service
+    this.stickerShopService = new StickerShopService();
+    
     // Initialize the UI manager
-    this.gameUI = new GameUI(this, this.buildingService, this.resourceService);
+    this.gameUI = new GameUI(this, this.buildingService, this.resourceService, this.stickerShopService);
     
     // Create UI panels (except player hand which is handled separately)
     this.gameUI.createUI();
@@ -118,7 +123,6 @@ export class GameScene extends Phaser.Scene {
     
     // Populate the deck based on starting_cards in config
     this.gameConfig.starting_cards.forEach(cardEntry => {
-      // Each entry is like: {"card_elven_apprentice": 1}
       const cardId = Object.keys(cardEntry)[0];
       const count = cardEntry[cardId];
       

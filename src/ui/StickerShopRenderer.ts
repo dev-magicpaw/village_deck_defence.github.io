@@ -59,9 +59,9 @@ export class StickerShopRenderer {
     panelY: number,
     panelWidth: number,
     panelHeight: number,
-    resourceService?: ResourceService,
-    onApplyCallback?: (stickerConfig: StickerConfig) => void,
-    stickerShopService?: StickerShopService // TODO make this not optional
+    resourceService: ResourceService,
+    onApplyCallback: (stickerConfig: StickerConfig) => void,
+    stickerShopService: StickerShopService
   ) {
     this.scene = scene;
     this.panelX = panelX;
@@ -70,7 +70,7 @@ export class StickerShopRenderer {
     this.panelHeight = panelHeight;
     this.resourceService = resourceService;
     this.onApplyCallback = onApplyCallback;
-    this.stickerShopService = stickerShopService || new StickerShopService();
+    this.stickerShopService = stickerShopService;
     
     // Get the sticker registry
     this.stickerRegistry = StickerRegistry.getInstance();
@@ -460,15 +460,6 @@ export class StickerShopRenderer {
   }
   
   /**
-   * Show the sticker shop (for backward compatibility)
-   * @deprecated Use stickerShopService.setShopState(true) instead
-   */
-  // TODO: remove this method
-  public show(): void {
-    this.stickerShopService.setShopState(true);
-  }
-  
-  /**
    * Internal method to show the shop UI
    */
   private _show(): void {
@@ -482,15 +473,6 @@ export class StickerShopRenderer {
   }
   
   /**
-   * Hide the sticker shop (for backward compatibility)
-   * @deprecated Use stickerShopService.setShopState(false) instead
-   */
-  // TODO: remove this method
-  public hide(): void {
-    this.stickerShopService.setShopState(false);
-  }
-  
-  /**
    * Internal method to hide the shop UI
    */
   private _hide(): void {
@@ -501,15 +483,6 @@ export class StickerShopRenderer {
       // Deselect sticker when closing the shop
       this.deselectSticker();
     }
-  }
-  
-  /**
-   * Toggle the visibility of the sticker shop (for backward compatibility)
-   * @deprecated Use stickerShopService.toggleShopState() instead
-   */
-  // TODO: remove this method
-  public toggle(): void {
-    this.stickerShopService.toggleShopState();
   }
   
   /**

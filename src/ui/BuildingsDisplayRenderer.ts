@@ -17,7 +17,7 @@ export class BuildingsDisplayRenderer {
   private buildingCards: Phaser.GameObjects.Container[] = [];
   private stickerShopRenderer: StickerShopRenderer | null = null;
   private stickerShopBuildingId: string = '';
-  private resourceService?: ResourceService; // TODO: make this not optional
+  private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
   
   // Card visual properties
@@ -41,8 +41,8 @@ export class BuildingsDisplayRenderer {
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
-   * @param resourceService Optional resource service for tracking resources
-   * @param stickerShopService Optional sticker shop service for managing the shop state
+   * @param resourceService Resource service for tracking resources
+   * @param stickerShopService Sticker shop service for managing the shop state
    */
   constructor(
     scene: Phaser.Scene,
@@ -51,8 +51,8 @@ export class BuildingsDisplayRenderer {
     panelY: number,
     panelWidth: number,
     panelHeight: number,
-    resourceService?: ResourceService, // TODO: make this not optional
-    stickerShopService?: StickerShopService // TODO: make this not optional
+    resourceService: ResourceService,
+    stickerShopService: StickerShopService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -60,8 +60,8 @@ export class BuildingsDisplayRenderer {
     this.panelY = panelY;
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
-    this.resourceService = resourceService || undefined;
-    this.stickerShopService = stickerShopService || new StickerShopService();
+    this.resourceService = resourceService;
+    this.stickerShopService = stickerShopService;
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
@@ -81,6 +81,11 @@ export class BuildingsDisplayRenderer {
     
     // Create the sticker shop renderer with exact same dimensions
     if (!this.stickerShopRenderer) {
+      // Create a callback for when stickers are applied
+      const onApplyCallback = (stickerConfig: any) => {
+        console.log('Sticker applied:', stickerConfig);
+      };
+      
       this.stickerShopRenderer = new StickerShopRenderer(
         this.scene,
         this.panelX,
@@ -88,7 +93,7 @@ export class BuildingsDisplayRenderer {
         this.panelWidth,
         this.panelHeight,
         this.resourceService,
-        undefined, // onApplyCallback
+        onApplyCallback,
         this.stickerShopService
       );
       this.stickerShopRenderer.init();
@@ -197,8 +202,8 @@ export class BuildingsDisplayRenderer {
     console.log(`Building ${building.name} clicked`);
     
     // Check if this is the sticker shop building
-    if (building.id === this.stickerShopBuildingId && this.stickerShopRenderer) {
-      this.stickerShopRenderer.show();
+    if (building.id === this.stickerShopBuildingId) {
+      this.stickerShopService.setShopState(true);
     }
   }
   

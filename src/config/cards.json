@@ -3,7 +3,7 @@
     "id": "card_human_villager",
     "name": "Human Villager",
     "description": "Human Villager",
-    "image": "src/assets/images/cards/card_human_villager.png",
+    "image": "human_villager",
     "race": "Human",
     "startingStickers": ["sticker_power_1", "sticker_construction_1", "sticker_invention_1"],
     "maxSlotCount": 3
@@ -12,25 +12,25 @@
     "id": "card_gnome_student",
     "name": "Gnome Student",
     "description": "Gnome Student",
-    "image": "src/assets/images/cards/card_gnome_student.png",
+    "image": "gnome_student",
     "race": "Gnome",
     "startingStickers": ["sticker_invention_3"],
     "maxSlotCount": 2
   },
   {
-    "id": "card_dwarf_miner",
-    "name": "Dwarf Miner",
-    "description": "Dwarf Miner",
-    "image": "src/assets/images/cards/card_dwarf_miner.png",
+    "id": "card_dwarf_builder",
+    "name": "Dwarf Builder",
+    "description": "Dwarf Builder",
+    "image": "dwarf_builder",
     "race": "Dwarf",
     "startingStickers": ["sticker_construction_3"],
     "maxSlotCount": 2
   },
   {
-    "id": "card_elven_apprentice",
-    "name": "Elven Apprentice",
-    "description": "Elven Apprentice",
-    "image": "src/assets/images/cards/card_elven_apprentice.png",
+    "id": "card_elf_scout",
+    "name": "Elf scout",
+    "description": "Elf scout",
+    "image": "elf_scout",
     "race": "Elf",
     "startingStickers": ["sticker_power_1"],
     "maxSlotCount": 2

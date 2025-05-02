@@ -39,12 +39,9 @@ export class DeckService<T extends Card = Card> {
    * @param position 'top' or 'bottom' of the deck
    */
   addCardsToDeck(cards: T[], position: 'top' | 'bottom' = 'top'): void {
-    // TODO call addToDeck for each card
-    if (position === 'top') {
-      this.deck = [...cards, ...this.deck];
-    } else {
-      this.deck = [...this.deck, ...cards];
-    }
+    cards.forEach(card => {
+      this.addToDeck(card, position);
+    });
   }
   
   /**

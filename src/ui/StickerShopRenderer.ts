@@ -179,9 +179,6 @@ export class StickerShopRenderer {
     this.displayContainer.add(this.shopPanel);
     this.displayContainer.add(titleText);
     this.displayContainer.add(closeButton);
-
-    // Create apply button
-    this.createApplyButton();
     
     // Create the resource panel that covers the "Discard and draw" button
     this.createResourcePanel();
@@ -192,68 +189,10 @@ export class StickerShopRenderer {
   
   /**
    * Create the Apply button at the bottom of the shop
+   * @deprecated The apply button is now created in the resource panel
    */
   private createApplyButton(): void {
-    // Create the apply button using panel_wood_arrows texture with 9-slice scaling
-    const buttonWidth = 150;
-    const buttonHeight = 50;
-    const buttonX = this.panelX + (this.panelWidth - buttonWidth) / 2;
-    const buttonY = this.panelY + this.panelHeight - buttonHeight - 30;
-    
-    this.applyButton = this.scene.add['nineslice'](
-      buttonX + buttonWidth / 2,
-      buttonY + buttonHeight / 2,
-      'panel_wood_arrows',
-      undefined,
-      buttonWidth,
-      buttonHeight,
-      10,
-      10,
-      10,
-      10
-    );
-    this.applyButton.setOrigin(0.5, 0.5);
-    
-    // Create button text
-    this.applyButtonText = this.scene.add.text(
-      buttonX + buttonWidth / 2,
-      buttonY + buttonHeight / 2,
-      'Apply',
-      {
-        fontSize: '20px',
-        color: '#ffffff',
-        fontStyle: 'bold'
-      }
-    );
-    this.applyButtonText.setOrigin(0.5, 0.5);
-    
-    // Initially disable the button
-    this.setApplyButtonState(false);
-    
-    // Make button interactive
-    this.applyButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        if (this.selectedSticker && this.onApplyCallback) {
-          this.onApplyCallback(this.selectedSticker);
-        }
-      });
-    
-    // Add hover effects
-    this.applyButton.on('pointerover', () => {
-      if (this.selectedSticker) {
-        this.applyButton?.setScale(1.05);
-        this.applyButtonText?.setScale(1.1);
-      }
-    });
-    
-    this.applyButton.on('pointerout', () => {
-      this.applyButton?.setScale(1);
-      this.applyButtonText?.setScale(1);
-    });
-    
-    // Add to display container
-    this.displayContainer.add(this.applyButton);
-    this.displayContainer.add(this.applyButtonText);
+    // No longer used as the button is now created in the resource panel
   }
   
   /**
@@ -422,6 +361,63 @@ export class StickerShopRenderer {
       this.selectAllButtonText?.setScale(1);
     });
     
+    // Create Apply button below Select All button
+    const applyButtonWidth = 120;
+    const applyButtonHeight = 40;
+    const applyButtonX = marginX + (cardWidth - applyButtonWidth) / 2;
+    const applyButtonY = buttonY + buttonHeight + 20; // Position below Select All button
+    
+    this.applyButton = this.scene.add['nineslice'](
+      applyButtonX + applyButtonWidth / 2,
+      applyButtonY,
+      'panel_wood_arrows',
+      undefined,
+      applyButtonWidth,
+      applyButtonHeight,
+      10,
+      10,
+      10,
+      10
+    );
+    this.applyButton.setOrigin(0.5, 0.5);
+    
+    // Create apply button text
+    this.applyButtonText = this.scene.add.text(
+      applyButtonX + applyButtonWidth / 2,
+      applyButtonY,
+      'Apply',
+      {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }
+    );
+    this.applyButtonText.setOrigin(0.5, 0.5);
+    
+    // Initially disable the apply button
+    this.setApplyButtonState(false);
+    
+    // Make apply button interactive
+    this.applyButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        if (this.selectedSticker && this.onApplyCallback) {
+          this.onApplyCallback(this.selectedSticker);
+        }
+      });
+    
+    // Add hover effects for apply button
+    this.applyButton.on('pointerover', () => {
+      if (this.selectedSticker) {
+        this.applyButton?.setScale(1.05);
+        this.applyButtonText?.setScale(1.05);
+      }
+    });
+    
+    this.applyButton.on('pointerout', () => {
+      this.applyButton?.setScale(1);
+      this.applyButtonText?.setScale(1);
+    });
+    
     // Add to display container
     this.displayContainer.add(this.resourcePanel);
     this.displayContainer.add(this.selectionText);
@@ -430,6 +426,8 @@ export class StickerShopRenderer {
     this.displayContainer.add(resourceIcon);
     this.displayContainer.add(this.selectAllButton);
     this.displayContainer.add(this.selectAllButtonText);
+    this.displayContainer.add(this.applyButton);
+    this.displayContainer.add(this.applyButtonText);
   }
   
   /**

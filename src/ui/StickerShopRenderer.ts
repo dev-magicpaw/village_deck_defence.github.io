@@ -307,9 +307,10 @@ export class StickerShopRenderer {
     this.resourcePanel.setTint(0x666666); // Same dark grey tint as main panel
     
     // Add "Selected: X" text with the invention resource icon
-    const selectedY = handPanelY + panelHeight / 2 - 30;
+    const resourceTextX = panelWidth / 2 - marginX // centered horizontaly. -marginX to give space for the image
+    const selectedY = handPanelY + 90;
     this.selectionText = this.scene.add.text(
-      marginX + cardWidth / 2 - 15, // Leave space for invention icon
+      resourceTextX,
       selectedY,
       'Selected: 0',
       {
@@ -318,7 +319,7 @@ export class StickerShopRenderer {
         align: 'center'
       }
     );
-    this.selectionText.setOrigin(0.5, 0.5);
+    this.selectionText.setOrigin(0.5, 1);
     
     // Add invention resource icon next to "Selected: X"
     this.inventionIcon = this.scene.add.image(
@@ -331,10 +332,9 @@ export class StickerShopRenderer {
     
     // Add "Acquired: X" text with invention resource icon
     const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
-    const acquiredX = panelWidth / 2 - marginX // centered horizontaly. -marginX to give space for the image
     const acquiredY = handPanelY + 50
     this.acquiredText = this.scene.add.text(
-      acquiredX,
+      resourceTextX,
       acquiredY,
       `Acquired: ${acquiredInvention}`,
       {

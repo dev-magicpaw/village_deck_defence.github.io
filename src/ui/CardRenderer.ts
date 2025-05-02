@@ -89,6 +89,19 @@ export class CardRenderer {
     
     this.container.add(this.selectionGlow);
     
+    // Without this simingly useless texture, there is a bug in sticker shop - when selecting excatly 4 cards, the card with the index 4 
+    // get rendering bug - it's background texture is partially not rendered.
+    // Would be nice to find the root cause and fix it.
+    const bgRect = this.scene.add.rectangle(
+      0, 
+      0, 
+      this.cardWidth, 
+      this.cardHeight, 
+      0xf5e9c9 // Light cream/paper color
+    );
+    bgRect.setOrigin(0.5, 0.5);
+    this.container.add(bgRect);
+    
     // Card background
     this.cardBackground = this.scene.add['nineslice'](
       0,

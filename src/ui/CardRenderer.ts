@@ -18,6 +18,7 @@ export class CardRenderer {
   private cardBackground!: Phaser.GameObjects.NineSlice;
   private card: Card;
   private onClickCallback?: (index: number) => void;
+  private onStickerClickCallback?: (cardIndex: number, slotIndex: number) => void;
   private index: number;
   private slotSize: number = 30;
   private slotScale: number = 0.8;
@@ -49,6 +50,7 @@ export class CardRenderer {
    * @param changeScaleOnHover Whether the card should change scale on hover
    * @param stickerChangeScaleOnHover Whether stickers should change scale on hover
    * @param selectableSticker Whether stickers should be selectable with their own glow
+   * @param onStickerClickCallback Optional callback for when a sticker slot is clicked
    */
   constructor(
     scene: Phaser.Scene,
@@ -60,12 +62,14 @@ export class CardRenderer {
     scale: number = 1,
     changeScaleOnHover: boolean = true,
     stickerChangeScaleOnHover: boolean = false,
-    selectableSticker: boolean = false
+    selectableSticker: boolean = false,
+    onStickerClickCallback?: (cardIndex: number, slotIndex: number) => void
   ) {
     this.scene = scene;
     this.card = card;
     this.index = index;
     this.onClickCallback = onClickCallback;
+    this.onStickerClickCallback = onStickerClickCallback;
     this.scale = scale;
     this.changeScaleOnHover = changeScaleOnHover;
     this.stickerChangeScaleOnHover = stickerChangeScaleOnHover;
@@ -268,6 +272,11 @@ export class CardRenderer {
             this.selectSticker(i);
           }
           
+          // Call the sticker click callback if provided
+          if (this.onStickerClickCallback) {
+            this.onStickerClickCallback(this.index, i);
+          }
+          
           // Prevent the card click callback from firing
           event.event.stopPropagation();
         });
@@ -406,7 +415,6 @@ export class CardRenderer {
     // Deselect current sticker if any
     this.deselectSticker();
     
-    // Check if the slot index is valid (don't require a sticker to be present)
     if (slotIndex >= 0 && slotIndex < (this.card.slotCount || 0)) {
       this.selectedStickerIndex = slotIndex;
       

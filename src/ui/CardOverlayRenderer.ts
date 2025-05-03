@@ -20,7 +20,7 @@ export enum CardOverlayRendererEvents {
 export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
   private scene: Phaser.Scene;
   private displayContainer: Phaser.GameObjects.Container;
-  private background: Phaser.GameObjects.Rectangle;
+  private background: Phaser.GameObjects.NineSlice;
   private isVisible: boolean = false;
   private playerHandRenderer: PlayerHandRenderer;
   private cardRenderers: CardRenderer[] = [];
@@ -62,10 +62,20 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     // Set a very high depth to ensure it renders on top of everything
     this.displayContainer.setDepth(2000);
     
-    // Create the background
+    // Create the background using 9-slice
     const { width, height } = this.scene.cameras.main;
-    this.background = this.scene.add.rectangle(0, 0, width, height, 0x222222, 0.9);
+    
+    // Use 9-slice panel with metal corners instead of a rectangle
+    this.background = this.scene.add.nineslice(
+      0, 0,                              // position x, y
+      'panel_metal_corners_metal_nice',  // texture key 
+      undefined,                         // frame
+      width, height,                     // width, height
+      20, 20,                            // leftWidth, rightWidth
+      20, 20                             // topHeight, bottomHeight
+    );
     this.background.setOrigin(0, 0);
+    this.background.setTint(0x333333); // Dark grey tint
     
     // Make the background interactive with explicit hit area
     this.background.setInteractive(

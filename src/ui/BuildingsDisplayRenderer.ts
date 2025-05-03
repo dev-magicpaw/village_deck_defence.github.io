@@ -164,7 +164,7 @@ export class BuildingsDisplayRenderer {
     const cardBackground = this.scene.add['nineslice'](
       0,
       0,
-      'panel_wood_paper_damaged', // Same background as cards
+      'panel_wood_paper', // Same background as cards
       undefined,
       this.cardWidth,
       this.cardHeight,

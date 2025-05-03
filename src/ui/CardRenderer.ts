@@ -121,7 +121,7 @@ export class CardRenderer {
       0, 
       this.cardWidth, 
       this.cardHeight, 
-      0xf5e9c9 // Light cream/paper color
+      0x000000 // Light cream/paper color
     );
     bgRect.setOrigin(0.5, 0.5);
     this.container.add(bgRect);
@@ -130,7 +130,7 @@ export class CardRenderer {
     this.cardBackground = this.scene.add['nineslice'](
       0,
       0,
-      'panel_wood_paper_damaged',
+      'panel_wood_paper',
       undefined,
       this.cardWidth,
       this.cardHeight,
@@ -152,12 +152,9 @@ export class CardRenderer {
         this.card.image
       );
       
-      // Scale the portrait to fit within the card dimensions
-      const portraitScale = Math.min(
-        (this.cardWidth-10) / portrait.width,
-        (this.cardHeight-20) / portrait.height
-      );
-      portrait.setScale(portraitScale);
+      // Set the image dimensions to match the card dimensions
+      // Leave some padding around the edges
+      portrait.setDisplaySize(this.cardWidth - 15, this.cardHeight - 15);
       
       this.container.add(portrait);
     }

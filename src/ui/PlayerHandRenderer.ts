@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Card } from '../entities/Card';
+import { Card, CardEvents } from '../entities/Card';
 import { PlayerHand } from '../entities/PlayerHand';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
@@ -75,8 +75,17 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
     
+    // Get initial cards from hand
+    this.currentCards = playerHand.getCards();
+    
     // Subscribe to the hand's change events
     this.playerHand.on(PlayerHand.Events.CARDS_CHANGED, this.onCardsChanged, this);
+    
+    // Subscribe to events from initial cards
+    this.updateCardEventSubscriptions(this.currentCards);
+    
+    // Initial rendering of cards (this must happen after the scene is fully created,
+    // so it will be done in init() instead)
     
     // Subscribe to sticker shop state changes if service is provided
     if (this.stickerShopService) {
@@ -110,6 +119,33 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     // Update the UI to reflect the new cards
     this.renderCards();
     this.updateButtonVisibility();
+    
+    // Update card event subscriptions
+    this.updateCardEventSubscriptions(cards);
+  }
+  
+  /**
+   * Subscribe to events from all cards in the hand
+   * @param cards Cards to subscribe to events from
+   */
+  private updateCardEventSubscriptions(cards: Card[]): void {
+    // First, remove any existing event listeners from old cards
+    this.currentCards.forEach(card => {
+      card.off(CardEvents.STICKER_APPLIED, this.onCardStickerApplied, this);
+    });
+    
+    // Then add event listeners to the new cards
+    cards.forEach(card => {
+      card.on(CardEvents.STICKER_APPLIED, this.onCardStickerApplied, this);
+    });
+  }
+  
+  /**
+   * Handler for when a sticker is applied to a card
+   */
+  private onCardStickerApplied(): void {
+    // Re-render all cards to reflect the new sticker - force render since the card object itself hasn't changed
+    this.renderCards(true);
   }
   
   /**
@@ -214,8 +250,8 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     
     this.updateButtonVisibility();
     
-    // Do initial render of cards
-    this.renderCards();
+    // Do initial render of cards - force render even if data hasn't changed
+    this.renderCards(true);
   }
   
   /**
@@ -255,13 +291,14 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   
   /**
    * Efficiently render the player's hand cards by minimizing object creation/destruction
+   * @param forceRender If true, renders cards even if the data hasn't changed
    */
-  private renderCards(): void {
+  private renderCards(forceRender: boolean = false): void {
     // Get cards from player hand
     const newCards = this.playerHand.getCards();
     
-    // Check if the cards have actually changed
-    if (this.areCardsEqual(this.currentCards, newCards)) {
+    // Check if the cards have actually changed, unless forceRender is true
+    if (!forceRender && this.areCardsEqual(this.currentCards, newCards)) {
       return;
     }
     
@@ -551,6 +588,11 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
         this
       );
     }
+    
+    // Unsubscribe from all card events
+    this.currentCards.forEach(card => {
+      card.off(CardEvents.STICKER_APPLIED, this.onCardStickerApplied, this);
+    });
     
     // Clear card objects
     this.clearCardObjects();

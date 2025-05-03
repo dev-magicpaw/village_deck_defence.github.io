@@ -275,7 +275,6 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
     
     // Create card renderer (centered at the top portion of the screen)
     const cardScale = 1.5;
-    const cardY = 180;
     
     this.cardRenderer = new CardRenderer(
       this.scene,

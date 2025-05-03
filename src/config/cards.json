@@ -32,7 +32,7 @@
     "description": "Elf scout",
     "image": "elf_scout",
     "race": "Elf",
-    "startingStickers": ["sticker_power_1"],
+    "startingStickers": ["sticker_power_3"],
     "maxSlotCount": 2
   }
 ]

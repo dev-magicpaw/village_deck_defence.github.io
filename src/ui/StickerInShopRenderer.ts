@@ -12,6 +12,7 @@ export class StickerInShopRenderer {
   private onClickCallback?: (stickerConfig: StickerConfig) => void;
   private background!: Phaser.GameObjects.Image;
   private isSelected: boolean = false;
+  private unaffordable: boolean = false;
   
   /**
    * Create a new sticker renderer
@@ -21,6 +22,7 @@ export class StickerInShopRenderer {
    * @param y Y position
    * @param size Size of the sticker display
    * @param onClickCallback Optional callback for when sticker is clicked
+   * @param unaffordable Whether the sticker is unaffordable
    */
   constructor(
     scene: Phaser.Scene,
@@ -28,12 +30,14 @@ export class StickerInShopRenderer {
     x: number,
     y: number,
     size: number,
-    onClickCallback?: (stickerConfig: StickerConfig) => void
+    onClickCallback?: (stickerConfig: StickerConfig) => void,
+    unaffordable: boolean = false
   ) {
     this.scene = scene;
     this.stickerConfig = stickerConfig;
     this.size = size;
     this.onClickCallback = onClickCallback;
+    this.unaffordable = unaffordable;
     
     // Create a container for the sticker and its elements
     this.container = this.scene.add.container(x, y);
@@ -64,7 +68,7 @@ export class StickerInShopRenderer {
     // Cost text (just the number)
     const costText = this.scene.add.text(0, 2, `${this.stickerConfig.cost}`, {
       fontSize: '18px',
-      color: '#ffffff',
+      color: this.unaffordable ? '#ff0000' : '#ffffff',
       fontStyle: 'bold'
     });
     costText.setOrigin(1, 0);

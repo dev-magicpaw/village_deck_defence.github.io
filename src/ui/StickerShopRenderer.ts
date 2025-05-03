@@ -497,6 +497,23 @@ export class StickerShopRenderer {
       return costDiff;
     });
     
+    // Calculate the maximum potential invention value from all cards in player's hand
+    let maxPotentialInvention = 0;
+    if (this.resourceService) {
+      // Include already acquired invention
+      maxPotentialInvention = this.resourceService.getInvention();
+    }
+    
+    // Add invention value from all cards in hand
+    const cards = this.playerHandRenderer['currentCards'];
+    if (cards && Array.isArray(cards)) {
+      cards.forEach(card => {
+        if (card.getInventionValue() > 0) {
+          maxPotentialInvention += card.getInventionValue();
+        }
+      });
+    }
+    
     // Calculate layout for grid
     const maxStickersPerRow = Math.floor((this.panelWidth - this.panelPadding * 2) / 
                                          (this.stickerSize + this.stickerSpacing));
@@ -515,6 +532,9 @@ export class StickerShopRenderer {
       const x = startX + col * (this.stickerSize + this.stickerSpacing);
       const y = startY + row * rowSpacing;
       
+      // Check if this sticker is unaffordable based on maximum potential invention
+      const isUnaffordable = stickerConfig.cost > maxPotentialInvention;
+      
       // Create sticker renderer
       const stickerRenderer = new StickerInShopRenderer(
         this.scene,
@@ -522,7 +542,8 @@ export class StickerShopRenderer {
         x,
         y,
         this.stickerSize,
-        (config) => this.onStickerClick(config)
+        (config) => this.onStickerClick(config),
+        isUnaffordable
       );
       
       this.stickerRenderers.push(stickerRenderer);

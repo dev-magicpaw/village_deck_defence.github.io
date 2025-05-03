@@ -526,6 +526,17 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   }
   
   /**
+   * Discard cards from the hand by their unique_ids
+   * @param uniqueIds Array of unique_ids to discard
+   */
+  public discardCardsByUniqueIds(uniqueIds: string[]): void {    
+    // Discard each card by its unique_id
+    uniqueIds.forEach(uniqueId => {
+      this.playerHand.discardByUniqueId(uniqueId);
+    });
+  }
+  
+  /**
    * Clean up resources when the renderer is no longer needed
    */
   public destroy(): void {

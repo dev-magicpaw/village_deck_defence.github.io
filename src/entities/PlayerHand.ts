@@ -147,6 +147,18 @@ export class PlayerHand {
   }
 
   /**
+   * Discard a specific card from the hand by its unique_id
+   * @param uniqueId The unique_id of the card to discard
+   * @returns The discarded card or undefined if not found
+   */
+  public discardByUniqueId(uniqueId: string): Card | undefined {
+    const index = this._cards.findIndex(card => card.unique_id === uniqueId);
+    if (index === -1) return undefined;
+    
+    return this.discardCard(index);
+  }
+
+  /**
    * Add event listener for hand events
    * @param event Event name
    * @param fn Event handler function

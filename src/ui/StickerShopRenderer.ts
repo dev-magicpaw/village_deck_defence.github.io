@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { Card } from '../entities/Card';
 import { StickerConfig } from '../entities/Sticker';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
@@ -720,20 +719,8 @@ export class StickerShopRenderer {
         this.resourceService.addInvention(selectedInventionValue);
       }
       
-      // 3. Get the card objects and discard all played cards
-      // We need to find the actual card objects from the hand
-      // TODO this should use the (not yet existing) method discardByUniqueId form the PlayerHand class.
-      const cardsToDiscard: Card[] = [];
-      this.playerHandRenderer['currentCards'].forEach(card => {
-        if (selectedCardIds.includes(card.unique_id)) {
-          cardsToDiscard.push(card);
-        }
-      });
-      
-      // Discard the cards
-      cardsToDiscard.forEach(card => {
-        this.deckService.discard(card);
-      });
+      // 3. Discard all selected cards using PlayerHandRenderer's method
+      this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
       
       // 4. Deduct the sticker cost from ResourceService
       if (this.resourceService) {

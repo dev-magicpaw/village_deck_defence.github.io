@@ -74,7 +74,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     // Create a title
     this.title = this.scene.add.text(
       width / 2,
-      40,
+      30,
       'Select Card to Apply Sticker',
       {
         fontSize: '24px',
@@ -180,7 +180,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     // Calculate optimal card size
     const { width, height } = this.scene.cameras.main;
     const padding = 20;
-    const topMargin = 80; // Space for title
+    const topMargin = 60; // Space for title
     
     // Calculate grid dimensions
     let cols: number;
@@ -217,7 +217,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     });
     
     // Add card source labels
-    this.addCardSourceLabels(hand, discard, deck);
+    // this.addCardSourceLabels(hand, discard, deck);
   }
   
   /**

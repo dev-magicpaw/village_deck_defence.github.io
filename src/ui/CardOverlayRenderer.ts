@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Card } from '../entities/Card';
 import { StickerConfig } from '../entities/Sticker';
+import { DeckService } from '../services/DeckService';
 import { CARD_HEIGHT, CARD_WIDTH, CardRenderer } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
 
@@ -26,9 +27,9 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
   private title: Phaser.GameObjects.Text;
   private selectedSticker: StickerConfig | null = null;
   private onApplyCallback?: (stickerConfig: StickerConfig, card: Card) => void;
+  private deckService: DeckService;
   
   // Card dimensions and grid configuration
-  private static CARD_ASPECT_RATIO = 1.4; // height/width ratio
   private static GRID_COLUMNS = 6;
   private static GRID_ROWS = 3;
 
@@ -36,17 +37,20 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
    * Create a new CardOverlayRenderer
    * @param scene The Phaser scene to render in
    * @param playerHandRenderer The player hand renderer to get cards from
+   * @param deckService The deck service to get deck and discard cards from
    * @param onApplyCallback Callback when a sticker is applied to a card
    */
   constructor(
     scene: Phaser.Scene,
     playerHandRenderer: PlayerHandRenderer,
+    deckService: DeckService,
     onApplyCallback?: (stickerConfig: StickerConfig, card: Card) => void
   ) {
     super();
     
     this.scene = scene;
     this.playerHandRenderer = playerHandRenderer;
+    this.deckService = deckService;
     this.onApplyCallback = onApplyCallback;
     
     // Create a container to hold the overlay
@@ -151,10 +155,9 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     // Get cards from the player hand renderer
     const hand = this.playerHandRenderer.getCardsInHand();
     
-    // For now, we'll use empty arrays for deck and discard
-    // In a real implementation, these would come from the appropriate services
-    const deck: Card[] = [];
-    const discard: Card[] = [];
+    // Get deck and discard cards from the deck service
+    const deck = this.deckService.getDeck();
+    const discard = this.deckService.getDiscardPile();
     
     return { hand, deck, discard };
   }
@@ -177,7 +180,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     // Calculate optimal card size
     const { width, height } = this.scene.cameras.main;
     const padding = 20;
-    const topMargin = 100; // Space for title
+    const topMargin = 80; // Space for title
     
     // Calculate grid dimensions
     let cols: number;
@@ -196,7 +199,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     // Calculate starting position
     const startX = padding + (width - padding * 2 - (actualCardWidth * cols) - (padding * (cols - 1))) / 2;
     const startY = topMargin;
-    
+
     // Render each card
     allCards.forEach((card, index) => {
       const row = Math.floor(index / cols);

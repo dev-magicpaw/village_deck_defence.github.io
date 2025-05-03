@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { Building } from '../entities/Building';
+import { PlayerHand } from '../entities/PlayerHand';
 import { BuildingService } from '../services/BuildingService';
+import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
@@ -21,6 +23,7 @@ export class BuildingsDisplayRenderer {
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
+  private deckService: DeckService;
   
   // Card visual properties
   private cardWidth: number = CARD_WIDTH;
@@ -68,10 +71,31 @@ export class BuildingsDisplayRenderer {
     this.stickerShopService = stickerShopService;
     this.playerHandRenderer = playerHandRenderer;
     
+    // Get the deck service from player hand
+    // TODO Get this in the constructor
+    const playerHand = this.getPlayerHandFromRenderer();
+    if (playerHand) {
+      this.deckService = playerHand['_deckService'];
+    } else {
+      console.error('Could not get deck service from player hand');
+      // Create a fallback empty deck service
+      this.deckService = new DeckService();
+    }
+    
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
   }
   
+  /**
+   * Helper function to get PlayerHand from the PlayerHandRenderer
+   */
+  private getPlayerHandFromRenderer(): PlayerHand | null {
+    if (this.playerHandRenderer && 'playerHand' in this.playerHandRenderer) {
+      return (this.playerHandRenderer as any).playerHand;
+    }
+    return null;
+  }
+
   /**
    * Initialize the component and load the shop if needed
    */
@@ -100,7 +124,8 @@ export class BuildingsDisplayRenderer {
         this.resourceService,
         onApplyCallback,
         this.stickerShopService,
-        this.playerHandRenderer
+        this.playerHandRenderer,
+        this.deckService
       );
       this.stickerShopRenderer.init();
     } 

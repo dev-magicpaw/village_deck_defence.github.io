@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
+import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
 import { StickerShopService } from '../services/StickerShopService';
@@ -28,6 +29,7 @@ export class StickerShopRenderer {
   private playerHandRenderer: PlayerHandRenderer;
   private inventionIcon: Phaser.GameObjects.Image | null = null;
   private cardOverlayRenderer: CardOverlayRenderer | null = null;
+  private deckService: DeckService;
   
   // Selection panel elements
   private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
@@ -58,6 +60,7 @@ export class StickerShopRenderer {
    * @param onApplyCallback Callback for when a sticker is applied
    * @param stickerShopService Service managing the shop state
    * @param playerHandRenderer The player hand renderer for card selection
+   * @param deckService Service for managing the deck and discard pile
    */
   constructor(
     scene: Phaser.Scene,
@@ -68,7 +71,8 @@ export class StickerShopRenderer {
     resourceService: ResourceService,
     onApplyCallback: (stickerConfig: StickerConfig) => void,
     stickerShopService: StickerShopService,
-    playerHandRenderer: PlayerHandRenderer
+    playerHandRenderer: PlayerHandRenderer,
+    deckService: DeckService
   ) {
     this.scene = scene;
     this.panelX = panelX;
@@ -79,6 +83,7 @@ export class StickerShopRenderer {
     this.onApplyCallback = onApplyCallback;
     this.stickerShopService = stickerShopService;
     this.playerHandRenderer = playerHandRenderer;
+    this.deckService = deckService;
     
     // Get the sticker registry
     this.stickerRegistry = StickerRegistry.getInstance();
@@ -200,6 +205,7 @@ export class StickerShopRenderer {
     this.cardOverlayRenderer = new CardOverlayRenderer(
       this.scene,
       this.playerHandRenderer,
+      this.deckService,
       (stickerConfig, card) => {
         if (this.onApplyCallback) {
           this.onApplyCallback(stickerConfig);

@@ -4,6 +4,7 @@ import { StickerConfig } from '../entities/Sticker';
 import { DeckService } from '../services/DeckService';
 import { CARD_HEIGHT, CARD_WIDTH, CardRenderer } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
+import { StickerApplicationOverlayEvents, StickerApplicationOverlayRenderer } from './StickerApplicationOverlayRenderer';
 
 /**
  * Events emitted by the CardOverlayRenderer
@@ -28,6 +29,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
   private selectedSticker: StickerConfig | null = null;
   private onApplyCallback?: (stickerConfig: StickerConfig, card: Card) => void;
   private deckService: DeckService;
+  private stickerApplicationOverlay: StickerApplicationOverlayRenderer | null = null;
   
   // Card dimensions and grid configuration
   private static GRID_COLUMNS = 6;
@@ -208,16 +210,55 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
       const x = startX + col * (actualCardWidth + padding)
       const y = startY + row * (actualCardHeight + padding) + actualCardHeight / 2;
       
-      // Create card renderer (providing necessary parameters according to the class definition)
-      const cardRenderer = new CardRenderer(this.scene, card, x, y, scale);
+      // Create card renderer with click callback
+      const cardRenderer = new CardRenderer(this.scene, card, x, y, index, (cardIndex) => {
+        this.onCardClicked(allCards[cardIndex]);
+      });
       
       const container = cardRenderer.getContainer();      
       this.cardRenderers.push(cardRenderer);
       this.displayContainer.add(container);
     });
+  }
+  
+  /**
+   * Handle a card being clicked
+   * @param card The card that was clicked
+   */
+  private onCardClicked(card: Card): void {
+    if (!this.selectedSticker) return;
     
-    // Add card source labels
-    // this.addCardSourceLabels(hand, discard, deck);
+    // Create sticker application overlay
+    if (this.stickerApplicationOverlay) {
+      this.stickerApplicationOverlay.destroy();
+    }
+    
+    this.stickerApplicationOverlay = new StickerApplicationOverlayRenderer(
+      this.scene,
+      card,
+      this.selectedSticker
+    );
+    
+    // Set up event handlers
+    this.stickerApplicationOverlay.on(
+      StickerApplicationOverlayEvents.STICKER_APPLIED,
+      (sticker: StickerConfig, targetCard: Card, slotIndex: number) => {
+        if (this.onApplyCallback) {
+          this.onApplyCallback(sticker, targetCard);
+        }
+      }
+    );
+    
+    // TODO remove ?
+    this.stickerApplicationOverlay.on(
+      StickerApplicationOverlayEvents.CANCELLED,
+      () => {
+        // Nothing special to do when cancelled
+      }
+    );
+    
+    // Show the overlay
+    this.stickerApplicationOverlay.show();
   }
   
   /**
@@ -286,6 +327,12 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
    */
   public destroy(): void {
     this.clearCardRenderers();
+    
+    if (this.stickerApplicationOverlay) {
+      this.stickerApplicationOverlay.destroy();
+      this.stickerApplicationOverlay = null;
+    }
+    
     this.displayContainer.destroy();
     this.removeAllListeners();
   }

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Card } from '../entities/Card';
 import { StickerConfig } from '../entities/Sticker';
+import { CardOverlayRendererEvents } from './CardOverlayRenderer';
 import { CardRenderer } from './CardRenderer';
 
 /**
@@ -201,8 +202,20 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
    */
   private applySticker(): void {
     if (this.selectedSlotIndex !== null) {
-      this.emit(StickerApplicationOverlayEvents.STICKER_APPLIED, this.sticker, this.card, this.selectedSlotIndex);
-      this.hide();
+      // Use the Card's applySticker method
+      const success = this.card.applySticker(this.sticker, this.selectedSlotIndex);
+      
+      if (success) {
+        // Emit our own event for any listeners
+        this.emit(StickerApplicationOverlayEvents.STICKER_APPLIED, this.sticker, this.card, this.selectedSlotIndex);
+        
+        // Hide this overlay
+        this.hide();
+        
+        // Also emit the CLOSED event to trigger closing the parent CardOverlayRenderer
+        // This will be picked up by any listeners in the parent overlay
+        this.emit(CardOverlayRendererEvents.CLOSED);
+      }
     }
   }
   
@@ -293,7 +306,7 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
    * @param slotIndex The index of the slot to select
    */
   private selectSlot(slotIndex: number): void {
-
+    this.selectedSlotIndex = slotIndex;
     this.updateApplyButtonState(true);
   }
   

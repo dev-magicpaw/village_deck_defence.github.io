@@ -1,7 +1,9 @@
+import Phaser from 'phaser';
 import { v4 as uuidv4 } from 'uuid';
 import { StickerRegistry } from '../services/StickerRegistry';
 import {
   CardSticker,
+  StickerConfig,
   StickerFactory
 } from './Sticker';
 import { Race } from './Types';
@@ -23,9 +25,16 @@ export interface CardSlot {
 }
 
 /**
+ * Events emitted by the Card entity
+ */
+export enum CardEvents {
+  STICKER_APPLIED = 'sticker-applied'
+}
+
+/**
  * Card entity representing a single card in the game
  */
-export class Card {
+export class Card extends Phaser.Events.EventEmitter {
   public readonly id: string;
   public readonly unique_id: string;
   public readonly name: string;
@@ -37,6 +46,7 @@ export class Card {
    * @param config Card configuration data
    */
   constructor(config: CardConfig) {
+    super();
     this.id = config.id;
     this.unique_id = uuidv4();
     this.name = config.name;
@@ -99,6 +109,30 @@ export class Card {
     });
     
     return total;
+  }
+
+  /**
+   * Apply a sticker to a specific slot
+   * @param sticker The sticker configuration to apply
+   * @param slotIndex The index of the slot to apply the sticker to
+   * @returns True if the sticker was applied successfully, false otherwise
+   */
+  public applySticker(sticker: StickerConfig, slotIndex: number): boolean {
+    // Check if the slot exists
+    if (slotIndex < 0 || slotIndex >= this._slots.length) {
+      return false;
+    }
+    
+    // Create the card sticker from the config
+    const cardSticker = StickerFactory.fromConfig(sticker);
+    
+    // Replace any existing sticker in the slot
+    this._slots[slotIndex].sticker = cardSticker;
+    
+    // Emit sticker applied event
+    this.emit(CardEvents.STICKER_APPLIED, this, sticker, slotIndex);
+    
+    return true;
   }
 
   public static fromConfig(config: CardConfig): Card {

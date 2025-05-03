@@ -246,6 +246,18 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
         if (this.onApplyCallback) {
           this.onApplyCallback(sticker, targetCard);
         }
+        
+        // Hide this overlay to return to sticker shop
+        this.hide();
+      }
+    );
+    
+    // Listen for the CLOSED event to close this overlay too
+    this.stickerApplicationOverlay.on(
+      CardOverlayRendererEvents.CLOSED,
+      () => {
+        // Hide this overlay to return to sticker shop
+        this.hide();
       }
     );
     

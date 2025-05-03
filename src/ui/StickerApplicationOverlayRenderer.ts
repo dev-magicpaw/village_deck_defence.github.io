@@ -178,13 +178,13 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
       this.applyButtonBackground.setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.applySticker());
       
-      // Add hover effects
+      // Add hover effects with scaling instead of tint
       this.applyButtonBackground.on('pointerover', () => {
-        this.applyButtonBackground.setTint(0xaaffaa);
+        this.applyButton.setScale(1.1);
       });
       
       this.applyButtonBackground.on('pointerout', () => {
-        this.applyButtonBackground.clearTint();
+        this.applyButton.setScale(1.0);
       });
     } else {
       this.applyButtonBackground.setTint(0x666666);
@@ -270,11 +270,15 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
       width / 2,
       height / 2,
       0,
-      undefined, // TODO: add do nothing callback?
+      undefined,
       cardScale,
       false,
       true,
-      true
+      true,
+      (cardIndex, slotIndex) => {
+        // When a slot is clicked, select it for sticker application
+        this.selectSlot(slotIndex);
+      }
     );
     
     // Scale up the card
@@ -289,20 +293,7 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
    * @param slotIndex The index of the slot to select
    */
   private selectSlot(slotIndex: number): void {
-    // Clear previous selection
-    if (this.selectedSlotIndex !== null && this.slotHighlights[this.selectedSlotIndex]) {
-      this.slotHighlights[this.selectedSlotIndex].setVisible(false);
-    }
-    
-    // Set new selection
-    this.selectedSlotIndex = slotIndex;
-    
-    // Highlight selected slot
-    if (this.slotHighlights[slotIndex]) {
-      this.slotHighlights[slotIndex].setVisible(true);
-    }
-    
-    // Enable apply button
+
     this.updateApplyButtonState(true);
   }
   

@@ -73,7 +73,8 @@ export class GameScene extends Phaser.Scene {
       this.buildingService, 
       this.resourceService, 
       this.stickerShopService,
-      this.playerHandRenderer
+      this.playerHandRenderer,
+      this.playerDeck
     );
     
     // Create UI panels 

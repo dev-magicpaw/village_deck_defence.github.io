@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BuildingService } from '../services/BuildingService';
+import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
@@ -16,19 +17,22 @@ export class GameUI {
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
+  private deckService: DeckService;
   
   constructor(
     scene: Phaser.Scene, 
     buildingService: BuildingService, 
     resourceService: ResourceService, 
     stickerShopService: StickerShopService,
-    playerHandRenderer: PlayerHandRenderer
+    playerHandRenderer: PlayerHandRenderer,
+    deckService: DeckService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
     this.playerHandRenderer = playerHandRenderer;
+    this.deckService = deckService;
   }
   
   /**
@@ -115,7 +119,8 @@ export class GameUI {
         panelHeight,
         this.resourceService,
         this.stickerShopService,
-        this.playerHandRenderer
+        this.playerHandRenderer,
+        this.deckService
       );
       
       this.buildingsDisplayRenderer.init();

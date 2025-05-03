@@ -49,6 +49,7 @@ export class BuildingsDisplayRenderer {
    * @param resourceService Resource service for tracking resources
    * @param stickerShopService Sticker shop service for managing the shop state
    * @param playerHandRenderer Player hand renderer for card selection
+   * @param deckService Deck service for managing the player's deck
    */
   constructor(
     scene: Phaser.Scene,
@@ -59,7 +60,8 @@ export class BuildingsDisplayRenderer {
     panelHeight: number,
     resourceService: ResourceService,
     stickerShopService: StickerShopService,
-    playerHandRenderer: PlayerHandRenderer
+    playerHandRenderer: PlayerHandRenderer,
+    deckService: DeckService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -70,17 +72,7 @@ export class BuildingsDisplayRenderer {
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
     this.playerHandRenderer = playerHandRenderer;
-    
-    // Get the deck service from player hand
-    // TODO Get this in the constructor
-    const playerHand = this.getPlayerHandFromRenderer();
-    if (playerHand) {
-      this.deckService = playerHand['_deckService'];
-    } else {
-      console.error('Could not get deck service from player hand');
-      // Create a fallback empty deck service
-      this.deckService = new DeckService();
-    }
+    this.deckService = deckService;
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);

@@ -29,6 +29,13 @@ export class CardRenderer {
   private slotObjects: Phaser.GameObjects.GameObject[] = [];
   private selectionGlow?: Phaser.GameObjects.Graphics;
   private isSelected: boolean = false;
+  private scale: number;
+  private changeScaleOnHover: boolean;
+  private stickerChangeScaleOnHover: boolean;
+  private selectableSticker: boolean;
+  private selectedStickerIndex: number = -1;
+  private stickerGlows: Phaser.GameObjects.Graphics[] = [];
+  private stickerImages: Phaser.GameObjects.Image[] = [];
   
   /**
    * Create a new card renderer
@@ -38,6 +45,10 @@ export class CardRenderer {
    * @param y Y position
    * @param index Card index for click handling
    * @param onClickCallback Optional callback for when card is clicked
+   * @param scale General scale to be applied to everything
+   * @param changeScaleOnHover Whether the card should change scale on hover
+   * @param stickerChangeScaleOnHover Whether stickers should change scale on hover
+   * @param selectableSticker Whether stickers should be selectable with their own glow
    */
   constructor(
     scene: Phaser.Scene,
@@ -45,15 +56,24 @@ export class CardRenderer {
     x: number,
     y: number,
     index: number,
-    onClickCallback?: (index: number) => void
+    onClickCallback?: (index: number) => void,
+    scale: number = 1,
+    changeScaleOnHover: boolean = true,
+    stickerChangeScaleOnHover: boolean = false,
+    selectableSticker: boolean = false
   ) {
     this.scene = scene;
     this.card = card;
     this.index = index;
     this.onClickCallback = onClickCallback;
+    this.scale = scale;
+    this.changeScaleOnHover = changeScaleOnHover;
+    this.stickerChangeScaleOnHover = stickerChangeScaleOnHover;
+    this.selectableSticker = selectableSticker;
 
     // Create a container for the card and its elements
     this.container = this.scene.add.container(x, y);
+    this.container.setScale(this.scale);
     
     // Create the card visual with all its elements
     this.createCardVisual();
@@ -147,13 +167,15 @@ export class CardRenderer {
       });
     
     // Hover effects
-    this.cardBackground.on('pointerover', () => {
-      this.container.setScale(1.05);
-    });
-    
-    this.cardBackground.on('pointerout', () => {
-      this.container.setScale(1);
-    });
+    if (this.changeScaleOnHover) {
+      this.cardBackground.on('pointerover', () => {
+        this.container.setScale(this.scale * 1.05);
+      });
+      
+      this.cardBackground.on('pointerout', () => {
+        this.container.setScale(this.scale);
+      });
+    }
   }
   
   /**
@@ -197,13 +219,77 @@ export class CardRenderer {
     // Create slots
     for (let i = 0; i < slotCount; i++) {
       const x = startX + (i * (this.slotSize + this.slotSpacing));
+      
+      // Create the slot (wooden background)
       const slot = this.scene.add.image(x, y, this.slotImage);
-      slot.setScale(this.slotScale); // Smaller than the main wooden circle
+      slot.setScale(this.slotScale);
       this.container.add(slot);
       this.slotObjects.push(slot);
-
-      // Add sticker if exists in startingStickers
+      
+      // Create sticker glow (initially invisible)
+      if (this.selectableSticker) {
+        const stickerGlow = this.scene.add.graphics();
+        stickerGlow.fillStyle(0x00ff00, 0.3); // Light green with transparency
+        stickerGlow.fillCircle(x, y, this.slotSize * 0.8);
+        
+        // Add a stroke for additional glow effect
+        stickerGlow.lineStyle(2, 0x00ff00, 0.7);
+        stickerGlow.strokeCircle(x, y, this.slotSize * 0.8);
+        
+        stickerGlow.setVisible(false);
+        this.container.add(stickerGlow);
+        this.stickerGlows[i] = stickerGlow;
+        this.slotObjects.push(stickerGlow);
+        
+        // If this slot is already selected, make the glow visible
+        if (this.selectedStickerIndex === i) {
+          stickerGlow.setVisible(true);
+        }
+      }
+      
+      // Add sticker if exists
       this.renderStickerInSlot(i, x, y);
+      
+      // Make slot interactive if selectable
+      if (this.selectableSticker) {
+        slot.setInteractive({ useHandCursor: true });
+        
+        // Click handler for slot selection
+        slot.on('pointerdown', (event: Phaser.Input.Pointer) => {
+          // Toggle selection
+          if (this.selectedStickerIndex === i) {
+            this.deselectSticker();
+          } else {
+            this.selectSticker(i);
+          }
+          
+          // Prevent the card click callback from firing
+          event.event.stopPropagation();
+        });
+        
+        // Hover effects for slots
+        if (this.stickerChangeScaleOnHover) {
+          slot.on('pointerover', () => {
+            // Scale up the slot
+            slot.setScale(this.slotScale * 1.2);
+            
+            // Also scale up the sticker if there is one
+            if (this.stickerImages[i]) {
+              this.stickerImages[i].setScale(this.stickerScale * 1.2);
+            }
+          });
+          
+          slot.on('pointerout', () => {
+            // Reset the slot scale
+            slot.setScale(this.slotScale);
+            
+            // Also reset the sticker scale if there is one
+            if (this.stickerImages[i]) {
+              this.stickerImages[i].setScale(this.stickerScale);
+            }
+          });
+        }
+      }
     }
   }
 
@@ -227,6 +313,9 @@ export class CardRenderer {
       stickerImage.setScale(this.stickerScale);
       this.container.add(stickerImage);
       this.slotObjects.push(stickerImage);
+      
+      // Store reference to sticker image for hover effects
+      this.stickerImages[slotIndex] = stickerImage;
     }
   }
   
@@ -240,6 +329,12 @@ export class CardRenderer {
       obj.destroy();
     });
     this.slotObjects = [];
+    
+    // Clear sticker glows array
+    this.stickerGlows = [];
+    
+    // Clear sticker images array
+    this.stickerImages = [];
   }
   
   /**
@@ -256,6 +351,9 @@ export class CardRenderer {
     if (this.nameText) {
       this.nameText.setText(this.card.name);
     }
+    
+    // Reset any sticker selection
+    this.selectedStickerIndex = -1;
     
     // Re-render the slots with the new card data
     this.renderSlots();
@@ -291,5 +389,46 @@ export class CardRenderer {
    */
   public setPosition(x: number, y: number): void {
     this.container.setPosition(x, y);
+  }
+
+  /**
+   * Select a specific sticker by its slot index
+   * @param slotIndex Index of the slot containing the sticker to select
+   */
+  public selectSticker(slotIndex: number): void {
+    if (!this.selectableSticker) return;
+    
+    // Deselect current sticker if any
+    this.deselectSticker();
+    
+    // Check if we have a valid sticker at this slot
+    if (this.card.slots && slotIndex < this.card.slots.length && this.card.slots[slotIndex]?.sticker) {
+      this.selectedStickerIndex = slotIndex;
+      
+      console.log('selected sticker ', this.selectedStickerIndex);
+
+      // Make the sticker glow visible
+      if (this.stickerGlows[slotIndex]) {
+        this.stickerGlows[slotIndex].setVisible(true);
+        console.log('Setting glow visible for slot', slotIndex, this.stickerGlows[slotIndex]);
+      } else {
+        console.log('No glow found for slot', slotIndex);
+      }
+    }
+  }
+  
+  /**
+   * Deselect the currently selected sticker
+   */
+  public deselectSticker(): void {
+    if (!this.selectableSticker || this.selectedStickerIndex === -1) return;
+    
+    // Hide the glow for the currently selected sticker
+    if (this.stickerGlows[this.selectedStickerIndex]) {
+      this.stickerGlows[this.selectedStickerIndex].setVisible(false);
+      console.log('Setting glow invisible for slot', this.selectedStickerIndex);
+    }
+    
+    this.selectedStickerIndex = -1;
   }
 } 

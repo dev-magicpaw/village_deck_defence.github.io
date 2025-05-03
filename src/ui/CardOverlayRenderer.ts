@@ -274,41 +274,6 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
   }
   
   /**
-   * Add labels showing which pile each card comes from
-   */
-  private addCardSourceLabels(hand: Card[], discard: Card[], deck: Card[]): void {
-    const { width } = this.scene.cameras.main;
-    const labelY = 70;
-    const spacing = 150;
-    
-    // Calculate positions
-    const centerX = width / 2;
-    const handX = centerX - spacing;
-    const deckX = centerX;
-    const discardX = centerX + spacing;
-    
-    // Create labels with counts
-    const createLabel = (x: number, text: string, count: number) => {
-      const label = this.scene.add.text(
-        x,
-        labelY,
-        `${text} (${count})`,
-        {
-          fontSize: '16px',
-          color: '#ffffff',
-          fontStyle: 'bold'
-        }
-      );
-      label.setOrigin(0.5, 0.5);
-      this.displayContainer.add(label);
-    };
-    
-    createLabel(handX, 'Hand', hand.length);
-    createLabel(deckX, 'Deck', deck.length);
-    createLabel(discardX, 'Discard', discard.length);
-  }
-  
-  /**
    * Clear all card renderers
    */
   private clearCardRenderers(): void {

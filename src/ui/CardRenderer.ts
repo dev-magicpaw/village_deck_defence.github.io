@@ -26,7 +26,6 @@ export class CardRenderer {
   private slotImage: string = 'round_wood';
   private slotOffset: number = 10;
   private stickerScale: number = 0.6;
-  private nameText?: Phaser.GameObjects.Text;
   private slotObjects: Phaser.GameObjects.GameObject[] = [];
   private selectionGlow?: Phaser.GameObjects.Graphics;
   private isSelected: boolean = false;
@@ -37,7 +36,7 @@ export class CardRenderer {
   private selectedStickerIndex: number = -1;
   private stickerGlows: Phaser.GameObjects.Graphics[] = [];
   private stickerImages: Phaser.GameObjects.Image[] = [];
-  
+  private inDiscard: boolean = false;
   /**
    * Create a new card renderer
    * @param scene The Phaser scene to render in
@@ -51,6 +50,7 @@ export class CardRenderer {
    * @param stickerChangeScaleOnHover Whether stickers should change scale on hover
    * @param selectableSticker Whether stickers should be selectable with their own glow
    * @param onStickerClickCallback Optional callback for when a sticker slot is clicked
+   * @param inDiscard Whether this card is in the discard pile
    */
   constructor(
     scene: Phaser.Scene,
@@ -63,7 +63,8 @@ export class CardRenderer {
     changeScaleOnHover: boolean = true,
     stickerChangeScaleOnHover: boolean = false,
     selectableSticker: boolean = false,
-    onStickerClickCallback?: (cardIndex: number, slotIndex: number) => void
+    onStickerClickCallback?: (cardIndex: number, slotIndex: number) => void,
+    inDiscard: boolean = false
   ) {
     this.scene = scene;
     this.card = card;
@@ -74,6 +75,7 @@ export class CardRenderer {
     this.changeScaleOnHover = changeScaleOnHover;
     this.stickerChangeScaleOnHover = stickerChangeScaleOnHover;
     this.selectableSticker = selectableSticker;
+    this.inDiscard = inDiscard;
 
     // Create a container for the card and its elements
     this.container = this.scene.add.container(x, y);
@@ -144,9 +146,15 @@ export class CardRenderer {
     // Add elements to container - background first
     this.container.add(this.cardBackground);
     
+    // Apply gray tint for discarded cards
+    if (this.inDiscard) {
+      this.cardBackground.setTint(0xbbbbbb);
+    }
+    
     // Card portrait/image
+    let portrait;
     if (this.card.image) {
-      const portrait = this.scene.add.image(
+      portrait = this.scene.add.image(
         0,
         0, // Center of the card
         this.card.image
@@ -155,6 +163,11 @@ export class CardRenderer {
       // Set the image dimensions to match the card dimensions
       // Leave some padding around the edges
       portrait.setDisplaySize(this.cardWidth - 15, this.cardHeight - 15);
+      
+      // Apply gray tint for discarded cards
+      if (this.inDiscard) {
+        portrait.setTint(0xbbbbbb);
+      }
       
       this.container.add(portrait);
     }
@@ -355,11 +368,17 @@ export class CardRenderer {
    * Update the card data and refresh the visual without destroying it
    * @param card New card data
    * @param index New index for the card
+   * @param inDiscard Whether this card is in the discard pile
    */
-  public updateCard(card: Card, index: number): void {
+  public updateCard(card: Card, index: number, inDiscard?: boolean): void {
     // Update the card data and index
     this.card = card;
     this.index = index;
+    
+    // Update the inDiscard flag if provided
+    if (inDiscard !== undefined) {
+      this.inDiscard = inDiscard;
+    }
     
     // Clear existing card visuals
     this.container.removeAll(true);
@@ -437,5 +456,19 @@ export class CardRenderer {
     }
     
     this.selectedStickerIndex = -1;
+  }
+
+  /**
+   * Set whether this card is in the discard pile and update its appearance
+   * @param inDiscard Whether the card is in the discard pile
+   */
+  public setInDiscard(inDiscard: boolean): void {
+    if (this.inDiscard === inDiscard) return; // No change needed
+    
+    this.inDiscard = inDiscard;
+    
+    // Refresh the card visual to apply the new state
+    this.container.removeAll(true);
+    this.createCardVisual();
   }
 } 

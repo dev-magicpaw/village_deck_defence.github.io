@@ -173,7 +173,9 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     
     // Get all player cards
     const { hand, discard, deck } = this.getPlayerCards();
-    const allCards = [...hand, ...discard, ...deck];
+    
+    // Order: discard pile first, then hand, then deck
+    const allCards = [...discard, ...hand, ...deck];
     
     if (allCards.length === 0) {
       throw new Error('No cards available');
@@ -204,8 +206,6 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
 
     // Create sets for faster lookups
     const discardSet = new Set(discard.map(card => card.unique_id));
-    console.log('discard', discard);
-    console.log('discardSet', discardSet);
 
     // Render each card
     allCards.forEach((card, index) => {

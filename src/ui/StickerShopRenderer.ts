@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Card } from '../entities/Card';
 import { StickerConfig } from '../entities/Sticker';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
@@ -452,11 +453,7 @@ export class StickerShopRenderer {
     // Make apply button interactive
     this.applyButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        if (this.selectedSticker) {
-          // Set the sticker in the card overlay and show it
-          this.cardOverlayRenderer?.setSticker(this.selectedSticker);
-          this.cardOverlayRenderer?.show();
-        }
+        this.purchaseSticker();
       });
     
     // Add hover effects for apply button
@@ -706,6 +703,58 @@ export class StickerShopRenderer {
     // Update selection text
     if (this.selectionText) {
       this.selectionText.setText('Selected: 0');
+    }
+  }
+  
+  /**
+   * Purchase and apply the currently selected sticker
+   */
+  private purchaseSticker(): void {
+    if (this.selectedSticker && this.canAffordSticker()) {
+      // 1. Get all selected card IDs
+      const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
+      const selectedInventionValue = this.playerHandRenderer.getSelectedInventionValue();
+      
+      // 2. Add their invention value to ResourceService
+      if (this.resourceService) {
+        this.resourceService.addInvention(selectedInventionValue);
+      }
+      
+      // 3. Get the card objects and discard all played cards
+      // We need to find the actual card objects from the hand
+      // TODO this should use the (not yet existing) method discardByUniqueId form the PlayerHand class.
+      const cardsToDiscard: Card[] = [];
+      this.playerHandRenderer['currentCards'].forEach(card => {
+        if (selectedCardIds.includes(card.unique_id)) {
+          cardsToDiscard.push(card);
+        }
+      });
+      
+      // Discard the cards
+      cardsToDiscard.forEach(card => {
+        this.deckService.discard(card);
+      });
+      
+      // 4. Deduct the sticker cost from ResourceService
+      if (this.resourceService) {
+        this.resourceService.consumeInvention(this.selectedSticker.cost);
+      }
+      
+      // 5. Deselect all cards
+      this.playerHandRenderer.clearCardSelection();
+      
+      // 6. Update the acquired text
+      if (this.acquiredText && this.resourceService) {
+        const acquiredInvention = this.resourceService.getInvention();
+        this.acquiredText.setText(`Acquired: ${acquiredInvention}`);
+      }
+      
+      // 7. Set the sticker in the card overlay and show it
+      this.cardOverlayRenderer?.setSticker(this.selectedSticker);
+      this.cardOverlayRenderer?.show();
+      
+      // Log the transaction
+      console.log(`Purchased sticker ${this.selectedSticker.name} for ${this.selectedSticker.cost} invention points`);
     }
   }
 } 

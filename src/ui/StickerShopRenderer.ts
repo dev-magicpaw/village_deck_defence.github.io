@@ -134,6 +134,26 @@ export class StickerShopRenderer {
     if (this.selectedSticker) {
       this.setApplyButtonState(this.canAffordSticker());
     }
+    
+    // Update affordability status for all stickers
+    this.updateStickersAffordability();
+  }
+  
+  /**
+   * Update the affordability status of all stickers based on current resources and selections
+   */
+  private updateStickersAffordability(): void {
+    // Calculate total available invention (acquired + selected)
+    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
+    const selectedInvention = this.playerHandRenderer.getSelectedInventionValue();
+    const totalAvailable = acquiredInvention + selectedInvention;
+    
+    // Update each sticker renderer
+    this.stickerRenderers.forEach(renderer => {
+      const stickerCost = renderer.getStickerConfig().cost;
+      const isUnaffordable = stickerCost > totalAvailable;
+      renderer.setUnaffordable(isUnaffordable);
+    });
   }
   
   /**
@@ -585,6 +605,9 @@ export class StickerShopRenderer {
       
       // Update the selection text when showing the shop
       this.updateSelectionText();
+      
+      // Update sticker affordability based on current resources and selections
+      this.updateStickersAffordability();
     }
   }
   

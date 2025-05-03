@@ -13,6 +13,7 @@ export class StickerInShopRenderer {
   private background!: Phaser.GameObjects.Image;
   private isSelected: boolean = false;
   private unaffordable: boolean = false;
+  private costText!: Phaser.GameObjects.Text; // Reference to cost text object
   
   /**
    * Create a new sticker renderer
@@ -66,12 +67,12 @@ export class StickerInShopRenderer {
     costBackground.setOrigin(0.5, 0);
     
     // Cost text (just the number)
-    const costText = this.scene.add.text(0, 2, `${this.stickerConfig.cost}`, {
+    this.costText = this.scene.add.text(0, 2, `${this.stickerConfig.cost}`, {
       fontSize: '18px',
       color: this.unaffordable ? '#ff0000' : '#ffffff',
       fontStyle: 'bold'
     });
-    costText.setOrigin(1, 0);
+    this.costText.setOrigin(1, 0);
     
     // Invention resource icon
     const resourceIcon = this.scene.add.image(5, 10, 'resource_invention');
@@ -80,7 +81,7 @@ export class StickerInShopRenderer {
     
     // Add elements to the cost container
     costContainer.add(costBackground);
-    costContainer.add(costText);
+    costContainer.add(this.costText);
     costContainer.add(resourceIcon);
     
     // Add cost container to the main container
@@ -138,6 +139,19 @@ export class StickerInShopRenderer {
    */
   public getContainer(): Phaser.GameObjects.Container {
     return this.container;
+  }
+  
+  /**
+   * Set whether this sticker is unaffordable
+   * @param unaffordable Whether the sticker is unaffordable
+   */
+  public setUnaffordable(unaffordable: boolean): void {
+    if (this.unaffordable === unaffordable) return; // No change needed
+    
+    this.unaffordable = unaffordable;
+    
+    // Use direct reference to update the cost text color
+    this.costText.setColor(unaffordable ? '#ff0000' : '#ffffff');
   }
   
   /**

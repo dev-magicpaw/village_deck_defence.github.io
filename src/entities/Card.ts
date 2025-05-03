@@ -39,6 +39,7 @@ export class Card extends Phaser.Events.EventEmitter {
   public readonly unique_id: string;
   public readonly name: string;
   public readonly race: Race;
+  public readonly image: string;
   private _slots: CardSlot[];
 
   /**
@@ -51,6 +52,7 @@ export class Card extends Phaser.Events.EventEmitter {
     this.unique_id = uuidv4();
     this.name = config.name;
     this.race = config.race;
+    this.image = config.image;
     this._slots = this.buildSlots(config.maxSlotCount, config.startingStickers);
   }
 

@@ -144,20 +144,23 @@ export class CardRenderer {
     // Add elements to container - background first
     this.container.add(this.cardBackground);
     
-    // Card name
-    this.nameText = this.scene.add.text(
-      0,
-      -this.cardHeight / 2 + 30,
-      this.card.name,
-      {
-        fontSize: '18px',
-        color: '#000000',
-        align: 'center',
-        wordWrap: { width: this.cardWidth - 20 }
-      }
-    );
-    this.nameText.setOrigin(0.5, 0.5);
-    this.container.add(this.nameText);
+    // Card portrait/image
+    if (this.card.image) {
+      const portrait = this.scene.add.image(
+        0,
+        0, // Center of the card
+        this.card.image
+      );
+      
+      // Scale the portrait to fit within the card dimensions
+      const portraitScale = Math.min(
+        (this.cardWidth-10) / portrait.width,
+        (this.cardHeight-20) / portrait.height
+      );
+      portrait.setScale(portraitScale);
+      
+      this.container.add(portrait);
+    }
     
     // Add slots
     this.renderSlots();
@@ -361,16 +364,14 @@ export class CardRenderer {
     this.card = card;
     this.index = index;
     
-    // Update card name text
-    if (this.nameText) {
-      this.nameText.setText(this.card.name);
-    }
+    // Clear existing card visuals
+    this.container.removeAll(true);
+    
+    // Recreate the card visual with the new card data
+    this.createCardVisual();
     
     // Reset any sticker selection
     this.selectedStickerIndex = -1;
-    
-    // Re-render the slots with the new card data
-    this.renderSlots();
   }
   
   /**

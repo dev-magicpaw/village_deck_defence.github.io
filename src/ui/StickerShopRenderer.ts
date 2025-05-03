@@ -606,6 +606,9 @@ export class StickerShopRenderer {
       // Update the selection text when showing the shop
       this.updateSelectionText();
       
+      // Update acquired invention value from resource service
+      this.updateAcquiredText();
+      
       // Update sticker affordability based on current resources and selections
       this.updateStickersAffordability();
     }
@@ -778,10 +781,7 @@ export class StickerShopRenderer {
       this.playerHandRenderer.clearCardSelection();
       
       // 6. Update the acquired text
-      if (this.acquiredText && this.resourceService) {
-        const acquiredInvention = this.resourceService.getInvention();
-        this.acquiredText.setText(`Acquired: ${acquiredInvention}`);
-      }
+      this.updateAcquiredText();
       
       // 7. Deselect the current sticker from the shop
       this.deselectSticker();
@@ -789,6 +789,16 @@ export class StickerShopRenderer {
       // 8. Set the sticker in the card overlay and show it
       this.cardOverlayRenderer?.setSticker(stickerToApply);
       this.cardOverlayRenderer?.show();
+    }
+  }
+  
+  /**
+   * Update the acquired text to show the current invention value
+   */
+  private updateAcquiredText(): void {
+    if (this.acquiredText) {
+      const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
+      this.acquiredText.setText(`Acquired: ${acquiredInvention}`);
     }
   }
 } 

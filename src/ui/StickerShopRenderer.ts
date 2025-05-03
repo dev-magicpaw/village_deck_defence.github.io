@@ -111,10 +111,35 @@ export class StickerShopRenderer {
   }
   
   /**
+   * Check if the player can afford the currently selected sticker
+   * @returns True if the player has enough resources, false otherwise
+   */
+  private canAffordSticker(): boolean {
+    if (!this.selectedSticker) return false;
+    
+    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
+    const selectedInvention = this.playerHandRenderer.getSelectedInventionValue();
+    const stickerCost = this.selectedSticker.cost;
+    
+    // Check if the total available invention value is enough to purchase the sticker
+    const canAfford = (acquiredInvention + selectedInvention) >= stickerCost;
+    
+    // Log for debugging
+    console.log(`Sticker cost: ${stickerCost}, Acquired: ${acquiredInvention}, Selected: ${selectedInvention}, Can afford: ${canAfford}`);
+    
+    return canAfford;
+  }
+  
+  /**
    * Handler for card selection changes
    */
   private onCardSelectionChanged(): void {
     this.updateSelectionText();
+    
+    // If a sticker is selected, check if we still have enough resources
+    if (this.selectedSticker) {
+      this.setApplyButtonState(this.canAffordSticker());
+    }
   }
   
   /**
@@ -541,8 +566,8 @@ export class StickerShopRenderer {
       renderer.setSelected(renderer.getStickerConfig().id === stickerConfig.id);
     });
     
-    // Enable the apply button
-    this.setApplyButtonState(true);
+    // Check if we have enough resources and update button state
+    this.setApplyButtonState(this.canAffordSticker());
   }
   
   /**

@@ -214,7 +214,6 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
       this.isVisible = true;
       this.displayContainer.setVisible(true);
       this.renderCard();
-      this.renderStickerSlots();
     }
   }
   
@@ -283,69 +282,6 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
     
     // Add to display container
     this.displayContainer.add(this.cardRenderer.getContainer());
-  }
-  
-  /**
-   * Render interactive sticker slots on the card
-   */
-  private renderStickerSlots(): void {
-    if (!this.cardRenderer) return;
-    
-    const { width, height } = this.scene.cameras.main;
-    const slotCount = this.card.slotCount || 0;
-    
-    if (slotCount <= 0) return;
-    
-    // Slot configuration - these should match the CardRenderer
-    const slotSize = 30;
-    const slotSpacing = 25;
-    const slotScale = 0.8;
-    const cardScale = 1.5;
-    
-    // Calculate actual slot positions based on CardRenderer layout
-    const totalWidth = (slotSize * slotCount) + (slotSpacing * (slotCount - 1));
-    const startX = width / 2 - ((totalWidth * cardScale) / 2) + ((slotSize * cardScale) / 2);
-    const y = 280; // Position at the bottom of the card - must match card position + height/2 - offset
-    
-    // // Create interactive slot buttons
-    // for (let i = 0; i < slotCount; i++) {
-    //   const x = startX + (i * (slotSize + slotSpacing) * cardScale);
-      
-    //   // Create highlight circle for each slot
-    //   const highlight = this.scene.add.graphics();
-    //   highlight.setVisible(false);
-    //   highlight.fillStyle(0x00aaff, 0.3);
-    //   highlight.fillCircle(x, y, (slotSize * cardScale) / 1.5);
-    //   highlight.lineStyle(2, 0x00aaff, 0.7);
-    //   highlight.strokeCircle(x, y, (slotSize * cardScale) / 1.5);
-    //   this.displayContainer.add(highlight);
-    //   this.slotHighlights.push(highlight);
-      
-    //   // Create invisible interactive button on top of each slot
-    //   const hitArea = new Phaser.Geom.Circle(0, 0, (slotSize * cardScale) / 1.5);
-    //   const slotButton = this.scene.add.image(x, y, 'transparent_pixel');
-    //   slotButton.setDisplaySize((slotSize * cardScale), (slotSize * cardScale));
-    //   slotButton.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
-      
-    //   // Add hover effect
-    //   slotButton.on('pointerover', () => {
-    //     highlight.setVisible(true);
-    //   });
-      
-    //   slotButton.on('pointerout', () => {
-    //     if (this.selectedSlotIndex !== i) {
-    //       highlight.setVisible(false);
-    //     }
-    //   });
-      
-    //   // Add click handler
-    //   slotButton.on('pointerdown', () => {
-    //     this.selectSlot(i);
-    //   });
-      
-    //   this.displayContainer.add(slotButton);
-    //   this.slotButtons.push(slotButton);
-    // }
   }
   
   /**

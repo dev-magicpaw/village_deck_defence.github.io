@@ -220,21 +220,20 @@ export class CardRenderer {
     for (let i = 0; i < slotCount; i++) {
       const x = startX + (i * (this.slotSize + this.slotSpacing));
       
-      // Create the slot (wooden background)
-      const slot = this.scene.add.image(x, y, this.slotImage);
-      slot.setScale(this.slotScale);
-      this.container.add(slot);
-      this.slotObjects.push(slot);
-      
-      // Create sticker glow (initially invisible)
+      // Create sticker glow (initially invisible) - this goes FIRST (behind the slot)
       if (this.selectableSticker) {
         const stickerGlow = this.scene.add.graphics();
-        stickerGlow.fillStyle(0x00ff00, 0.3); // Light green with transparency
-        stickerGlow.fillCircle(x, y, this.slotSize * 0.8);
+        
+        // Draw green glow effect AROUND the slot (so make it larger than the slot)
+        // Slot has slotScale applied, so we need to account for that in glow size
+        const glowSize = (this.slotSize * this.slotScale) * 1.3; // 30% larger than the slot
+        
+        stickerGlow.fillStyle(0x00aaff, 0.8); // Light blue
+        stickerGlow.fillCircle(x, y, glowSize);
         
         // Add a stroke for additional glow effect
-        stickerGlow.lineStyle(2, 0x00ff00, 0.7);
-        stickerGlow.strokeCircle(x, y, this.slotSize * 0.8);
+        stickerGlow.lineStyle(2, 0x00aaff, 0.9);
+        stickerGlow.strokeCircle(x, y, glowSize);
         
         stickerGlow.setVisible(false);
         this.container.add(stickerGlow);
@@ -247,7 +246,13 @@ export class CardRenderer {
         }
       }
       
-      // Add sticker if exists
+      // Create the slot (wooden background) - this goes SECOND (on top of glow)
+      const slot = this.scene.add.image(x, y, this.slotImage);
+      slot.setScale(this.slotScale);
+      this.container.add(slot);
+      this.slotObjects.push(slot);
+      
+      // Add sticker if exists - this goes THIRD (on top of slot)
       this.renderStickerInSlot(i, x, y);
       
       // Make slot interactive if selectable
@@ -401,11 +406,11 @@ export class CardRenderer {
     // Deselect current sticker if any
     this.deselectSticker();
     
-    // Check if we have a valid sticker at this slot
-    if (this.card.slots && slotIndex < this.card.slots.length && this.card.slots[slotIndex]?.sticker) {
+    // Check if the slot index is valid (don't require a sticker to be present)
+    if (slotIndex >= 0 && slotIndex < (this.card.slotCount || 0)) {
       this.selectedStickerIndex = slotIndex;
       
-      console.log('selected sticker ', this.selectedStickerIndex);
+      console.log('selected sticker slot', this.selectedStickerIndex);
 
       // Make the sticker glow visible
       if (this.stickerGlows[slotIndex]) {

@@ -418,14 +418,11 @@ export class CardRenderer {
     if (slotIndex >= 0 && slotIndex < (this.card.slotCount || 0)) {
       this.selectedStickerIndex = slotIndex;
       
-      console.log('selected sticker slot', this.selectedStickerIndex);
-
       // Make the sticker glow visible
       if (this.stickerGlows[slotIndex]) {
         this.stickerGlows[slotIndex].setVisible(true);
-        console.log('Setting glow visible for slot', slotIndex, this.stickerGlows[slotIndex]);
       } else {
-        console.log('No glow found for slot', slotIndex);
+        throw new Error('No sticker glow found for slot ' + slotIndex);
       }
     }
   }
@@ -439,7 +436,6 @@ export class CardRenderer {
     // Hide the glow for the currently selected sticker
     if (this.stickerGlows[this.selectedStickerIndex]) {
       this.stickerGlows[this.selectedStickerIndex].setVisible(false);
-      console.log('Setting glow invisible for slot', this.selectedStickerIndex);
     }
     
     this.selectedStickerIndex = -1;

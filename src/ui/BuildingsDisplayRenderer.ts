@@ -102,11 +102,6 @@ export class BuildingsDisplayRenderer {
     
     // Create the sticker shop renderer with exact same dimensions
     if (!this.stickerShopRenderer) {
-      // Create a callback for when stickers are applied
-      const onApplyCallback = (stickerConfig: any) => {
-        console.log('Sticker applied:', stickerConfig);
-      };
-      
       this.stickerShopRenderer = new StickerShopRenderer(
         this.scene,
         this.panelX,
@@ -114,7 +109,6 @@ export class BuildingsDisplayRenderer {
         this.panelWidth,
         this.panelHeight,
         this.resourceService,
-        onApplyCallback,
         this.stickerShopService,
         this.playerHandRenderer,
         this.deckService
@@ -221,9 +215,7 @@ export class BuildingsDisplayRenderer {
    * Handle building card click
    * @param building The clicked building
    */
-  private onBuildingClick(building: Building): void {
-    console.log(`Building ${building.name} clicked`);
-    
+  private onBuildingClick(building: Building): void {    
     // Check if this is the sticker shop building
     if (building.id === this.stickerShopBuildingId) {
       this.stickerShopService.setShopState(true);

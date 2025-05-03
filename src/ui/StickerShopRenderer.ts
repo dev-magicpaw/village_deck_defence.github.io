@@ -23,7 +23,6 @@ export class StickerShopRenderer {
   private selectedSticker: StickerConfig | null = null;
   private applyButton: Phaser.GameObjects.NineSlice | null = null;
   private applyButtonText: Phaser.GameObjects.Text | null = null;
-  private onApplyCallback?: (stickerConfig: StickerConfig) => void;
   private resourceService?: ResourceService;
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
@@ -69,7 +68,6 @@ export class StickerShopRenderer {
     panelWidth: number,
     panelHeight: number,
     resourceService: ResourceService,
-    onApplyCallback: (stickerConfig: StickerConfig) => void,
     stickerShopService: StickerShopService,
     playerHandRenderer: PlayerHandRenderer,
     deckService: DeckService
@@ -80,7 +78,6 @@ export class StickerShopRenderer {
     this.panelWidth = panelWidth;
     this.panelHeight = panelHeight;
     this.resourceService = resourceService;
-    this.onApplyCallback = onApplyCallback;
     this.stickerShopService = stickerShopService;
     this.playerHandRenderer = playerHandRenderer;
     this.deckService = deckService;
@@ -122,11 +119,7 @@ export class StickerShopRenderer {
     const stickerCost = this.selectedSticker.cost;
     
     // Check if the total available invention value is enough to purchase the sticker
-    const canAfford = (acquiredInvention + selectedInvention) >= stickerCost;
-    
-    // Log for debugging
-    console.log(`Sticker cost: ${stickerCost}, Acquired: ${acquiredInvention}, Selected: ${selectedInvention}, Can afford: ${canAfford}`);
-    
+    const canAfford = (acquiredInvention + selectedInvention) >= stickerCost;    
     return canAfford;
   }
   
@@ -231,20 +224,8 @@ export class StickerShopRenderer {
       this.scene,
       this.playerHandRenderer,
       this.deckService,
-      (stickerConfig, card) => {
-        if (this.onApplyCallback) {
-          this.onApplyCallback(stickerConfig);
-        }
-      }
+      undefined,
     );
-  }
-  
-  /**
-   * Create the Apply button at the bottom of the shop
-   * @deprecated The apply button is now created in the resource panel
-   */
-  private createApplyButton(): void {
-    // No longer used as the button is now created in the resource panel
   }
   
   /**
@@ -555,14 +536,10 @@ export class StickerShopRenderer {
   private onStickerClick(stickerConfig: StickerConfig): void {
     // Select the sticker
     this.selectedSticker = stickerConfig;
-    console.log(`Sticker ${stickerConfig.name} selected`);
-    
-    // Highlight the selected sticker and unhighlight others
     this.stickerRenderers.forEach(renderer => {
       renderer.setSelected(renderer.getStickerConfig().id === stickerConfig.id);
     });
     
-    // Check if we have enough resources and update button state
     this.setApplyButtonState(this.canAffordSticker());
   }
   
@@ -739,9 +716,6 @@ export class StickerShopRenderer {
       // 7. Set the sticker in the card overlay and show it
       this.cardOverlayRenderer?.setSticker(this.selectedSticker);
       this.cardOverlayRenderer?.show();
-      
-      // Log the transaction
-      console.log(`Purchased sticker ${this.selectedSticker.name} for ${this.selectedSticker.cost} invention points`);
     }
   }
 } 

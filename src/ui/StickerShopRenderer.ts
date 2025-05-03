@@ -29,6 +29,7 @@ export class StickerShopRenderer {
   private inventionIcon: Phaser.GameObjects.Image | null = null;
   private cardOverlayRenderer: CardOverlayRenderer | null = null;
   private deckService: DeckService;
+  private escKey: Phaser.Input.Keyboard.Key | null = null;
   
   // Selection panel elements
   private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
@@ -551,6 +552,16 @@ export class StickerShopRenderer {
       this.isVisible = true;
       this.displayContainer.setVisible(true);
       
+      // Setup Esc key to close the shop
+      if (this.scene.input.keyboard) {
+        this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        if (this.escKey) {
+          this.escKey.on('down', () => {
+            this.stickerShopService.setShopState(false);
+          });
+        }
+      }
+      
       // Update the selection text when showing the shop
       this.updateSelectionText();
     }
@@ -563,6 +574,12 @@ export class StickerShopRenderer {
     if (this.isVisible) {
       this.isVisible = false;
       this.displayContainer.setVisible(false);
+      
+      // Remove Esc key listener
+      if (this.escKey) {
+        this.escKey.off('down');
+        this.escKey = null;
+      }
       
       // Deselect sticker when closing the shop
       this.deselectSticker();
@@ -605,6 +622,12 @@ export class StickerShopRenderer {
       this.onShopStateChanged,
       this
     );
+    
+    // Remove Esc key listener if active
+    if (this.escKey) {
+      this.escKey.off('down');
+      this.escKey = null;
+    }
     
     // Clear all sticker renderers
     this.clearStickerRenderers();

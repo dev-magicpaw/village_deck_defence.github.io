@@ -345,7 +345,13 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
           cardX,
           cardY,
           i,
-          (cardIndex) => this.onCardClick(cardIndex)
+          (cardIndex) => this.onCardClick(cardIndex),
+          1, // default scale
+          true, // change scale on hover
+          false, // don't change sticker scale on hover
+          false, // not selectable sticker
+          undefined, // no sticker click callback
+          false // not in discard pile
         );
         
         // Set initial selection state

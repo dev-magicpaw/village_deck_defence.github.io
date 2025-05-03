@@ -37,6 +37,10 @@ export class CardRenderer {
   private stickerGlows: Phaser.GameObjects.Graphics[] = [];
   private stickerImages: Phaser.GameObjects.Image[] = [];
   private inDiscard: boolean = false;
+  
+  // Constants
+  private static DISCARD_TINT = 0x555555; // Gray tint for discard pile cards
+  
   /**
    * Create a new card renderer
    * @param scene The Phaser scene to render in
@@ -148,7 +152,7 @@ export class CardRenderer {
     
     // Apply gray tint for discarded cards
     if (this.inDiscard) {
-      this.cardBackground.setTint(0xbbbbbb);
+      this.cardBackground.setTint(CardRenderer.DISCARD_TINT);
     }
     
     // Card portrait/image
@@ -166,7 +170,7 @@ export class CardRenderer {
       
       // Apply gray tint for discarded cards
       if (this.inDiscard) {
-        portrait.setTint(0xbbbbbb);
+        portrait.setTint(CardRenderer.DISCARD_TINT);
       }
       
       this.container.add(portrait);

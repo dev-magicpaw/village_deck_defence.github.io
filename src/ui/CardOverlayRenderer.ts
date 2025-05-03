@@ -202,6 +202,11 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     const startX = padding + (width - padding * 2 - (actualCardWidth * cols) - (padding * (cols - 1))) / 2;
     const startY = topMargin;
 
+    // Create sets for faster lookups
+    const discardSet = new Set(discard.map(card => card.unique_id));
+    console.log('discard', discard);
+    console.log('discardSet', discardSet);
+
     // Render each card
     allCards.forEach((card, index) => {
       const row = Math.floor(index / cols);
@@ -210,10 +215,26 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
       const x = startX + col * (actualCardWidth + padding)
       const y = startY + row * (actualCardHeight + padding) + actualCardHeight / 2;
       
+      // Check if the card is in the discard pile
+      const isInDiscard = discardSet.has(card.unique_id);
+      
       // Create card renderer with click callback
-      const cardRenderer = new CardRenderer(this.scene, card, x, y, index, (cardIndex) => {
-        this.onCardClicked(allCards[cardIndex]);
-      });
+      const cardRenderer = new CardRenderer(
+        this.scene, 
+        card, 
+        x, 
+        y, 
+        index, 
+        (cardIndex) => {
+          this.onCardClicked(allCards[cardIndex]);
+        },
+        scale,
+        true,
+        false,
+        false,
+        undefined,
+        isInDiscard
+      );
       
       const container = cardRenderer.getContainer();      
       this.cardRenderers.push(cardRenderer);

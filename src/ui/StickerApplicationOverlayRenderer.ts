@@ -290,7 +290,8 @@ export class StickerApplicationOverlayRenderer extends Phaser.Events.EventEmitte
       (cardIndex, slotIndex) => {
         // When a slot is clicked, select it for sticker application
         this.selectSlot(slotIndex);
-      }
+      },
+      false // always false
     );
     
     // Scale up the card

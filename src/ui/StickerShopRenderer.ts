@@ -4,6 +4,7 @@ import { ResourceService } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
 import { StickerShopService } from '../services/StickerShopService';
 import { GameUI } from '../ui/GameUI';
+import { CardOverlayRenderer } from './CardOverlayRenderer';
 import { CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
@@ -26,6 +27,7 @@ export class StickerShopRenderer {
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
   private inventionIcon: Phaser.GameObjects.Image | null = null;
+  private cardOverlayRenderer: CardOverlayRenderer | null = null;
   
   // Selection panel elements
   private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
@@ -183,8 +185,27 @@ export class StickerShopRenderer {
     // Create the resource panel that covers the "Discard and draw" button
     this.createResourcePanel();
     
+    // Initialize card overlay renderer
+    this.initCardOverlayRenderer();
+    
     // Render all stickers
     this.renderStickers();
+  }
+  
+  /**
+   * Initialize the card overlay renderer
+   */
+  private initCardOverlayRenderer(): void {
+    // Initialize the card overlay renderer with the player hand renderer and a callback
+    this.cardOverlayRenderer = new CardOverlayRenderer(
+      this.scene,
+      this.playerHandRenderer,
+      (stickerConfig, card) => {
+        if (this.onApplyCallback) {
+          this.onApplyCallback(stickerConfig);
+        }
+      }
+    );
   }
   
   /**
@@ -400,8 +421,10 @@ export class StickerShopRenderer {
     // Make apply button interactive
     this.applyButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        if (this.selectedSticker && this.onApplyCallback) {
-          this.onApplyCallback(this.selectedSticker);
+        if (this.selectedSticker) {
+          // Set the sticker in the card overlay and show it
+          this.cardOverlayRenderer?.setSticker(this.selectedSticker);
+          this.cardOverlayRenderer?.show();
         }
       });
     
@@ -581,6 +604,11 @@ export class StickerShopRenderer {
     
     // Clear all sticker renderers
     this.clearStickerRenderers();
+    
+    // Destroy the card overlay renderer
+    if (this.cardOverlayRenderer) {
+      this.cardOverlayRenderer.destroy();
+    }
     
     // Destroy all UI elements
     if (this.shopPanel) {

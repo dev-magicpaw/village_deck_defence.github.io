@@ -405,6 +405,14 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   public getSelectedCardIds(): string[] {
     return Array.from(this.selectedCards);
   }
+  
+  /**
+   * Get the current cards in the player's hand
+   */
+  public getCardsInHand(): Card[] {
+    return [...this.currentCards];
+  }
+  
   /**
    * Select and deselect cards by their unique IDs
    * @param idsToSelect Array of card unique IDs to select

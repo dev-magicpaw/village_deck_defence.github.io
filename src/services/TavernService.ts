@@ -197,16 +197,16 @@ export class TavernService extends Phaser.Events.EventEmitter {
     }
 
     // Deduct cost - it's always deducted, even if the adventure fails
-    this.resourceService.consumePower(option.cost);
-    
-
-    // Check if we have enough resources
-    if (!this.canAffordAdventure(option)) {
+    const power = this.resourceService.getPower();
+    console.log('power', power);
+    console.log('option.cost', option.cost);
+    if (option.cost > power) {
+      this.resourceService.consumePower(power);
       this.onAdventureFailure(option);
       return false;
     }
 
-    
+    this.resourceService.consumePower(option.cost);
     this.onAdventureSuccess(option);
     return true;
   }

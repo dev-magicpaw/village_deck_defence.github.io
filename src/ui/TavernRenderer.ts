@@ -515,23 +515,10 @@ export class TavernRenderer {
     const option = this.tavernService.getAdventureOption(this.selectedLevel);
     if (!option) throw new Error('No adventure option found');
 
-    // 1. Play any selected cards
     this.playSelectedCards();
-    
-    // 2. Deduct the sticker cost from ResourceService
-    if (this.resourceService) {
-      this.resourceService.consumePower(this.resourceService.getPower());
-    }
-
-    // 3. Update the acquired text
     this.updateAcquiredText();
-    
-    // 4. Deselect the level
     this.deselectLevel();
-  
-    // Attempt the adventure
     const success = this.tavernService.attemptAdventure(option);
-    // Process the adventure result
     this.tavernService.processAdventureResult(option, success);
   }
   

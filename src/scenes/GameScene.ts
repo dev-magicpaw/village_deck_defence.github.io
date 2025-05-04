@@ -200,6 +200,7 @@ export class GameScene extends Phaser.Scene {
   private initializeTavernService(): void {
     this.tavernService = TavernService.getInstance();
     this.tavernService.init(this.resourceService);
+    this.tavernService.setDeckService(this.playerDeck);
   }
   
   /**

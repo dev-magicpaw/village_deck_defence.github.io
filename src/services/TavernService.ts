@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
+import { Card } from '../entities/Card';
 import { CardRegistry } from './CardRegistry';
+import { DeckService } from './DeckService';
 import { RecruitCardRegistry } from './RecruitCardRegistry';
 import { ResourceService } from './ResourceService';
 
@@ -55,6 +57,7 @@ export class TavernService extends Phaser.Events.EventEmitter {
   private resourceService: ResourceService | null = null; // TODO: make not optional
   private adventureOptions: Map<AdventureLevel, AdventureOption[]> = new Map();
   private isOpen: boolean = false;
+  private deckService: DeckService<Card> | null = null;
 
   /**
    * Private constructor to enforce singleton pattern
@@ -150,6 +153,14 @@ export class TavernService extends Phaser.Events.EventEmitter {
   }
 
   /**
+   * Set the deck service
+   * @param deckService The deck service to use for adding cards
+   */
+  public setDeckService(deckService: DeckService<Card>): void {
+    this.deckService = deckService;
+  }
+
+  /**
    * Get all available adventure levels
    */
   public getAvailableAdventureLevels(): AdventureLevel[] {
@@ -231,15 +242,26 @@ export class TavernService extends Phaser.Events.EventEmitter {
   }
 
   /**
-   * Add cards to the player's deck
+   * Add cards to the player's discard pile
    * @param cardId The card type to add
    * @param count Number of cards to add
    */
   private addCardsToDiscard(cardId: string, count: number): void {
-    // TODO this should you real Deck service
-    // This would typically use the DeckService to add cards to the player's deck
-    // For now, we'll just log that cards would be added
-    console.log(`Adventure successful! Adding ${count} ${cardId} cards to deck`);
+    if (!this.deckService) {
+      throw new Error('DeckService not initialized. Cannot add cards to discard pile.');
+    }
+    
+    for (let i = 0; i < count; i++) {
+      const card = this.cardRegistry.createCardInstance(cardId);
+      if (card) {
+        this.deckService.discard(card);
+        console.log(`Added ${cardId} to discard pile`);
+      } else {
+        throw new Error(`Failed to create card instance for ${cardId}`);
+      }
+    }
+    
+    this.emit(TavernServiceEvents.ADVENTURE_SUCCESS, { cardId, count });
   }
 
   /**
@@ -247,7 +269,7 @@ export class TavernService extends Phaser.Events.EventEmitter {
    */
   private onAdventureSuccess(option: AdventureOption): void {
     console.log(`Successfully completed adventure: ${option.name}`);
-    // This would emit an event that UI components could listen to
+    this.emit(TavernServiceEvents.ADVENTURE_SUCCESS, option);
   }
   
   /**
@@ -255,6 +277,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
    */
   private onAdventureFailure(option: AdventureOption): void {
     console.log(`Failed to complete adventure: ${option.name}`);
-    // This would emit an event that UI components could listen to
+    this.emit(TavernServiceEvents.ADVENTURE_FAILURE, option);
   }
 } 

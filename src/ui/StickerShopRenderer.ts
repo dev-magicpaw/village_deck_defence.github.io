@@ -836,29 +836,28 @@ export class StickerShopRenderer {
    * Purchase and apply the currently selected sticker
    */
   private purchaseSticker(): void {
-    // Only proceed if a sticker is selected AND we can afford it
-    if (this.selectedSticker && this.canAffordSticker()) {
-      // Store the selected sticker in a local variable
-      const stickerToApply = this.selectedSticker;
+    if (!this.selectedSticker || !this.canAffordSticker()) return;
 
-      // 1. Play any selected cards
-      this.playSelectedCards();
-      
-      // 2. Deduct the sticker cost from ResourceService
-      if (this.resourceService) {
-        this.resourceService.consumeInvention(stickerToApply.cost);
-      }
+    // Store the selected sticker in a local variable
+    const stickerToApply = this.selectedSticker;
 
-      // 3. Update the acquired text
-      this.updateAcquiredText();
-      
-      // 4. Deselect the current sticker from the shop
-      this.deselectSticker();
-      
-      // 5. Set the sticker in the card overlay and show it
-      this.cardOverlayRenderer?.setSticker(stickerToApply);
-      this.cardOverlayRenderer?.show();
+    // 1. Play any selected cards
+    this.playSelectedCards();
+    
+    // 2. Deduct the sticker cost from ResourceService
+    if (this.resourceService) {
+      this.resourceService.consumeInvention(stickerToApply.cost);
     }
+
+    // 3. Update the acquired text
+    this.updateAcquiredText();
+    
+    // 4. Deselect the current sticker from the shop
+    this.deselectSticker();
+      
+    // 5. Set the sticker in the card overlay and show it
+    this.cardOverlayRenderer?.setSticker(stickerToApply);
+    this.cardOverlayRenderer?.show();
   }
   
   /**

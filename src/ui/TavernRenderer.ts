@@ -352,6 +352,21 @@ export class TavernRenderer {
       }
     );
     this.proceedButtonText.setOrigin(0.5, 0.5);
+
+    // Set hover effects
+    this.proceedButton.setInteractive({ useHandCursor: true });
+    this.proceedButton.setInteractive({ useHandCursor: true }).on('pointerdown', () => { this.proceedWithAdventure(); });
+
+    this.proceedButton.on('pointerover', () => {
+      this.proceedButton?.setScale(1.05);
+      this.proceedButton?.setScale(1.05);
+    });
+    
+    this.proceedButton.on('pointerout', () => {
+      this.proceedButton?.setScale(1);
+      this.proceedButton?.setScale(1);
+    });
+
     
     // Set initial button states
     this.setProceedButtonState(false);
@@ -359,7 +374,6 @@ export class TavernRenderer {
     
     // Add event listeners for buttons
     this.playCardsButton.on('pointerdown', this.onPlayCardsClicked.bind(this));
-    this.proceedButton.on('pointerdown', this.onProceedClicked.bind(this));
     
     // Add all elements to container
     this.container.add([
@@ -516,27 +530,30 @@ export class TavernRenderer {
   /**
    * Handle Proceed button click
    */
-  private onProceedClicked(): void {
+  private proceedWithAdventure(): void {
     if (!this.selectedLevel) return;
+
+    const option = this.tavernService.getAdventureOption(this.selectedLevel);
+    if (!option) throw new Error('No adventure option found');
+
+    // 1. Play any selected cards
+    this.playSelectedCards();
     
-    // Get an adventure option for the selected level
-    try {
-      const option = this.tavernService.getAdventureOption(this.selectedLevel);
-      if (option) {
-        console.log(`Starting adventure: ${option.name}`);
-        // Attempt the adventure
-        const success = this.tavernService.attemptAdventure(option);
-        console.log(`Adventure ${success ? 'succeeded' : 'failed'}`);
-        
-        // Process the adventure result
-        this.tavernService.processAdventureResult(option, success);
-        
-        // Update resource display
-        this.updateResourceDisplay();
-      }
-    } catch (error) {
-      console.error('Failed to start adventure:', error);
+    // 2. Deduct the sticker cost from ResourceService
+    if (this.resourceService) {
+      this.resourceService.consumePower(this.resourceService.getPower());
     }
+
+    // 3. Update the acquired text
+    this.updateAcquiredText();
+    
+    // 4. Deselect the level
+    this.deselectLevel();
+  
+    // Attempt the adventure
+    const success = this.tavernService.attemptAdventure(option);
+    // Process the adventure result
+    this.tavernService.processAdventureResult(option, success);
   }
   
   /**
@@ -657,6 +674,22 @@ export class TavernRenderer {
       this.container.add(card);
     });
   }
+
+    /**
+   * Deselect the currently selected sticker
+   */
+    private deselectLevel(): void {
+      // Deselect the level
+      this.selectedLevel = null;
+      
+      // Disable the proceed button
+      this.setProceedButtonState(false);
+      
+      // Update selection text
+      if (this.selectionText) {
+        this.selectionText.setText('Selected: 0');
+      }
+    }
   
   /**
    * Create a visual representation of an adventure level card

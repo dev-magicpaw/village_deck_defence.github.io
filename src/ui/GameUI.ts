@@ -5,6 +5,7 @@ import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
+import { InvasionRenderer } from './InvasionRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
 
 export class GameUI {
@@ -20,8 +21,7 @@ export class GameUI {
   private playerHandRenderer: PlayerHandRenderer;
   private deckService: DeckService;
   private invasionService: InvasionService;
-  private invasionTitle!: Phaser.GameObjects.Text;
-  private lastKnownDay: number = 1;
+  private invasionRenderer!: InvasionRenderer;
   
   constructor(
     scene: Phaser.Scene, 
@@ -54,35 +54,19 @@ export class GameUI {
   /**
    * Create the invasion progress panel at the top of the screen
    */
-  // TODO: move invasion panel and title to a separate class InvasionRenderer
   private createInvasionProgressPanel(): void {
     const { width, height } = this.scene.cameras.main;
     const panelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
     
-    // Create the panel background using 9-slice
-    const invasionPanel = this.scene.add['nineslice'](
+    // Create the invasion renderer
+    this.invasionRenderer = new InvasionRenderer(
+      this.scene,
+      this.invasionService,
       0,
       0,
-      'panel_metal_corners_metal',
-      undefined,
       width,
-      panelHeight,
-      20,
-      20,
-      20,
-      20
+      panelHeight
     );
-    
-    // Set the origin to the top-left corner
-    invasionPanel.setOrigin(0, 0);
-    
-    // Add the panel title with current day
-    this.lastKnownDay = this.invasionService.getCurrentDay();
-    this.invasionTitle = this.scene.add.text(width / 2, panelHeight / 2, `Invasion progress track: day ${this.lastKnownDay}`, {
-      fontSize: '24px',
-      color: '#ffffff'
-    });
-    this.invasionTitle.setOrigin(0.5, 0.5);
   }
   
   /**
@@ -224,11 +208,7 @@ export class GameUI {
       this.buildingsDisplayRenderer.update();
     }
     
-    // Update invasion title if day has changed
-    const currentDay = this.invasionService.getCurrentDay();
-    if (currentDay !== this.lastKnownDay) {
-      this.lastKnownDay = currentDay;
-      this.invasionTitle.setText(`Invasion progress track: day ${currentDay}`);
-    }
+    // Update invasion renderer
+    this.invasionRenderer.update();
   }
 } 

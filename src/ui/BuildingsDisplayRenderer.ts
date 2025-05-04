@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { Building } from '../entities/Building';
-import { PlayerHand } from '../entities/PlayerHand';
 import { BuildingService } from '../services/BuildingService';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
@@ -76,16 +75,6 @@ export class BuildingsDisplayRenderer {
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
-  }
-  
-  /**
-   * Helper function to get PlayerHand from the PlayerHandRenderer
-   */
-  private getPlayerHandFromRenderer(): PlayerHand | null {
-    if (this.playerHandRenderer && 'playerHand' in this.playerHandRenderer) {
-      return (this.playerHandRenderer as any).playerHand;
-    }
-    return null;
   }
 
   /**

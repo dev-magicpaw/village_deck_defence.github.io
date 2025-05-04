@@ -3,8 +3,10 @@ import { BuildingService } from '../services/BuildingService';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
+import { TavernService } from '../services/TavernService';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
+import { TavernRenderer } from './TavernRenderer';
 
 export class GameUI {
   static readonly INVASION_PANEL_HEIGHT_PROPORTION: number = 0.08;
@@ -13,9 +15,11 @@ export class GameUI {
 
   private scene: Phaser.Scene;
   private buildingsDisplayRenderer?: BuildingsDisplayRenderer;
+  private tavernRenderer?: TavernRenderer;
   private buildingService: BuildingService;
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
+  private tavernService: TavernService;
   private playerHandRenderer: PlayerHandRenderer;
   private deckService: DeckService;
   
@@ -31,6 +35,7 @@ export class GameUI {
     this.buildingService = buildingService;
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
+    this.tavernService = TavernService.getInstance();
     this.playerHandRenderer = playerHandRenderer;
     this.deckService = deckService;
   }
@@ -125,6 +130,17 @@ export class GameUI {
       
       this.buildingsDisplayRenderer.init();
       this.buildingsDisplayRenderer.render();
+      
+      // Initialize tavern renderer using the same panel dimensions
+      this.tavernRenderer = new TavernRenderer(
+        this.scene,
+        panelX,
+        panelY,
+        panelWidth,
+        panelHeight
+      );
+      
+      this.tavernRenderer.init();
     } else {
       throw new Error("No building service");
     }
@@ -214,6 +230,11 @@ export class GameUI {
     // Update buildings display if it exists
     if (this.buildingsDisplayRenderer) {
       this.buildingsDisplayRenderer.update();
+    }
+    
+    // Update tavern renderer if it exists
+    if (this.tavernRenderer) {
+      this.tavernRenderer.update();
     }
   }
 } 

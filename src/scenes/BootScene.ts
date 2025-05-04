@@ -65,11 +65,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image('gnome_student', 'assets/images/portraits/gnome_student.png');
     this.load.image('human_villager', 'assets/images/portraits/human_villager.png');
 
-    // Load configuration files
-    this.load.json('stickers', 'config/stickers.json');
-    this.load.json('cardsConfig', 'config/cards.json'); 
-    this.load.json('gameConfig', 'config/game.json');
-    this.load.json('buildingsConfig', 'config/buildings.json');
+    this.load.image('physical_card_back', 'assets/images/cards/Card_shirt_01.png');
+    this.load.image('magic_card_back', 'assets/images/cards/Card_shirt_04.png');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/Sword1.png');
@@ -81,6 +78,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image('sticker_invention_1', 'assets/images/stickers/TomeYellow1.png');
     this.load.image('sticker_invention_2', 'assets/images/stickers/TomeYellow2.png');
     this.load.image('sticker_invention_3', 'assets/images/stickers/TomeYellow3.png');
+
+    // Load configuration files
+    this.load.json('stickers', 'config/stickers.json');
+    this.load.json('cardsConfig', 'config/cards.json'); 
+    this.load.json('gameConfig', 'config/game.json');
+    this.load.json('buildingsConfig', 'config/buildings.json');
   }
 
   create(): void {

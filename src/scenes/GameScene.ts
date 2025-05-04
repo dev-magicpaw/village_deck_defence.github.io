@@ -9,6 +9,7 @@ import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
+import { TavernService } from '../services/TavernService';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
 
@@ -31,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   private cardRegistry!: CardRegistry;
   private buildingRegistry!: BuildingRegistry;
   private buildingService!: BuildingService;
+  private tavernService!: TavernService;
   private stickerShopService!: StickerShopService;
 
   constructor() {
@@ -60,6 +62,10 @@ export class GameScene extends Phaser.Scene {
     // Initialize buildings
     this.buildingService = new BuildingService();
     this.buildingService.initializeBuildings();
+    
+    // Initialize the tavern service
+    this.tavernService = TavernService.getInstance();
+    this.tavernService.init();
     
     // Initialize the sticker shop service
     this.stickerShopService = new StickerShopService();

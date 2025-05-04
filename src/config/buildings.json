@@ -12,5 +12,12 @@
         "description": "Allows to purchase stickers",
         "image": "src/assets/images/cards/card_human_villager.png",
         "constructed_from_start": true
+    },
+    {
+        "id": "tavern",
+        "name": "Tavern",
+        "description": "Allows to go for small adventures",
+        "image": "src/assets/images/cards/card_human_villager.png",
+        "constructed_from_start": true
     }
 ]

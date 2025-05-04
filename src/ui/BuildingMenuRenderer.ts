@@ -20,7 +20,7 @@ export class BuildingMenuRenderer {
   private menuX: number;
   private menuY: number;
   private isVisible: boolean = false;
-  private currentSlotId: string = '';
+  private currentSlotUniqueId: string = '';
   
   /**
    * Create a new building menu renderer
@@ -93,20 +93,28 @@ export class BuildingMenuRenderer {
   
   /**
    * Show the building menu for a specific slot
-   * @param slotId The ID of the building slot to display the menu for
+   * @param slotUniqueId The unique ID of the building slot to display the menu for
    */
-  public show(slotId: string): void {
-    this.currentSlotId = slotId;
+  public show(slotUniqueId: string): void {
+    this.currentSlotUniqueId = slotUniqueId;
     
     // Get the building slot data
-    const slot = this.buildingService.getBuildingSlotById(slotId);
+    const slot = this.buildingService.getBuildingSlotByUniqueId(slotUniqueId);
     if (!slot) {
-      console.error(`Building slot with ID ${slotId} not found`);
+      // Try fallback to legacy ID for backward compatibility
+      const slotByLegacyId = this.buildingService.getBuildingSlotById(slotUniqueId);
+      if (slotByLegacyId) {
+        console.warn(`Using legacy slot ID ${slotUniqueId} instead of unique_id`);
+        this.show(slotByLegacyId.unique_id);
+        return;
+      }
+      
+      console.error(`Building slot with unique ID ${slotUniqueId} not found`);
       return;
     }
     
-    // Update title with slot ID
-    this.titleText.setText(`Building Options - Slot ${slotId}`);
+    // Update title with slot ID (using a shorter version of the unique_id for display)
+    this.titleText.setText(`Building Options - Slot ${slotUniqueId.substring(0, 8)}...`);
     
     // Clear any existing building buttons
     this.clearBuildingButtons();
@@ -128,7 +136,7 @@ export class BuildingMenuRenderer {
   public hide(): void {
     this.menuContainer.setVisible(false);
     this.isVisible = false;
-    this.currentSlotId = '';
+    this.currentSlotUniqueId = '';
   }
   
   /**
@@ -251,21 +259,32 @@ export class BuildingMenuRenderer {
   }
   
   /**
-   * Handle building selection
+   * Called when a building is selected from the menu
    * @param buildingId The ID of the selected building
    */
   private onBuildingSelected(buildingId: string): void {
-    // Construct the building in the current slot
-    if (this.currentSlotId) {
-      const constructed = this.buildingService.constructBuilding(buildingId, this.currentSlotId);
+    console.log(`Building selected: ${buildingId} for slot ${this.currentSlotUniqueId}`);
+    
+    // Construct the building in the selected slot
+    if (this.currentSlotUniqueId) {
+      const constructed = this.buildingService.constructBuilding(buildingId, this.currentSlotUniqueId);
       if (constructed) {
-        console.log(`Building ${buildingId} constructed in slot ${this.currentSlotId}`);
+        console.log(`Successfully constructed building ${buildingId} in slot ${this.currentSlotUniqueId}`);
+        
+        // Dispatch an event to notify other components
+        const event = new CustomEvent('building:constructed', {
+          detail: {
+            buildingId,
+            slotUniqueId: this.currentSlotUniqueId
+          }
+        });
+        window.dispatchEvent(event);
       } else {
-        console.error(`Failed to construct building ${buildingId} in slot ${this.currentSlotId}`);
+        console.error(`Failed to construct building ${buildingId} in slot ${this.currentSlotUniqueId}`);
       }
     }
     
-    // Hide the menu after selection
+    // Hide the menu
     this.hide();
   }
   

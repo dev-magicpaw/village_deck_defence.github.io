@@ -661,6 +661,13 @@ export class StickerShopRenderer {
   }
   
   /**
+   * Public method to show the sticker shop
+   */
+  public show(): void {
+    this._show();
+  }
+  
+  /**
    * Internal method to show the shop UI
    */
   private _show(): void {

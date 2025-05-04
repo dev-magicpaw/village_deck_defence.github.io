@@ -9,7 +9,8 @@ export interface BuildingConfig {
  * Represents a slot where a building can be constructed
  */
 export interface BuildingSlot {
-  id: string; // Should be a uuid4 unique identifier
+  id: string; // Deprecated - kept for backward compatibility // TODO: Remove
+  unique_id: string; // UUID v4 unique identifier
   already_constructed: string | null;
   available_for_construction: string[];
 }
@@ -20,7 +21,8 @@ export interface BuildingSlot {
 export interface BuildingSlotLocation {
   x: number;
   y: number;
-  slot_id: string;
+  slot_id: string; // Deprecated - kept for backward compatibility // TODO: Remove
+  slot_unique_id: string; // References the slot's unique_id
 }
 
 /**

@@ -165,16 +165,24 @@ export class BuildingsDisplayRenderer {
     
     // Render each building slot
     slots.forEach(slot => {
-      // Find the location for this slot
-      const location = slotLocations.find(loc => loc.slot_id === slot.id);
+      // Find the location for this slot using unique_id
+      const location = slotLocations.find(loc => loc.slot_unique_id === slot.unique_id);
       
       if (location) {
-        console.log(`Rendering slot ${slot.id} at position (${location.x}, ${location.y})`);
+        console.log(`Rendering slot ${slot.unique_id} at position (${location.x}, ${location.y})`);
         // Create the slot at the specified location
         const slotContainer = this.createBuildingSlot(slot, location);
         this.buildingSlots.push({ slot, container: slotContainer });
       } else {
-        console.warn(`No location found for slot ${slot.id}`);
+        // Fallback to legacy slot_id for backward compatibility
+        const legacyLocation = slotLocations.find(loc => loc.slot_id === slot.id);
+        if (legacyLocation) {
+          console.log(`Rendering slot ${slot.id} (legacy) at position (${legacyLocation.x}, ${legacyLocation.y})`);
+          const slotContainer = this.createBuildingSlot(slot, legacyLocation);
+          this.buildingSlots.push({ slot, container: slotContainer });
+        } else {
+          console.warn(`No location found for slot ${slot.unique_id}`);
+        }
       }
     });
   }
@@ -189,7 +197,7 @@ export class BuildingsDisplayRenderer {
     // Position slots relative to the panel
     const x = this.panelX + location.x;
     const y = this.panelY + location.y;
-    console.log(`Creating slot ${slot.id} at position (${x}, ${y}), panel at (${this.panelX}, ${this.panelY})`);
+    console.log(`Creating slot ${slot.unique_id} at position (${x}, ${y}), panel at (${this.panelX}, ${this.panelY})`);
     
     const container = this.scene.add.container(x, y);
     
@@ -206,9 +214,9 @@ export class BuildingsDisplayRenderer {
       const foundBuilding = this.constructedBuildings.find(b => b.id === constructedBuildingId);
       if (foundBuilding) {
         building = foundBuilding;
-        console.log(`Found constructed building ${foundBuilding.name} for slot ${slot.id}`);
+        console.log(`Found constructed building ${foundBuilding.name} for slot ${slot.unique_id}`);
       } else {
-        console.warn(`Building ID ${constructedBuildingId} is marked as constructed in slot ${slot.id} but not found in constructed buildings`);
+        console.warn(`Building ID ${constructedBuildingId} is marked as constructed in slot ${slot.unique_id} but not found in constructed buildings`);
       }
     }
     
@@ -308,28 +316,38 @@ export class BuildingsDisplayRenderer {
   }
   
   /**
-   * Handle building slot click
-   * @param slot The clicked building slot
-   * @param building The constructed building in the slot (if any)
+   * Handle clicking on a building slot
+   * @param slot The building slot data
+   * @param building The building in the slot, or null if empty
    */
   private onBuildingSlotClick(slot: BuildingSlot, building: Building | null): void {
+    console.log(`Slot clicked: ${slot.unique_id}`);
+    
+    // If we have a building, check if it's a special building
     if (building) {
-      // If there's a constructed building, handle special building behavior
-      if (building.id === this.stickerShopBuildingId) {
-        this.stickerShopService.setShopState(true);
-        return;
-      } else if (building.id === this.tavernBuildingId) {
-        // Show tavern UI
-        if (this.tavernRenderer) {
-          this.tavernRenderer.show();
-        }
+      if (building.id === this.stickerShopBuildingId && this.stickerShopRenderer) {
+        console.log('Opening sticker shop');
+        // Hide the buildings display and show the sticker shop
+        this.displayContainer.setVisible(false);
+        this.stickerShopRenderer.show();
         return;
       }
-    } else {
-      // If there's no building, show the building menu
-      if (this.buildingMenuRenderer && slot.available_for_construction.length > 0) {
-        this.buildingMenuRenderer.show(slot.id);
+      
+      if (building.id === this.tavernBuildingId && this.tavernRenderer) {
+        console.log('Opening tavern');
+        // Hide the buildings display and show the tavern
+        this.displayContainer.setVisible(false);
+        this.tavernRenderer.show();
+        return;
       }
+      
+      console.log(`Building ${building.id} clicked, but it doesn't have special handling`);
+      return;
+    }
+    
+    // If there's no building, show the building menu
+    if (this.buildingMenuRenderer && slot.available_for_construction.length > 0) {
+      this.buildingMenuRenderer.show(slot.unique_id);
     }
   }
   

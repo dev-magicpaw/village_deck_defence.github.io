@@ -15,18 +15,55 @@ export class BuildingService {
 
   /**
    * Create a new BuildingService
-   * @param buildingSlots Initial building slots
-   * @param buildingSlotLocations Initial building slot locations
+   * @param buildingSlotsConfig Initial building slots from config (will get unique_ids assigned)
+   * @param buildingSlotLocations Initial building slot locations from config (will be mapped to slots)
    */
   constructor(
-    buildingSlots: BuildingSlot[],
+    buildingSlotsConfig: BuildingSlot[],
     buildingSlotLocations: BuildingSlotLocation[]
   ) {
     this.buildingRegistry = BuildingRegistry.getInstance();
-    this.buildingSlots = [...buildingSlots];
-    this.buildingSlotLocations = [...buildingSlotLocations];
-
+    
+    this.initializeBuildingSlots(buildingSlotsConfig, buildingSlotLocations);
     this.initializeBuildings();
+  }
+
+  /**
+   * Initialize building slots and their locations
+   * Generates unique IDs for slots and maps locations to slots
+   */
+  private initializeBuildingSlots(
+    buildingSlotsConfig: BuildingSlot[],
+    buildingSlotLocations: BuildingSlotLocation[]
+  ): void {
+    // Generate and assign unique_id to each slot
+    this.buildingSlots = buildingSlotLocations.map(location => {
+      // Find the matching slot config from the input
+      const slotConfig = buildingSlotsConfig.find(slot => slot.id === location.slot_id);
+      if (!slotConfig) {
+        throw new Error(`No matching slot config found for location with slot_id ${location.slot_id}`);
+      }
+      
+      // Create a building slot with a unique ID
+      return {
+        ...slotConfig,
+        unique_id: uuidv4()
+      };
+    });
+    
+    // Map locations to slots by array index and assign slot_unique_id
+    this.buildingSlotLocations = buildingSlotLocations.map((location, index) => {
+      const slotUniqueId = this.buildingSlots[index].unique_id;
+      
+      if (!slotUniqueId) {
+        throw new Error(`No matching slot found for location with slot_id ${location.slot_id}`);
+      }
+      
+      return {
+        ...location,
+        slot_unique_id: slotUniqueId
+      };
+    });
   }
 
   /**
@@ -34,15 +71,9 @@ export class BuildingService {
    * Immediately constructs buildings that are defined as already_constructed in the level config
    */
   private initializeBuildings(): void {    
-    // Log building slots for debugging
-    console.log("BuildingService - After loading config, slots:", this.buildingSlots);
-    console.log("BuildingService - After loading config, locations:", this.buildingSlotLocations);
-    
-    // Construct buildings that are already constructed in level config
     this.buildingSlots.forEach(slot => {
       if (slot.already_constructed) {
-        console.log(`BuildingService - Constructing building ${slot.already_constructed} from slot ${slot.id}`);
-        this.constructBuilding(slot.already_constructed, slot.id);
+        this.constructBuilding(slot.already_constructed, slot.unique_id);
       }
     });
   }
@@ -62,7 +93,14 @@ export class BuildingService {
   }
 
   /**
-   * Get a specific building slot by ID
+   * Get a specific building slot by its unique ID
+   */
+  public getBuildingSlotByUniqueId(uniqueId: string): BuildingSlot | undefined {
+    return this.buildingSlots.find(slot => slot.unique_id === uniqueId);
+  }
+
+  /**
+   * Get a specific building slot by its legacy ID (deprecated)
    */
   public getBuildingSlotById(slotId: string): BuildingSlot | undefined {
     return this.buildingSlots.find(slot => slot.id === slotId);
@@ -70,6 +108,13 @@ export class BuildingService {
 
   /**
    * Get the location for a specific building slot
+   */
+  public getBuildingSlotLocationByUniqueId(slotUniqueId: string): BuildingSlotLocation | undefined {
+    return this.buildingSlotLocations.find(location => location.slot_unique_id === slotUniqueId);
+  }
+
+  /**
+   * Get the location for a specific building slot by legacy ID (deprecated)
    */
   public getBuildingSlotLocation(slotId: string): BuildingSlotLocation | undefined {
     return this.buildingSlotLocations.find(location => location.slot_id === slotId);
@@ -91,20 +136,20 @@ export class BuildingService {
   
   /**
    * Get the ID of the building constructed in a specific slot
-   * @param slotId The ID of the slot to check
+   * @param slotUniqueId The unique ID of the slot to check
    * @returns The ID of the building in this slot, or null if none
    */
-  public getBuildingInSlot(slotId: string): string | null {
-    return this.slotToBuildingMap[slotId] || null;
+  public getBuildingInSlot(slotUniqueId: string): string | null {
+    return this.slotToBuildingMap[slotUniqueId] || null;
   }
   
   /**
    * Construct a new building
    * @param buildingId The ID of the building to construct
-   * @param slotId Optional slot ID where the building should be constructed
+   * @param slotUniqueId Optional unique ID of the slot where the building should be constructed
    * @returns true if building was constructed, false if it was already constructed or doesn't exist
    */
-  public constructBuilding(buildingId: string, slotId?: string): boolean {
+  public constructBuilding(buildingId: string, slotUniqueId?: string): boolean {
     // Check if already constructed
     if (this.isBuildingConstructed(buildingId)) {
       return false;
@@ -120,9 +165,9 @@ export class BuildingService {
     this.constructedBuildings.push(building);
     
     // If a slot was specified, update the slot mapping
-    if (slotId) {
+    if (slotUniqueId) {
       // Get the slot to update its constructed status
-      const slotIndex = this.buildingSlots.findIndex(slot => slot.id === slotId);
+      const slotIndex = this.buildingSlots.findIndex(slot => slot.unique_id === slotUniqueId);
       if (slotIndex >= 0) {
         // Update the slot's already_constructed property
         this.buildingSlots[slotIndex] = {
@@ -131,7 +176,7 @@ export class BuildingService {
         };
         
         // Update the slot-to-building mapping
-        this.slotToBuildingMap[slotId] = buildingId;
+        this.slotToBuildingMap[slotUniqueId] = buildingId;
       }
     }
     
@@ -169,8 +214,10 @@ export class BuildingService {
     already_constructed: string | null,
     available_for_construction: string[]
   ): BuildingSlot {
+    const id = uuidv4(); // Generate new ID for both fields
     return {
-      id: uuidv4(),
+      id, // Use same ID for both fields for newly created slots
+      unique_id: id,
       already_constructed,
       available_for_construction
     };

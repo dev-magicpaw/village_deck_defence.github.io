@@ -15,6 +15,7 @@ import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
 
 // TODO: move this into Building.ts
+// TODO: each building slot should have a unique id, uuid4
 interface BuildingSlot {
   id: string;
   already_constructed: string | null;
@@ -96,6 +97,15 @@ export class GameScene extends Phaser.Scene {
     
     // Initialize buildings
     this.buildingService = new BuildingService();
+    
+    // Pass the config data directly to ensure it has access to the building slots
+    // TODO these should be passed in the BuildingService constructor
+    const buildingSlots = this.gameConfig.building_slots || [];
+    // TODO these should be passed in the BuildingDisplayRenderer constructor
+    const buildingSlotLocations = this.gameConfig.building_slot_locations || [];
+    
+    // Manually set the building slots before initializing
+    this.buildingService.setBuildingSlots(buildingSlots, buildingSlotLocations);
     this.buildingService.initializeBuildings();
     
     // Initialize the tavern service
@@ -163,7 +173,7 @@ export class GameScene extends Phaser.Scene {
     
     // Find the level config with matching ID
     const levelConfig = levelsData.find((level: any) => level.id === this.levelId);
-    if( !levelConfig ) {
+    if (!levelConfig) {
       throw new Error(`Level config not found for level ID: ${this.levelId}`);
     }
   
@@ -172,6 +182,9 @@ export class GameScene extends Phaser.Scene {
       ...this.gameConfig,
       ...levelConfig
     };
+    
+    // Make sure we're updating the registry with the complete config
+    this.game.registry.set('gameConfig', this.gameConfig);
   }
 
   /**

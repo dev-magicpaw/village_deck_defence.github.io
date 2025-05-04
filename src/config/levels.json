@@ -1,7 +1,7 @@
 [
     {
         "id": "level_1",
-        "name": "Village",
+        "name": "Village Defense",
         "description": "Protect the village from the forces of evil",
         "starting_cards": [
             {"card_elf_scout": 1},

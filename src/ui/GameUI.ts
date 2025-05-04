@@ -48,7 +48,6 @@ export class GameUI {
     this.createInvasionProgressPanel();
     this.createDisplaySpacePanel();
     this.createEntityInfoPanel();
-    // Player hand panel is now handled by PlayerHandRenderer
   }
   
   /**

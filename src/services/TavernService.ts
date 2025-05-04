@@ -197,7 +197,7 @@ export class TavernService extends Phaser.Events.EventEmitter {
     }
 
     // Deduct cost - it's always deducted, even if the adventure fails
-    this.resourceService.consumeConstruction(option.cost);
+    this.resourceService.consumePower(option.cost);
     
 
     // Check if we have enough resources

@@ -409,24 +409,7 @@ export class StickerShopRenderer {
     
     this.selectAllButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        // TODO this should be refactored into a method
-        // Select all cards in the player hand with at least 1 invention value
-        // Get all cards from the player hand renderer
-        const cards = this.playerHandRenderer['currentCards'];
-        const idsToSelect: string[] = [];
-        const idsToDeselect: string[] = [];
-        
-        // Determine which cards to select and deselect based on invention value
-        cards.forEach(card => {
-          if (card.getInventionValue() >= 1) {
-            idsToSelect.push(card.unique_id);
-          } else {
-            idsToDeselect.push(card.unique_id);
-          }
-        });
-        
-        // Pass the IDs to the player hand renderer
-        this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);        
+        this.selectAllCardsWithInvention();
       });
     
     this.selectAllButton.on('pointerover', () => {
@@ -550,6 +533,28 @@ export class StickerShopRenderer {
     this.displayContainer.add(this.playCardsButtonText);
     this.displayContainer.add(this.purchaseButton);
     this.displayContainer.add(this.purchaseButtonText);
+  }
+  
+  /**
+   * Selects all cards in the player's hand that have at least 1 invention value
+   */
+  private selectAllCardsWithInvention(): void {
+    // Get all cards from the player hand renderer
+    const cards = this.playerHandRenderer['currentCards'];
+    const idsToSelect: string[] = [];
+    const idsToDeselect: string[] = [];
+    
+    // Determine which cards to select and deselect based on invention value
+    cards.forEach(card => {
+      if (card.getInventionValue() >= 1) {
+        idsToSelect.push(card.unique_id);
+      } else {
+        idsToDeselect.push(card.unique_id);
+      }
+    });
+    
+    // Pass the IDs to the player hand renderer
+    this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);
   }
   
   /**

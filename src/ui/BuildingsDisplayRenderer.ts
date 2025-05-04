@@ -6,7 +6,7 @@ import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
-import { CARD_WIDTH } from './CardRenderer';
+import { CARD_WIDTH, CARD_WIDTH_TO_HEIGHT_RATIO } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
@@ -32,7 +32,7 @@ export class BuildingsDisplayRenderer {
   private deckService: DeckService;
   
   // Card visual properties
-  private cardWidth: number = CARD_WIDTH;
+  private cardWidth: number = CARD_WIDTH * CARD_WIDTH_TO_HEIGHT_RATIO;
   private cardHeight: number = CARD_WIDTH; //for building display cards are squared
   private panelMarginX: number = 30;
   private panelMarginY: number = 30;
@@ -165,6 +165,10 @@ export class BuildingsDisplayRenderer {
     const y = this.panelY + location.y + this.panelMarginY;
     const container = this.scene.add.container(x, y);
     
+    // Set the origin to the center point of the card
+    container.setSize(this.cardWidth, this.cardHeight);
+    container.setPosition(x + this.cardWidth/2, y + this.cardHeight/2);
+    
     // // Add a debug background
     // const background = this.scene.add.rectangle(0, 0, this.cardWidth + 10, this.cardHeight + 10, 0x0000ff, 0.3);
     // container.add(background);
@@ -172,13 +176,13 @@ export class BuildingsDisplayRenderer {
 
     // Create the card background
     const cardBackground = this.scene.add.image(
-      this.cardWidth / 2,
-      this.cardHeight / 2,
+      0,
+      0,
       'round_wood_cross'
     );
     cardBackground.setDisplaySize(this.cardWidth, this.cardHeight);
     cardBackground.setRotation(Math.PI / 4); // turn it 45 degrees
-    cardBackground.setScale(5);
+    cardBackground.setScale(2);
     cardBackground.setOrigin(0.5,0.5);
     
     cardBackground.setInteractive({ useHandCursor: true });
@@ -206,10 +210,14 @@ export class BuildingsDisplayRenderer {
     const y = this.panelY + location.y + this.panelMarginY;
     const container = this.scene.add.container(x, y);
     
+    // Set the origin to the center point of the card
+    container.setSize(this.cardWidth, this.cardHeight);
+    container.setPosition(x + this.cardWidth/2, y + this.cardHeight/2);
+    
     // Create the card background
     const cardBackground = this.scene.add['nineslice'](
-      this.cardWidth / 2,
-      this.cardHeight / 2,
+      0,
+      0,
       'panel_wood_paper',
       undefined,
       this.cardWidth,
@@ -227,8 +235,8 @@ export class BuildingsDisplayRenderer {
     
     // Create title text with building name
     const titleText = this.scene.add.text(
-      this.cardWidth / 2,
-      this.cardHeight / 2,
+      0,
+      0,
       building.name,
       {
         fontSize: '18px',

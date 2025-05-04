@@ -74,10 +74,10 @@ export class BootScene extends Phaser.Scene {
     this.load.image('recruit_card', 'assets/images/card_backs/recruit_card.png');
 
     // Load building card images
-    this.load.image('building_tavern', 'assets/images/buildings/building_tavern.png');
-    this.load.image('building_workshop', 'assets/images/buildings/building_workshop.png');
-    this.load.image('building_wooden_gates', 'assets/images/buildings/building_wooden_gates.png');
-    this.load.image('building_wooden_wall', 'assets/images/buildings/building_wooden_wall.png');
+    this.load.image('building_tavern', 'assets/images/buildings/building_tavern.jpg');
+    this.load.image('building_workshop', 'assets/images/buildings/building_workshop.jpg');
+    this.load.image('building_wooden_gates', 'assets/images/buildings/building_wooden_gates.jpg');
+    this.load.image('building_wooden_wall', 'assets/images/buildings/building_wooden_wall.jpg');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/Sword1.png');

@@ -812,33 +812,18 @@ export class StickerShopRenderer {
       // Store the selected sticker in a local variable
       const stickerToApply = this.selectedSticker;
       
-      // // 1. Get all selected card IDs
-      // const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
-      // const selectedInventionValue = this.playerHandRenderer.getSelectedInventionValue();
-      
-      // // 2. Add their invention value to ResourceService
-      // if (this.resourceService) {
-      //   this.resourceService.addInvention(selectedInventionValue);
-      // }
-      
-      // // 3. Discard all selected cards using PlayerHandRenderer's method
-      // this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
-      
-      // 4. Deduct the sticker cost from ResourceService
+      // 1. Deduct the sticker cost from ResourceService
       if (this.resourceService) {
         this.resourceService.consumeInvention(stickerToApply.cost);
       }
-      
-      // // 5. Deselect all cards
-      // this.playerHandRenderer.clearCardSelection();
-      
-      // 6. Update the acquired text
+
+      // 2. Update the acquired text
       this.updateAcquiredText();
       
-      // 7. Deselect the current sticker from the shop
+      // 3. Deselect the current sticker from the shop
       this.deselectSticker();
       
-      // 8. Set the sticker in the card overlay and show it
+      // 4. Set the sticker in the card overlay and show it
       this.cardOverlayRenderer?.setSticker(stickerToApply);
       this.cardOverlayRenderer?.show();
     }

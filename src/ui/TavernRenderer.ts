@@ -277,6 +277,8 @@ export class TavernRenderer {
     
     // Set hover effects
     this.selectAllButton.setInteractive({ useHandCursor: true });
+    this.selectAllButton.on('pointerdown', () => { this.selectAllCards(); });
+
     this.selectAllButton.on('pointerover', () => {
       this.selectAllButton?.setScale(1.05);
       this.selectAllButtonText?.setScale(1.05);
@@ -315,7 +317,7 @@ export class TavernRenderer {
     
     // Set hover effects
     this.playCardsButton.setInteractive({ useHandCursor: true });
-    this.playCardsButton.setInteractive({ useHandCursor: true }).on('pointerdown', () => { this.playSelectedCards(); });
+    this.playCardsButton.on('pointerdown', () => { this.playSelectedCards(); });
 
     this.playCardsButton.on('pointerover', () => {
       this.playCardsButton?.setScale(1.05);
@@ -355,7 +357,7 @@ export class TavernRenderer {
 
     // Set hover effects
     this.proceedButton.setInteractive({ useHandCursor: true });
-    this.proceedButton.setInteractive({ useHandCursor: true }).on('pointerdown', () => { this.proceedWithAdventure(); });
+    this.proceedButton.on('pointerdown', () => { this.proceedWithAdventure(); });
 
     this.proceedButton.on('pointerover', () => {
       this.proceedButton?.setScale(1.05);
@@ -371,9 +373,6 @@ export class TavernRenderer {
     // Set initial button states
     this.setProceedButtonState(false);
     this.setPlayCardsButtonState(false);
-    
-    // Add event listeners for buttons
-    this.playCardsButton.on('pointerdown', this.onPlayCardsClicked.bind(this));
     
     // Add all elements to container
     this.container.add([
@@ -479,47 +478,27 @@ export class TavernRenderer {
     // 6. Disable the play cards button since no cards are selected anymore
     this.setPlayCardsButtonState(false);
   }
-  
-  /**
-   * Handle Play Cards button click
-   */
-  private onPlayCardsClicked(): void {
-    if (!this.resourceService) return;
-    
-    const selectedIds = this.playerHandRenderer.getSelectedCardIds();
-    if (selectedIds.length === 0) return;
-    
-    // Get the cards being played
+
+  private selectAllCards(): void {
+    // Select all cards in the player hand with at least 1 invention value
+    // Get all cards from the player hand renderer
     const cards = this.playerHandRenderer['currentCards'];
-    if (!cards) return;
+    const idsToSelect: string[] = [];
+    const idsToDeselect: string[] = [];
     
-    // Calculate total power from selected cards
-    let totalPower = 0;
-    const selectedCards = cards.filter(card => selectedIds.includes(card.unique_id));
-    
-    selectedCards.forEach(card => {
-      totalPower += card.getPowerValue();
+    // Determine which cards to select and deselect based on invention value
+    cards.forEach(card => {
+      if (card.getPowerValue() >= 1) {
+        idsToSelect.push(card.unique_id);
+      } else {
+        idsToDeselect.push(card.unique_id);
+      }
     });
     
-    // Add power to resource service
-    if (totalPower > 0) {
-      this.resourceService.addPower(totalPower);
-    }
-    
-    // Discard played cards if deck service is available
-    if (this.deckService) {
-      selectedCards.forEach(card => {
-        this.deckService?.discard(card);
-      });
-    }
-    
-    // Clear selection
-    this.playerHandRenderer.clearCardSelection();
-    
-    // Update display
-    this.updateAcquiredText();
+    // Pass the IDs to the player hand renderer
+    this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);   
   }
-
+  
   private updateAcquiredText(): void {
     if (this.acquiredText) {
       const acquiredPower = this.resourceService ? this.resourceService.getPower() : 0;

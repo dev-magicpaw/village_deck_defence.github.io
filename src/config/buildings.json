@@ -19,5 +19,20 @@
         "description": "Allows to go for small adventures",
         "image": "src/assets/images/cards/card_human_villager.png",
         "constructed_from_start": true
+    },
+    {
+        "id": "wooden_palisade",
+        "name": "Wooden Palisade",
+        "description": "Gives some protection from invaders",
+        "image": "src/assets/images/cards/wooden_palisade.png",
+        "constructed_from_start": false
+    },
+    {
+        "id": "wooden_gates",
+        "name": "Wooden Gates",
+        "description": "Gives a bit of protection from invaders",
+        "image": "src/assets/images/cards/wooden_gates.png",
+        "constructed_from_start": false
     }
+
 ]

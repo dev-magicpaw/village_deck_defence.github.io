@@ -15,7 +15,11 @@
             { "x": 100, "y": 100, "slot_id": "tavern_slot"},
             { "x": 200, "y": 100, "slot_id": "workshop_slot"},
             { "x": 300, "y": 100, "slot_id": "architect_slot"},
-            { "x": 400, "y": 100, "slot_id": "village_slot"}
+            { "x": 400, "y": 100, "slot_id": "village_slot"},
+            { "x": 100, "y": 200, "slot_id": "village_slot"},
+            { "x": 200, "y": 200, "slot_id": "village_slot"},
+            { "x": 300, "y": 200, "slot_id": "village_slot"},
+            { "x": 400, "y": 200, "slot_id": "village_slot"}
         ],
         "building_slots": [
             {
@@ -36,7 +40,10 @@
             {
                 "id": "village_slot",
                 "already_constructed": null,
-                "available_for_construction": []
+                "available_for_construction": [
+                    "wooden_palisade",
+                    "wooden_gates"
+                ]
             }
         ]
     }

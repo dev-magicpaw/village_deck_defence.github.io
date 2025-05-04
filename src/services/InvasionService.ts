@@ -6,6 +6,7 @@ import { AnalyticsService } from './AnalyticsService';
 export class InvasionService {
   private invasionDistance: number;
   private invasionSpeedPerTurn: number;
+  private invasionDifficulty: number = 0;
   private currentDistance: number;
   private currentDay: number = 1;
   
@@ -13,10 +14,12 @@ export class InvasionService {
    * Create a new invasion service
    * @param initialDistance Initial distance of the invasion from village
    * @param speedPerTurn How much distance is reduced each turn
+   * @param difficulty Optional difficulty level of the invasion (affects enemy strength)
    */
-  constructor(initialDistance: number, speedPerTurn: number) {
+  constructor(initialDistance: number, speedPerTurn: number, difficulty: number = 0) {
     this.invasionDistance = initialDistance;
     this.invasionSpeedPerTurn = speedPerTurn;
+    this.invasionDifficulty = difficulty;
     this.currentDistance = initialDistance;
   }
   
@@ -51,6 +54,13 @@ export class InvasionService {
    */
   public getCurrentDay(): number {
     return this.currentDay;
+  }
+  
+  /**
+   * Get the difficulty level of the invasion
+   */
+  public getDifficulty(): number {
+    return this.invasionDifficulty;
   }
   
   /**

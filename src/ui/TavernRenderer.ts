@@ -685,41 +685,13 @@ export class TavernRenderer {
     });
     
     // Determine level image and name based on adventure level
-    let imageName = 'panel_wood';
-    let levelName = '';
-    
-    switch (level) {
-      case AdventureLevel.RECRUITMENT:
-        imageName = 'panel_wood';
-        levelName = 'Recruitment';
-        break;
-      case AdventureLevel.IN_TOWN:
-        imageName = 'panel_brick';
-        levelName = 'In Town';
-        break;
-      case AdventureLevel.OUTSIDE_TOWN:
-        imageName = 'panel_metal';
-        levelName = 'Outside Town';
-        break;
-      case AdventureLevel.IN_FAR_LANDS:
-        imageName = 'panel_stone';
-        levelName = 'Far Lands';
-        break;
-    }
+    const imageName = 'recruit_card';
     
     // Level image
+    // TODO: make it the size of the card
     const image = this.scene.add.image(0, -30, imageName);
     image.setDisplaySize(this.levelCardWidth - 20, 100);
-    
-    // Level name
-    const name = this.scene.add.text(0, -80, levelName, {
-      fontFamily: 'Arial',
-      fontSize: '16px',
-      color: '#000000',
-      align: 'center'
-    });
-    name.setOrigin(0.5, 0.5);
-
+ 
     
     // Selection highlight (initially invisible)
     const highlight = this.scene.add.image(0, 0, 'panel_metal_glow');
@@ -729,7 +701,7 @@ export class TavernRenderer {
     highlight.setAlpha(0.3);
     
     // Add all elements to the container
-    container.add([highlight, background, image, name]);
+    container.add([highlight, background, image]);
     
     // Store highlight for later reference
     container.setData('highlight', highlight);

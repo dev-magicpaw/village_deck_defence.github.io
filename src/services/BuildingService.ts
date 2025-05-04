@@ -2,12 +2,26 @@ import { BuildingConfig } from '../entities/Building';
 import { Building as BuildingInterface } from '../types/game';
 import { BuildingRegistry } from './BuildingRegistry';
 
+interface BuildingSlot {
+  id: string;
+  already_constructed: string | null;
+  available_for_construction: string[];
+}
+
+interface BuildingSlotLocation {
+  x: number;
+  y: number;
+  slot_id: string;
+}
+
 /**
  * Service for managing buildings in the game
  */
 export class BuildingService {
   private buildingRegistry: BuildingRegistry;
   private constructedBuildings: BuildingInterface[] = [];
+  private buildingSlots: BuildingSlot[] = [];
+  private buildingSlotLocations: BuildingSlotLocation[] = [];
 
   /**
    * Create a new BuildingService
@@ -18,19 +32,97 @@ export class BuildingService {
 
   /**
    * Initialize buildings from configuration
-   * Immediately constructs buildings that are marked as constructed_from_start
+   * Immediately constructs buildings that are marked as constructed_from_start 
+   * or are defined as already_constructed in the level config
    */
   public initializeBuildings(): void {
-    // Get all building IDs
-    const buildingIds = this.buildingRegistry.getAllBuildingIds();
+    // Load building slots from the game config
+    this.loadBuildingSlotsFromConfig();
     
-    // Process all building configs and construct those marked as constructed_from_start
+    // First, construct buildings that are already constructed in level config
+    this.buildingSlots.forEach(slot => {
+      if (slot.already_constructed) {
+        this.constructBuilding(slot.already_constructed);
+      }
+    });
+    
+    // Then, construct buildings that are marked as constructed_from_start in the building config
+    // but only if they're not already constructed via level config
+    const buildingIds = this.buildingRegistry.getAllBuildingIds();
     buildingIds.forEach(buildingId => {
       const buildingConfig = this.buildingRegistry.getBuildingConfig(buildingId);
-      if (buildingConfig && buildingConfig.constructed_from_start) {
+      if (buildingConfig && buildingConfig.constructed_from_start && !this.isBuildingConstructed(buildingId)) {
         this.constructBuilding(buildingId);
       }
     });
+  }
+
+  /**
+   * Load building slots from the game configuration
+   */
+  private loadBuildingSlotsFromConfig(): void {
+    // Try to get game config from registry
+    const game = (window as any).game;
+    if (!game || !game.registry) {
+      return;
+    }
+    
+    // First check the merged gameConfig
+    const gameConfig = game.registry.get('gameConfig');
+    if (gameConfig) {
+      // Load building slots
+      if (gameConfig.building_slots && Array.isArray(gameConfig.building_slots)) {
+        this.buildingSlots = gameConfig.building_slots;
+      }
+      
+      // Load building slot locations
+      if (gameConfig.building_slot_locations && Array.isArray(gameConfig.building_slot_locations)) {
+        this.buildingSlotLocations = gameConfig.building_slot_locations;
+      }
+      return;
+    }
+    
+    // For backward compatibility, check for levelConfig
+    const levelConfig = game.registry.get('levelConfig');
+    if (levelConfig) {
+      // Load building slots
+      if (levelConfig.building_slots && Array.isArray(levelConfig.building_slots)) {
+        this.buildingSlots = levelConfig.building_slots;
+      }
+      
+      // Load building slot locations
+      if (levelConfig.building_slot_locations && Array.isArray(levelConfig.building_slot_locations)) {
+        this.buildingSlotLocations = levelConfig.building_slot_locations;
+      }
+    }
+  }
+
+  /**
+   * Get all building slots from the level configuration
+   */
+  public getBuildingSlots(): BuildingSlot[] {
+    return [...this.buildingSlots];
+  }
+
+  /**
+   * Get all building slot locations from the level configuration
+   */
+  public getBuildingSlotLocations(): BuildingSlotLocation[] {
+    return [...this.buildingSlotLocations];
+  }
+
+  /**
+   * Get a specific building slot by ID
+   */
+  public getBuildingSlotById(slotId: string): BuildingSlot | undefined {
+    return this.buildingSlots.find(slot => slot.id === slotId);
+  }
+
+  /**
+   * Get the location for a specific building slot
+   */
+  public getBuildingSlotLocation(slotId: string): BuildingSlotLocation | undefined {
+    return this.buildingSlotLocations.find(location => location.slot_id === slotId);
   }
 
   /**

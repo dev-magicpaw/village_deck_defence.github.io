@@ -14,12 +14,34 @@ import { TavernService } from '../services/TavernService';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
 
+// TODO: move this into Building.ts
+interface BuildingSlot {
+  id: string;
+  already_constructed: string | null;
+  available_for_construction: string[];
+}
+
+// TODO: move this into Building.ts
+interface BuildingSlotLocation {
+  x: number;
+  y: number;
+  slot_id: string;
+}
+
 interface GameConfig {
-  starting_cards: Array<Record<string, number>>;
+  // Global game settings
   player_hand_size: number;
   invasion_speed_per_turn: number;
+  
+  // Level-specific settings (can be overridden by level config)
+  id?: string;
+  name?: string;
+  description?: string;
+  starting_cards: Array<Record<string, number>>;
   invasion_distance: number;
   invasion_difficulty: number;
+  building_slot_locations?: Array<BuildingSlotLocation>;
+  building_slots?: Array<BuildingSlot>;
 }
 
 export class GameScene extends Phaser.Scene {
@@ -36,9 +58,18 @@ export class GameScene extends Phaser.Scene {
   private tavernService!: TavernService;
   private stickerShopService!: StickerShopService;
   private recruitCardRegistry!: RecruitCardRegistry;
+  private levelId: string = 'level_1'; // Default level ID
 
   constructor() {
     super({ key: 'GameScene' });
+  }
+
+  init(data: { levelId: string }): void {
+    if( !data || !data.levelId ) {
+      throw new Error('Level ID is required');
+    }
+
+    this.levelId = data.levelId;
   }
 
   preload(): void {
@@ -47,6 +78,7 @@ export class GameScene extends Phaser.Scene {
     this.load.json('cardsConfig', 'config/cards.json');
     this.load.json('buildingsConfig', 'config/buildings.json');
     this.load.json('recruitCardsConfig', 'config/recruit_cards.json');
+    this.load.json('levelsConfig', 'config/levels.json');
   }
 
   create(): void {
@@ -92,7 +124,8 @@ export class GameScene extends Phaser.Scene {
     // Track scene load for analytics
     trackEvent('scene_enter', {
       event_category: 'navigation',
-      event_label: 'game_scene'
+      event_label: 'game_scene',
+      level_id: this.levelId
     });
   }
   
@@ -100,8 +133,13 @@ export class GameScene extends Phaser.Scene {
    * Load game configurations
    */
   private loadConfigurations(): void {
-    // Get the game config
+    // Get the base game config
     this.gameConfig = this.cache.json.get('gameConfig');
+    
+    // Load and merge the level-specific config
+    this.loadLevelConfig();
+    
+    // Make the complete config available globally
     this.game.registry.set('gameConfig', this.gameConfig);
     
     // Initialize the card registry
@@ -118,12 +156,32 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
+   * Load the level configuration and merge it with the game config
+   */
+  private loadLevelConfig(): void {
+    const levelsData = this.cache.json.get('levelsConfig');
+    
+    // Find the level config with matching ID
+    const levelConfig = levelsData.find((level: any) => level.id === this.levelId);
+    if( !levelConfig ) {
+      throw new Error(`Level config not found for level ID: ${this.levelId}`);
+    }
+  
+    // Merge level config with game config (level settings override game settings)
+    this.gameConfig = {
+      ...this.gameConfig,
+      ...levelConfig
+    };
+  }
+
+  /**
    * Initialize the invasion service
    */
   private initializeInvasionService(): void {
     this.invasionService = new InvasionService(
       this.gameConfig.invasion_distance,
-      this.gameConfig.invasion_speed_per_turn
+      this.gameConfig.invasion_speed_per_turn,
+      this.gameConfig.invasion_difficulty
     );
   }
   
@@ -135,14 +193,14 @@ export class GameScene extends Phaser.Scene {
   }
   
   /**
-   * Initialize the player's deck based on game config
+   * Initialize the player's deck based on level config
    */
   private initializePlayerDeck(): void {
     // Create empty deck service
     this.playerDeck = new DeckService<Card>();
     
-    // Populate the deck based on starting_cards in config
-    this.gameConfig.starting_cards.forEach(cardEntry => {
+    const startingCards = this.gameConfig.starting_cards
+    startingCards.forEach(cardEntry => {
       const cardId = Object.keys(cardEntry)[0];
       const count = cardEntry[cardId];
       

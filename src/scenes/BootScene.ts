@@ -87,6 +87,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('gameConfig', 'config/game.json');
     this.load.json('buildingsConfig', 'config/buildings.json');
     this.load.json('recruitCardsConfig', 'config/recruit_cards.json');
+    this.load.json('levelsConfig', 'config/levels.json');
   }
 
   create(): void {
@@ -95,9 +96,24 @@ export class BootScene extends Phaser.Scene {
     this.initializeBuildingRegistry();
     this.initializeRecruitCardRegistry();
     
-    // Transition to the level select scene
-    // this.scene.start('LevelSelectScene');
-    this.scene.start('GameScene');
+    // Get level ID from levels config
+    const currentLevelId = this.getCurrentLevelId();
+    
+    // Transition to the game scene with level ID
+    this.scene.start('GameScene', { levelId: currentLevelId });
+  }
+  
+  /**
+   * Get the current level ID to load
+   * Currently selects the first level from the config
+   */
+  private getCurrentLevelId(): string {
+    const levelsData = this.cache.json.get('levelsConfig');
+    if (levelsData && levelsData.levels && levelsData.levels.length > 0) {
+      return levelsData.levels[0].id; // Return the first level ID
+    }
+    // Fallback to default level ID if levels config is not valid
+    return 'level_1';
   }
   
   /**

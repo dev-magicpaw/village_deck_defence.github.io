@@ -21,8 +21,10 @@ export class StickerShopRenderer {
   private shopPanel: Phaser.GameObjects.NineSlice | null = null;
   private stickerRenderers: StickerInShopRenderer[] = [];
   private selectedSticker: StickerConfig | null = null;
-  private applyButton: Phaser.GameObjects.NineSlice | null = null;
-  private applyButtonText: Phaser.GameObjects.Text | null = null;
+  private purchaseButton: Phaser.GameObjects.NineSlice | null = null;
+  private purchaseButtonText: Phaser.GameObjects.Text | null = null;
+  private playCardsButton: Phaser.GameObjects.NineSlice | null = null;
+  private playCardsButtonText: Phaser.GameObjects.Text | null = null;
   private resourceService?: ResourceService;
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
@@ -132,7 +134,7 @@ export class StickerShopRenderer {
     
     // If a sticker is selected, check if we still have enough resources
     if (this.selectedSticker) {
-      this.setApplyButtonState(this.canAffordSticker());
+      this.setPurchaseButtonState(this.canAffordSticker());
     }
     
     // Update affordability status for all stickers
@@ -253,18 +255,18 @@ export class StickerShopRenderer {
    * Set the state of the apply button (enabled/disabled)
    * @param enabled Whether the button should be enabled
    */
-  private setApplyButtonState(enabled: boolean): void {
-    if (this.applyButton && this.applyButtonText) {
+  private setPurchaseButtonState(enabled: boolean): void {
+    if (this.purchaseButton && this.purchaseButtonText) {
       if (enabled) {
         // Enable the button
-        this.applyButton.clearTint();
-        this.applyButton.setInteractive({ useHandCursor: true });
-        this.applyButtonText.setColor('#ffffff');
+        this.purchaseButton.clearTint();
+        this.purchaseButton.setInteractive({ useHandCursor: true });
+        this.purchaseButtonText.setColor('#ffffff');
       } else {
         // Disable the button
-        this.applyButton.setTint(0x555555);
-        this.applyButton.disableInteractive();
-        this.applyButtonText.setColor('#888888');
+        this.purchaseButton.setTint(0x555555);
+        this.purchaseButton.disableInteractive();
+        this.purchaseButtonText.setColor('#888888');
       }
     }
   }
@@ -345,31 +347,32 @@ export class StickerShopRenderer {
       'resource_invention'
     );
     resourceIcon.setOrigin(1, 1);
-    resourceIcon.setScale(0.6); // Scale down the icon to fit nicely
+    resourceIcon.setScale(0.6);
     
     // Create "Select All" button
-    const buttonWidth = 120;
-    const buttonHeight = 40;
-    const buttonX = marginX + (cardWidth - buttonWidth) / 2;
-    const buttonY = handPanelY + panelHeight / 2 + 30;
+    const buttonWidth = 150;
+    const buttonHeight = 35;
+    const buttonX = marginX + (cardWidth / 2);
+    const buttonY = handPanelY + 130;
+    const buttonSpacingY = 10;
     
     this.selectAllButton = this.scene.add['nineslice'](
-      buttonX + buttonWidth / 2,
+      buttonX,
       buttonY,
-      'panel_wood_arrows',
+      'panel_wood_corners_metal',
       undefined,
       buttonWidth,
       buttonHeight,
-      10,
-      10,
-      10,
-      10
+      20,
+      20,
+      20,
+      20
     );
     this.selectAllButton.setOrigin(0.5, 0.5);
     
     // Create button text
     this.selectAllButtonText = this.scene.add.text(
-      buttonX + buttonWidth / 2,
+      buttonX,
       buttonY,
       'Select All',
       {
@@ -380,12 +383,10 @@ export class StickerShopRenderer {
     );
     this.selectAllButtonText.setOrigin(0.5, 0.5);
     
-    // Make button interactive
     this.selectAllButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
+        // TODO this should be refactored into a method
         // Select all cards in the player hand with at least 1 invention value
-        // TODO: This should decide here, which cards to select / deselect and provide the respective unique_card ids to the playerHandRenderer
-        
         // Get all cards from the player hand renderer
         const cards = this.playerHandRenderer['currentCards'];
         const idsToSelect: string[] = [];
@@ -404,7 +405,6 @@ export class StickerShopRenderer {
         this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);        
       });
     
-    // Add hover effects
     this.selectAllButton.on('pointerover', () => {
       this.selectAllButton?.setScale(1.05);
       this.selectAllButtonText?.setScale(1.05);
@@ -415,59 +415,103 @@ export class StickerShopRenderer {
       this.selectAllButtonText?.setScale(1);
     });
     
-    // Create Apply button below Select All button
-    const applyButtonWidth = 120;
-    const applyButtonHeight = 40;
-    const applyButtonX = marginX + (cardWidth - applyButtonWidth) / 2;
-    const applyButtonY = buttonY + buttonHeight + 20; // Position below Select All button
+    // Create Play Cards button
+    const playCardsButtonY = buttonY + buttonHeight + buttonSpacingY;
     
-    this.applyButton = this.scene.add['nineslice'](
-      applyButtonX + applyButtonWidth / 2,
-      applyButtonY,
-      'panel_wood_arrows',
+    this.playCardsButton = this.scene.add['nineslice'](
+      buttonX,
+      playCardsButtonY,
+      'panel_wood_corners_metal',
       undefined,
-      applyButtonWidth,
-      applyButtonHeight,
-      10,
-      10,
-      10,
-      10
+      buttonWidth,
+      buttonHeight,
+      20,
+      20,
+      20,
+      20
     );
-    this.applyButton.setOrigin(0.5, 0.5);
+    this.playCardsButton.setOrigin(0.5, 0.5);
     
-    // Create apply button text
-    this.applyButtonText = this.scene.add.text(
-      applyButtonX + applyButtonWidth / 2,
-      applyButtonY,
-      'Apply',
+    // Create play cards button text
+    this.playCardsButtonText = this.scene.add.text(
+      buttonX,
+      playCardsButtonY,
+      'Play Cards',
       {
         fontSize: '16px',
         color: '#ffffff',
         fontStyle: 'bold'
       }
     );
-    this.applyButtonText.setOrigin(0.5, 0.5);
+    this.playCardsButtonText.setOrigin(0.5, 0.5);
     
-    // Initially disable the apply button
-    this.setApplyButtonState(false);
+    // Make play cards button interactive
+    this.playCardsButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        this.playSelectedCards();
+      });
     
-    // Make apply button interactive
-    this.applyButton.setInteractive({ useHandCursor: true })
+    // Add hover effects for play cards button
+    this.playCardsButton.on('pointerover', () => {
+      this.playCardsButton?.setScale(1.05);
+      this.playCardsButtonText?.setScale(1.05);
+    });
+    
+    this.playCardsButton.on('pointerout', () => {
+      this.playCardsButton?.setScale(1);
+      this.playCardsButtonText?.setScale(1);
+    });
+
+    // Create Purchase button
+    const purchaseButtonY = playCardsButtonY + buttonHeight + buttonSpacingY;
+
+    this.purchaseButton = this.scene.add['nineslice'](
+      buttonX,
+      purchaseButtonY,
+      'panel_wood_corners_metal',
+      undefined,
+      buttonWidth,
+      buttonHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.purchaseButton.setOrigin(0.5, 0.5);
+    
+    // Create purchase button text
+    this.purchaseButtonText = this.scene.add.text(
+      buttonX,
+      purchaseButtonY,
+      'Purchase',
+      {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }
+    );
+    this.purchaseButtonText.setOrigin(0.5, 0.5);
+    
+    // Initially disable the purchase button
+    this.setPurchaseButtonState(false);
+    
+    // Make purchase button interactive
+    this.purchaseButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         this.purchaseSticker();
       });
     
-    // Add hover effects for apply button
-    this.applyButton.on('pointerover', () => {
+    // Add hover effects for purchase button
+    this.purchaseButton.on('pointerover', () => {
       if (this.selectedSticker) {
-        this.applyButton?.setScale(1.05);
-        this.applyButtonText?.setScale(1.05);
+        this.purchaseButton?.setScale(1.05);
+        this.purchaseButtonText?.setScale(1.05);
       }
     });
     
-    this.applyButton.on('pointerout', () => {
-      this.applyButton?.setScale(1);
-      this.applyButtonText?.setScale(1);
+    this.purchaseButton.on('pointerout', () => {
+      this.purchaseButton?.setScale(1);
+      this.purchaseButtonText?.setScale(1);
     });
     
     // Add to display container
@@ -478,8 +522,10 @@ export class StickerShopRenderer {
     this.displayContainer.add(resourceIcon);
     this.displayContainer.add(this.selectAllButton);
     this.displayContainer.add(this.selectAllButtonText);
-    this.displayContainer.add(this.applyButton);
-    this.displayContainer.add(this.applyButtonText);
+    this.displayContainer.add(this.playCardsButton);
+    this.displayContainer.add(this.playCardsButtonText);
+    this.displayContainer.add(this.purchaseButton);
+    this.displayContainer.add(this.purchaseButtonText);
   }
   
   /**
@@ -582,7 +628,7 @@ export class StickerShopRenderer {
       renderer.setSelected(renderer.getStickerConfig().id === stickerConfig.id);
     });
     
-    this.setApplyButtonState(this.canAffordSticker());
+    this.setPurchaseButtonState(this.canAffordSticker());
   }
   
   /**
@@ -688,11 +734,11 @@ export class StickerShopRenderer {
     if (this.shopPanel) {
       this.shopPanel.destroy();
     }
-    if (this.applyButton) {
-      this.applyButton.destroy();
+    if (this.purchaseButton) {
+      this.purchaseButton.destroy();
     }
-    if (this.applyButtonText) {
-      this.applyButtonText.destroy();
+    if (this.purchaseButtonText) {
+      this.purchaseButtonText.destroy();
     }
     if (this.resourcePanel) {
       this.resourcePanel.destroy();
@@ -708,6 +754,12 @@ export class StickerShopRenderer {
     }
     if (this.selectAllButtonText) {
       this.selectAllButtonText.destroy();
+    }
+    if (this.playCardsButton) {
+      this.playCardsButton.destroy();
+    }
+    if (this.playCardsButtonText) {
+      this.playCardsButtonText.destroy();
     }
     if (this.inventionIcon) {
       this.inventionIcon.destroy();
@@ -744,7 +796,7 @@ export class StickerShopRenderer {
     });
     
     // Disable the apply button
-    this.setApplyButtonState(false);
+    this.setPurchaseButtonState(false);
     
     // Update selection text
     if (this.selectionText) {
@@ -760,25 +812,25 @@ export class StickerShopRenderer {
       // Store the selected sticker in a local variable
       const stickerToApply = this.selectedSticker;
       
-      // 1. Get all selected card IDs
-      const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
-      const selectedInventionValue = this.playerHandRenderer.getSelectedInventionValue();
+      // // 1. Get all selected card IDs
+      // const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
+      // const selectedInventionValue = this.playerHandRenderer.getSelectedInventionValue();
       
-      // 2. Add their invention value to ResourceService
-      if (this.resourceService) {
-        this.resourceService.addInvention(selectedInventionValue);
-      }
+      // // 2. Add their invention value to ResourceService
+      // if (this.resourceService) {
+      //   this.resourceService.addInvention(selectedInventionValue);
+      // }
       
-      // 3. Discard all selected cards using PlayerHandRenderer's method
-      this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
+      // // 3. Discard all selected cards using PlayerHandRenderer's method
+      // this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
       
       // 4. Deduct the sticker cost from ResourceService
       if (this.resourceService) {
         this.resourceService.consumeInvention(stickerToApply.cost);
       }
       
-      // 5. Deselect all cards
-      this.playerHandRenderer.clearCardSelection();
+      // // 5. Deselect all cards
+      // this.playerHandRenderer.clearCardSelection();
       
       // 6. Update the acquired text
       this.updateAcquiredText();
@@ -800,5 +852,28 @@ export class StickerShopRenderer {
       const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
       this.acquiredText.setText(`Acquired: ${acquiredInvention}`);
     }
+  }
+  
+  /**
+   * Play selected cards from the player's hand
+   */
+  private playSelectedCards(): void {
+    // 1. Get all selected card IDs
+    const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
+    const selectedInventionValue = this.playerHandRenderer.getSelectedInventionValue();
+    
+    // 2. Add their invention value to ResourceService
+    if (this.resourceService) {
+      this.resourceService.addInvention(selectedInventionValue);
+    }
+    
+    // 3. Discard all selected cards using PlayerHandRenderer's method
+    this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
+    
+    // 4. Deselect all cards
+    this.playerHandRenderer.clearCardSelection();
+    
+    // 5. Update the acquired text
+    this.updateAcquiredText();
   }
 } 

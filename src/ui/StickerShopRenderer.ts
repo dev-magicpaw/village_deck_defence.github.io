@@ -132,6 +132,10 @@ export class StickerShopRenderer {
   private onCardSelectionChanged(): void {
     this.updateSelectionText();
     
+    // Check if any cards are selected and update play cards button state
+    const hasSelectedCards = this.playerHandRenderer.getSelectedCardIds().length > 0;
+    this.setPlayCardsButtonState(hasSelectedCards);
+    
     // If a sticker is selected, check if we still have enough resources
     if (this.selectedSticker) {
       this.setPurchaseButtonState(this.canAffordSticker());
@@ -267,6 +271,26 @@ export class StickerShopRenderer {
         this.purchaseButton.setTint(0x555555);
         this.purchaseButton.disableInteractive();
         this.purchaseButtonText.setColor('#888888');
+      }
+    }
+  }
+  
+  /**
+   * Set the state of the play cards button (enabled/disabled)
+   * @param enabled Whether the button should be enabled
+   */
+  private setPlayCardsButtonState(enabled: boolean): void {
+    if (this.playCardsButton && this.playCardsButtonText) {
+      if (enabled) {
+        // Enable the button
+        this.playCardsButton.clearTint();
+        this.playCardsButton.setInteractive({ useHandCursor: true });
+        this.playCardsButtonText.setColor('#ffffff');
+      } else {
+        // Disable the button
+        this.playCardsButton.setTint(0x555555);
+        this.playCardsButton.disableInteractive();
+        this.playCardsButtonText.setColor('#888888');
       }
     }
   }
@@ -655,6 +679,10 @@ export class StickerShopRenderer {
       // Update acquired invention value from resource service
       this.updateAcquiredText();
       
+      // Initialize play cards button state based on card selection
+      const hasSelectedCards = this.playerHandRenderer.getSelectedCardIds().length > 0;
+      this.setPlayCardsButtonState(hasSelectedCards);
+      
       // Update sticker affordability based on current resources and selections
       this.updateStickersAffordability();
     }
@@ -845,6 +873,7 @@ export class StickerShopRenderer {
   private playSelectedCards(): void {
     // 1. Get all selected card IDs
     const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
+    
     const selectedInventionValue = this.playerHandRenderer.getSelectedInventionValue();
     
     // 2. Add their invention value to ResourceService
@@ -860,5 +889,8 @@ export class StickerShopRenderer {
     
     // 5. Update the acquired text
     this.updateAcquiredText();
+    
+    // 6. Disable the play cards button since no cards are selected anymore
+    this.setPlayCardsButtonState(false);
   }
 } 

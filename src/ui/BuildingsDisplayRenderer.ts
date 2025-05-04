@@ -4,9 +4,11 @@ import { BuildingService } from '../services/BuildingService';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
+import { TavernService } from '../services/TavernService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
+import { TavernRenderer } from './TavernRenderer';
 
 /**
  * Component that renders the constructed buildings in the main display area
@@ -18,9 +20,12 @@ export class BuildingsDisplayRenderer {
   private buildings: Building[] = [];
   private buildingCards: Phaser.GameObjects.Container[] = [];
   private stickerShopRenderer: StickerShopRenderer | null = null;
+  private tavernRenderer: TavernRenderer | null = null;
   private stickerShopBuildingId: string = '';
+  private tavernBuildingId: string = '';
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
+  private tavernService: TavernService;
   private playerHandRenderer: PlayerHandRenderer;
   private deckService: DeckService;
   
@@ -70,6 +75,7 @@ export class BuildingsDisplayRenderer {
     this.panelHeight = panelHeight;
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
+    this.tavernService = TavernService.getInstance();
     this.playerHandRenderer = playerHandRenderer;
     this.deckService = deckService;
     
@@ -88,6 +94,7 @@ export class BuildingsDisplayRenderer {
     }
         
     this.stickerShopBuildingId = gameConfig.sticker_shop_building_id;
+    this.tavernBuildingId = gameConfig.tavern_building_id;
     
     // Create the sticker shop renderer with exact same dimensions
     if (!this.stickerShopRenderer) {
@@ -103,7 +110,19 @@ export class BuildingsDisplayRenderer {
         this.deckService
       );
       this.stickerShopRenderer.init();
-    } 
+    }
+    
+    // Create the tavern renderer with the same dimensions
+    if (!this.tavernRenderer) {
+      this.tavernRenderer = new TavernRenderer(
+        this.scene,
+        this.panelX,
+        this.panelY,
+        this.panelWidth,
+        this.panelHeight
+      );
+      this.tavernRenderer.init();
+    }
     
     this.render();
   }
@@ -208,6 +227,11 @@ export class BuildingsDisplayRenderer {
     // Check if this is the sticker shop building
     if (building.id === this.stickerShopBuildingId) {
       this.stickerShopService.setShopState(true);
+    } else if (building.id === this.tavernBuildingId) {
+      // Show tavern UI
+      if (this.tavernRenderer) {
+        this.tavernRenderer.setVisibility(true);
+      }
     }
   }
   
@@ -232,7 +256,7 @@ export class BuildingsDisplayRenderer {
       this.render();
     }
   }
-  
+
   /**
    * Destroy this renderer and all its visual elements
    */
@@ -240,6 +264,9 @@ export class BuildingsDisplayRenderer {
     this.clearBuildingCards();
     if (this.stickerShopRenderer) {
       this.stickerShopRenderer.destroy();
+    }
+    if (this.tavernRenderer) {
+      this.tavernRenderer.destroy();
     }
     this.displayContainer.destroy();
   }

@@ -527,7 +527,7 @@ export class StickerShopRenderer {
     
     // Add hover effects for purchase button
     this.purchaseButton.on('pointerover', () => {
-      if (this.selectedSticker) {
+      if (this.selectedSticker && this.canAffordSticker()) {
         this.purchaseButton?.setScale(1.05);
         this.purchaseButtonText?.setScale(1.05);
       }
@@ -836,22 +836,26 @@ export class StickerShopRenderer {
    * Purchase and apply the currently selected sticker
    */
   private purchaseSticker(): void {
+    // Only proceed if a sticker is selected AND we can afford it
     if (this.selectedSticker && this.canAffordSticker()) {
       // Store the selected sticker in a local variable
       const stickerToApply = this.selectedSticker;
+
+      // 1. Play any selected cards
+      this.playSelectedCards();
       
-      // 1. Deduct the sticker cost from ResourceService
+      // 2. Deduct the sticker cost from ResourceService
       if (this.resourceService) {
         this.resourceService.consumeInvention(stickerToApply.cost);
       }
 
-      // 2. Update the acquired text
+      // 3. Update the acquired text
       this.updateAcquiredText();
       
-      // 3. Deselect the current sticker from the shop
+      // 4. Deselect the current sticker from the shop
       this.deselectSticker();
       
-      // 4. Set the sticker in the card overlay and show it
+      // 5. Set the sticker in the card overlay and show it
       this.cardOverlayRenderer?.setSticker(stickerToApply);
       this.cardOverlayRenderer?.show();
     }
@@ -864,6 +868,14 @@ export class StickerShopRenderer {
     if (this.acquiredText) {
       const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
       this.acquiredText.setText(`Acquired: ${acquiredInvention}`);
+      
+      // Update purchase button state when acquired resources change
+      if (this.selectedSticker) {
+        this.setPurchaseButtonState(this.canAffordSticker());
+      }
+      
+      // Update sticker affordability
+      this.updateStickersAffordability();
     }
   }
   

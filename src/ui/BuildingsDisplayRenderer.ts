@@ -6,6 +6,7 @@ import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
+import { CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
@@ -19,9 +20,9 @@ export class BuildingsDisplayRenderer {
   private displayContainer: Phaser.GameObjects.Container;
   private constructedBuildings: Building[] = [];
   private buildingSlots: Array<{slot: BuildingSlot, container: Phaser.GameObjects.Container}> = [];
-  private stickerShopRenderer: StickerShopRenderer | null = null;
-  private tavernRenderer: TavernRenderer | null = null;
-  private buildingMenuRenderer: BuildingMenuRenderer | null = null;
+  private stickerShopRenderer: StickerShopRenderer;
+  private tavernRenderer: TavernRenderer;
+  private buildingMenuRenderer: BuildingMenuRenderer;
   private stickerShopBuildingId: string = '';
   private tavernBuildingId: string = '';
   private resourceService: ResourceService;
@@ -31,8 +32,8 @@ export class BuildingsDisplayRenderer {
   private deckService: DeckService;
   
   // Card visual properties
-  private cardWidth: number = 150;
-  private cardHeight: number = 200;
+  private cardWidth: number = CARD_WIDTH;
+  private cardHeight: number = CARD_WIDTH; //for building display cards are squared
   private panelMarginX: number = 30;
   private panelMarginY: number = 30;
   
@@ -54,6 +55,9 @@ export class BuildingsDisplayRenderer {
    * @param stickerShopService Sticker shop service for managing the shop state
    * @param playerHandRenderer Player hand renderer for card selection
    * @param deckService Deck service for managing the player's deck
+   * @param stickerShopRenderer Sticker shop renderer for showing the sticker shop
+   * @param tavernRenderer Tavern renderer for showing the tavern
+   * @param buildingMenuRenderer Building menu renderer for showing the building menu
    */
   constructor(
     scene: Phaser.Scene,
@@ -65,7 +69,10 @@ export class BuildingsDisplayRenderer {
     resourceService: ResourceService,
     stickerShopService: StickerShopService,
     playerHandRenderer: PlayerHandRenderer,
-    deckService: DeckService
+    deckService: DeckService,
+    stickerShopRenderer: StickerShopRenderer,
+    tavernRenderer: TavernRenderer,
+    buildingMenuRenderer: BuildingMenuRenderer
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -78,13 +85,12 @@ export class BuildingsDisplayRenderer {
     this.tavernService = TavernService.getInstance();
     this.playerHandRenderer = playerHandRenderer;
     this.deckService = deckService;
+    this.stickerShopRenderer = stickerShopRenderer;
+    this.tavernRenderer = tavernRenderer;
+    this.buildingMenuRenderer = buildingMenuRenderer;
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
-    
-    // Manually set the card dimensions to be more appropriate for buildings
-    this.cardWidth = 150;
-    this.cardHeight = 200;
   }
 
   /**
@@ -102,45 +108,6 @@ export class BuildingsDisplayRenderer {
     
     // Make sure the display container is visible and on top
     this.displayContainer.setDepth(10);
-    
-    // Create the sticker shop renderer with exact same dimensions
-    if (!this.stickerShopRenderer) {
-      this.stickerShopRenderer = new StickerShopRenderer(
-        this.scene,
-        this.panelX,
-        this.panelY,
-        this.panelWidth,
-        this.panelHeight,
-        this.resourceService,
-        this.stickerShopService,
-        this.playerHandRenderer,
-        this.deckService
-      );
-      this.stickerShopRenderer.init();
-    }
-    
-    // Create the tavern renderer with the same dimensions
-    if (!this.tavernRenderer) {
-      this.tavernRenderer = new TavernRenderer(
-        this.scene,
-        this.panelX,
-        this.panelY,
-        this.panelWidth,
-        this.panelHeight,
-        this.playerHandRenderer,
-        this.resourceService,
-        this.deckService
-      );
-      this.tavernRenderer.init();
-    }
-    
-    // Create the building menu renderer
-    if (!this.buildingMenuRenderer) {
-      this.buildingMenuRenderer = new BuildingMenuRenderer(
-        this.scene,
-        this.buildingService
-      );
-    }
     
     this.render();
   }
@@ -164,150 +131,114 @@ export class BuildingsDisplayRenderer {
     console.log('Constructed buildings:', this.constructedBuildings);
     
     // Render each building slot
-    slots.forEach(slot => {
-      // Find the location for this slot using unique_id
-      const location = slotLocations.find(loc => loc.slot_unique_id === slot.unique_id);
-      
-      if (location) {
-        console.log(`Rendering slot ${slot.unique_id} at position (${location.x}, ${location.y})`);
-        // Create the slot at the specified location
-        const slotContainer = this.createBuildingSlot(slot, location);
-        this.buildingSlots.push({ slot, container: slotContainer });
-      } else {
-        // Fallback to legacy slot_id for backward compatibility
-        const legacyLocation = slotLocations.find(loc => loc.slot_id === slot.id);
-        if (legacyLocation) {
-          console.log(`Rendering slot ${slot.id} (legacy) at position (${legacyLocation.x}, ${legacyLocation.y})`);
-          const slotContainer = this.createBuildingSlot(slot, legacyLocation);
-          this.buildingSlots.push({ slot, container: slotContainer });
-        } else {
-          console.warn(`No location found for slot ${slot.unique_id}`);
-        }
+    slotLocations.forEach(location => {
+      // Find the slot for this location using unique_id
+      const slot = slots.find(s => s.unique_id === location.slot_unique_id);
+      if (!slot) {
+        throw new Error(`No slot found for location with slot_unique_id ${location.slot_unique_id}`);
       }
+            
+      let slotContainer: Phaser.GameObjects.Container;
+      if (slot.already_constructed) {
+        // Find the constructed building for this slot
+        const building = this.constructedBuildings.find(b => b.id === slot.already_constructed);
+        if (!building) {
+          throw new Error(`Building ID ${slot.already_constructed} is marked as constructed in slot ${slot.unique_id} but not found in constructed buildings`);
+        }
+        slotContainer = this.createConstructedBuildingSlot(slot, location, building);
+      } else {
+        slotContainer = this.createEmptyBuildingSlot(slot, location);
+      }
+      
+      this.buildingSlots.push({ slot, container: slotContainer });      
     });
   }
   
   /**
-   * Create a visual representation for a building slot
+   * Create a visual representation for an empty building slot
    * @param slot The building slot data
    * @param location The location data for the slot
-   * @returns Container with the building slot
+   * @returns Container with the empty building slot
    */
-  private createBuildingSlot(slot: BuildingSlot, location: BuildingSlotLocation): Phaser.GameObjects.Container {
-    // Position slots relative to the panel
-    const x = this.panelX + location.x;
-    const y = this.panelY + location.y;
-    console.log(`Creating slot ${slot.unique_id} at position (${x}, ${y}), panel at (${this.panelX}, ${this.panelY})`);
-    
+  private createEmptyBuildingSlot(slot: BuildingSlot, location: BuildingSlotLocation): Phaser.GameObjects.Container {
+    const x = this.panelX + location.x + this.panelMarginX;
+    const y = this.panelY + location.y + this.panelMarginY;
     const container = this.scene.add.container(x, y);
     
-    // Add a debug background to make sure it's visible
-    const background = this.scene.add.rectangle(0, 0, this.cardWidth + 10, this.cardHeight + 10, 0x0000ff, 0.3);
-    container.add(background);
+    // // Add a debug background
+    // const background = this.scene.add.rectangle(0, 0, this.cardWidth + 10, this.cardHeight + 10, 0x0000ff, 0.3);
+    // container.add(background);
     
-    // Check if there's a constructed building for this slot
-    const constructedBuildingId = slot.already_constructed;
-    let building: Building | null = null;
+
+    // Create the card background
+    const cardBackground = this.scene.add.image(
+      this.cardWidth / 2,
+      this.cardHeight / 2,
+      'round_wood_cross'
+    );
+    cardBackground.setDisplaySize(this.cardWidth, this.cardHeight);
+    cardBackground.setRotation(Math.PI / 4); // turn it 45 degrees
+    cardBackground.setScale(5);
+    cardBackground.setOrigin(0.5,0.5);
     
-    if (constructedBuildingId) {
-      // Find the building in the constructed buildings
-      const foundBuilding = this.constructedBuildings.find(b => b.id === constructedBuildingId);
-      if (foundBuilding) {
-        building = foundBuilding;
-        console.log(`Found constructed building ${foundBuilding.name} for slot ${slot.unique_id}`);
-      } else {
-        console.warn(`Building ID ${constructedBuildingId} is marked as constructed in slot ${slot.unique_id} but not found in constructed buildings`);
+    cardBackground.setInteractive({ useHandCursor: true });
+    cardBackground.on('pointerdown', () => { this.onBuildingSlotClick(slot, null); });
+    cardBackground.on('pointerover', () => { container.setScale(1.05); });
+    cardBackground.on('pointerout', () => { container.setScale(1); });
+    
+    container.add(cardBackground);
+    
+    // Add the container to the display container
+    this.displayContainer.add(container);
+    
+    return container;
+  }
+  
+  /**
+   * Create a visual representation for a constructed building slot
+   * @param slot The building slot data
+   * @param location The location data for the slot
+   * @param building The building constructed on this slot
+   * @returns Container with the constructed building
+   */
+  private createConstructedBuildingSlot(slot: BuildingSlot, location: BuildingSlotLocation, building: Building): Phaser.GameObjects.Container {
+    const x = this.panelX + location.x + this.panelMarginX;
+    const y = this.panelY + location.y + this.panelMarginY;
+    const container = this.scene.add.container(x, y);
+    
+    // Create the card background
+    const cardBackground = this.scene.add['nineslice'](
+      this.cardWidth / 2,
+      this.cardHeight / 2,
+      'panel_wood_paper',
+      undefined,
+      this.cardWidth,
+      this.cardHeight,
+      20, 20, 20, 20
+    );
+    cardBackground.setOrigin(0.5,0.5);
+
+    cardBackground.setInteractive({ useHandCursor: true });
+    cardBackground.on('pointerdown', () => { this.onBuildingSlotClick(slot, building); });
+    cardBackground.on('pointerover', () => { container.setScale(1.05); });
+    cardBackground.on('pointerout', () => { container.setScale(1); });
+    
+    container.add(cardBackground);
+    
+    // Create title text with building name
+    const titleText = this.scene.add.text(
+      this.cardWidth / 2,
+      this.cardHeight / 2,
+      building.name,
+      {
+        fontSize: '18px',
+        color: '#000000',
+        align: 'center',
+        wordWrap: { width: this.cardWidth - 20 }
       }
-    }
-    
-    let cardBackground: Phaser.GameObjects.Rectangle | Phaser.GameObjects.NineSlice;
-    
-    // Verify texture exists before creating the card background
-    if (!this.scene.textures.exists('panel_wood_paper')) {
-      console.error('Texture "panel_wood_paper" not found for building slot background!');
-      // Fallback to a basic rectangle if texture is missing
-      cardBackground = this.scene.add.rectangle(0, 0, this.cardWidth, this.cardHeight, 0x999999);
-      cardBackground.setOrigin(0.5, 0.5);
-      container.add(cardBackground);
-    } else {
-      // Create the card background
-      try {
-        cardBackground = this.scene.add['nineslice'](
-          0,
-          0,
-          'panel_wood_paper', // Same background as cards
-          undefined,
-          this.cardWidth,
-          this.cardHeight,
-          20,
-          20,
-          20,
-          20
-        );
-        cardBackground.setOrigin(0.5, 0.5);
-        container.add(cardBackground);
-      } catch (error) {
-        console.error('Error creating nineslice for building slot:', error);
-        // Fallback to a basic rectangle
-        cardBackground = this.scene.add.rectangle(0, 0, this.cardWidth, this.cardHeight, 0x999999);
-        cardBackground.setOrigin(0.5, 0.5);
-        container.add(cardBackground);
-      }
-    }
-    
-    // Create title text
-    let titleText;
-    if (building) {
-      // If there's a constructed building, show its name
-      titleText = this.scene.add.text(
-        0,
-        -this.cardHeight / 2 + 30,
-        building.name,
-        {
-          fontSize: '18px',
-          color: '#000000',
-          align: 'center',
-          wordWrap: { width: this.cardWidth - 20 }
-        }
-      );
-    } else {
-      // Otherwise, show "Building Slot"
-      titleText = this.scene.add.text(
-        0,
-        -this.cardHeight / 2 + 30,
-        'Building to construct',
-        {
-          fontSize: '18px',
-          color: '#000000',
-          align: 'center',
-          wordWrap: { width: this.cardWidth - 20 }
-        }
-      );
-    }
+    );
     titleText.setOrigin(0.5, 0.5);
     container.add(titleText);
-    
-    // Add an icon or image if needed
-    if (building) {
-      // TODO: Add building image if available
-    }
-    
-    // Make interactive area
-    if (cardBackground instanceof Phaser.GameObjects.GameObject) {
-      (cardBackground as any).setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
-          this.onBuildingSlotClick(slot, building);
-        });
-      
-      // Hover effects
-      (cardBackground as any).on('pointerover', () => {
-        container.setScale(1.05);
-      });
-      
-      (cardBackground as any).on('pointerout', () => {
-        container.setScale(1);
-      });
-    }
     
     // Add the container to the display container
     this.displayContainer.add(container);
@@ -325,7 +256,7 @@ export class BuildingsDisplayRenderer {
     
     // If we have a building, check if it's a special building
     if (building) {
-      if (building.id === this.stickerShopBuildingId && this.stickerShopRenderer) {
+      if (building.id === this.stickerShopBuildingId) {
         console.log('Opening sticker shop');
         // Hide the buildings display and show the sticker shop
         this.displayContainer.setVisible(false);
@@ -333,7 +264,7 @@ export class BuildingsDisplayRenderer {
         return;
       }
       
-      if (building.id === this.tavernBuildingId && this.tavernRenderer) {
+      if (building.id === this.tavernBuildingId) {
         console.log('Opening tavern');
         // Hide the buildings display and show the tavern
         this.displayContainer.setVisible(false);
@@ -346,7 +277,7 @@ export class BuildingsDisplayRenderer {
     }
     
     // If there's no building, show the building menu
-    if (this.buildingMenuRenderer && slot.available_for_construction.length > 0) {
+    if (slot.available_for_construction.length > 0) {
       this.buildingMenuRenderer.show(slot.unique_id);
     }
   }
@@ -379,16 +310,10 @@ export class BuildingsDisplayRenderer {
   public destroy(): void {
     this.displayContainer.destroy();
     
-    if (this.stickerShopRenderer) {
-      this.stickerShopRenderer.destroy();
-    }
+    this.stickerShopRenderer.destroy();
     
-    if (this.tavernRenderer) {
-      this.tavernRenderer.destroy();
-    }
+    this.tavernRenderer.destroy();
     
-    if (this.buildingMenuRenderer) {
-      this.buildingMenuRenderer.destroy();
-    }
+    this.buildingMenuRenderer.destroy();
   }
 } 

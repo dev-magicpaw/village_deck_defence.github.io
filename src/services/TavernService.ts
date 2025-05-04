@@ -209,8 +209,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
 
     // Deduct cost - it's always deducted, even if the adventure fails
     const power = this.resourceService.getPower();
-    console.log('power', power);
-    console.log('option.cost', option.cost);
     if (option.cost > power) {
       this.resourceService.consumePower(power);
       this.onAdventureFailure(option);
@@ -255,7 +253,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
       const card = this.cardRegistry.createCardInstance(cardId);
       if (card) {
         this.deckService.discard(card);
-        console.log(`Added ${cardId} to discard pile`);
       } else {
         throw new Error(`Failed to create card instance for ${cardId}`);
       }

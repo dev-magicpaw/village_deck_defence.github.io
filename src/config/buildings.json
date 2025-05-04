@@ -9,25 +9,25 @@
         "id": "workshop",
         "name": "Workshop",
         "description": "Allows to purchase stickers",
-        "image": "src/assets/images/cards/card_human_villager.png"
+        "image": "building_workshop"
     },
     {
         "id": "tavern",
         "name": "Tavern",
         "description": "Allows to go for small adventures",
-        "image": "src/assets/images/cards/card_human_villager.png"
+        "image": "building_tavern"
     },
     {
         "id": "wooden_palisade",
         "name": "Wooden Palisade",
         "description": "Gives some protection from invaders",
-        "image": "src/assets/images/cards/wooden_palisade.png"
+        "image": "building_wooden_wall"
     },
     {
         "id": "wooden_gates",
         "name": "Wooden Gates",
         "description": "Gives a bit of protection from invaders",
-        "image": "src/assets/images/cards/wooden_gates.png"
+        "image": "building_wooden_gates"
     }
 
 ]

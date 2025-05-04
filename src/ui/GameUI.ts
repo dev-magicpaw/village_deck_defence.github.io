@@ -4,9 +4,12 @@ import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
+import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
 import { InvasionRenderer } from './InvasionRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
+import { StickerShopRenderer } from './StickerShopRenderer';
+import { TavernRenderer } from './TavernRenderer';
 
 export class GameUI {
   static readonly INVASION_PANEL_HEIGHT_PROPORTION: number = 0.08;
@@ -22,6 +25,9 @@ export class GameUI {
   private deckService: DeckService;
   private invasionService: InvasionService;
   private invasionRenderer!: InvasionRenderer;
+  private stickerShopRenderer!: StickerShopRenderer;
+  private tavernRenderer!: TavernRenderer;
+  private buildingMenuRenderer!: BuildingMenuRenderer;
   
   constructor(
     scene: Phaser.Scene, 
@@ -99,6 +105,39 @@ export class GameUI {
     // Set the origin to the top-left corner
     displayPanel.setOrigin(0, 0);
     
+    // Create the sticker shop renderer
+    this.stickerShopRenderer = new StickerShopRenderer(
+      this.scene,
+      panelX,
+      panelY,
+      panelWidth,
+      panelHeight,
+      this.resourceService,
+      this.stickerShopService,
+      this.playerHandRenderer,
+      this.deckService
+    );
+    this.stickerShopRenderer.init();
+    
+    // Create the tavern renderer
+    this.tavernRenderer = new TavernRenderer(
+      this.scene,
+      panelX,
+      panelY,
+      panelWidth,
+      panelHeight,
+      this.playerHandRenderer,
+      this.resourceService,
+      this.deckService
+    );
+    this.tavernRenderer.init();
+    
+    // Create the building menu renderer
+    this.buildingMenuRenderer = new BuildingMenuRenderer(
+      this.scene,
+      this.buildingService
+    );
+    
     // Initialize buildings display if building service is available
     if (this.buildingService) {
       this.buildingsDisplayRenderer = new BuildingsDisplayRenderer(
@@ -111,7 +150,10 @@ export class GameUI {
         this.resourceService,
         this.stickerShopService,
         this.playerHandRenderer,
-        this.deckService
+        this.deckService,
+        this.stickerShopRenderer,
+        this.tavernRenderer,
+        this.buildingMenuRenderer
       );
       
       this.buildingsDisplayRenderer.init();

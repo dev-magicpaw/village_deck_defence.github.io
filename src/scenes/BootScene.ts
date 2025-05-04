@@ -41,7 +41,7 @@ export class BootScene extends Phaser.Scene {
       loadingText.destroy();
     });
     
-    // Load essential assets
+    // Load ui elements
     this.load.image('logo', 'assets/images/logo.png');
     this.load.image('panel_metal_corners_metal', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_dark.png');
     this.load.image('panel_metal_corners_metal_nice', 'assets/images/ui-pack-adventure/PNG/Default/panel_grey_bolts_detail_a.png');
@@ -58,7 +58,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('close_button', 'assets/images/ui-pack-adventure/PNG/Default/button_close.png');
     this.load.image('button_wood', 'assets/images/ui-pack-adventure/PNG/Default/button_brown.png');
     
-
+    // Load resource images
     this.load.image('resource_construction', 'assets/images/fantasyIconPack/64/HammerT1.png');
     this.load.image('resource_invention', 'assets/images/fantasyIconPack/64/TomeYellow.png');
     this.load.image('resource_power', 'assets/images/fantasyIconPack/64/SwordT1.png');
@@ -72,6 +72,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image('physical_card_back', 'assets/images/card_backs/Card_shirt_01.png');
     this.load.image('magic_card_back', 'assets/images/card_backs/Card_shirt_04.png');
     this.load.image('recruit_card', 'assets/images/card_backs/recruit_card.png');
+
+    // Load building card images
+    this.load.image('building_tavern', 'assets/images/buildings/building_tavern.png');
+    this.load.image('building_workshop', 'assets/images/buildings/building_workshop.png');
+    this.load.image('building_wooden_gates', 'assets/images/buildings/building_wooden_gates.png');
+    this.load.image('building_wooden_wall', 'assets/images/buildings/building_wooden_wall.png');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/Sword1.png');

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Building } from '../entities/Building';
+import { Building, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
@@ -18,7 +18,7 @@ export class BuildingsDisplayRenderer {
   private buildingService: BuildingService;
   private displayContainer: Phaser.GameObjects.Container;
   private constructedBuildings: Building[] = [];
-  private buildingSlots: Array<{slot: any, container: Phaser.GameObjects.Container}> = [];
+  private buildingSlots: Array<{slot: BuildingSlot, container: Phaser.GameObjects.Container}> = [];
   private stickerShopRenderer: StickerShopRenderer | null = null;
   private tavernRenderer: TavernRenderer | null = null;
   private buildingMenuRenderer: BuildingMenuRenderer | null = null;
@@ -185,7 +185,7 @@ export class BuildingsDisplayRenderer {
    * @param location The location data for the slot
    * @returns Container with the building slot
    */
-  private createBuildingSlot(slot: any, location: any): Phaser.GameObjects.Container {
+  private createBuildingSlot(slot: BuildingSlot, location: BuildingSlotLocation): Phaser.GameObjects.Container {
     // Position slots relative to the panel
     const x = this.panelX + location.x;
     const y = this.panelY + location.y;
@@ -312,7 +312,7 @@ export class BuildingsDisplayRenderer {
    * @param slot The clicked building slot
    * @param building The constructed building in the slot (if any)
    */
-  private onBuildingSlotClick(slot: any, building: Building | null): void {
+  private onBuildingSlotClick(slot: BuildingSlot, building: Building | null): void {
     if (building) {
       // If there's a constructed building, handle special building behavior
       if (building.id === this.stickerShopBuildingId) {

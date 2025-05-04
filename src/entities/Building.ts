@@ -3,7 +3,24 @@ export interface BuildingConfig {
   name: string;
   description: string;
   image: string;
-  constructed_from_start: boolean;
+}
+
+/**
+ * Represents a slot where a building can be constructed
+ */
+export interface BuildingSlot {
+  id: string; // Should be a uuid4 unique identifier
+  already_constructed: string | null;
+  available_for_construction: string[];
+}
+
+/**
+ * Represents the position of a building slot on the game board
+ */
+export interface BuildingSlotLocation {
+  x: number;
+  y: number;
+  slot_id: string;
 }
 
 /**
@@ -42,7 +59,6 @@ export function convertBuildingJsonToConfig(buildingJson: any): BuildingConfig {
     id: buildingJson.id,
     name: buildingJson.name,
     description: buildingJson.description,
-    image: buildingJson.image,
-    constructed_from_start: buildingJson.constructed_from_start
+    image: buildingJson.image
   };
 } 

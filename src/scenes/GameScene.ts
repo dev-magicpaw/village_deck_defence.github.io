@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { Card } from '../entities/Card';
 import { PlayerHand } from '../entities/PlayerHand';
 import { trackEvent } from '../game';
@@ -14,21 +15,6 @@ import { TavernService } from '../services/TavernService';
 import { GameUI } from '../ui/GameUI';
 import { PlayerHandRenderer } from '../ui/PlayerHandRenderer';
 
-// TODO: move this into Building.ts
-// TODO: each building slot should have a unique id, uuid4
-interface BuildingSlot {
-  id: string;
-  already_constructed: string | null;
-  available_for_construction: string[];
-}
-
-// TODO: move this into Building.ts
-interface BuildingSlotLocation {
-  x: number;
-  y: number;
-  slot_id: string;
-}
-
 interface GameConfig {
   // Global game settings
   player_hand_size: number;
@@ -41,8 +27,8 @@ interface GameConfig {
   starting_cards: Array<Record<string, number>>;
   invasion_distance: number;
   invasion_difficulty: number;
-  building_slot_locations?: Array<BuildingSlotLocation>;
-  building_slots?: Array<BuildingSlot>;
+  building_slot_locations: Array<BuildingSlotLocation>;
+  building_slots: Array<BuildingSlot>;
 }
 
 export class GameScene extends Phaser.Scene {
@@ -96,17 +82,7 @@ export class GameScene extends Phaser.Scene {
     this.initializePlayerDeck();
     
     // Initialize buildings
-    this.buildingService = new BuildingService();
-    
-    // Pass the config data directly to ensure it has access to the building slots
-    // TODO these should be passed in the BuildingService constructor
-    const buildingSlots = this.gameConfig.building_slots || [];
-    // TODO these should be passed in the BuildingDisplayRenderer constructor
-    const buildingSlotLocations = this.gameConfig.building_slot_locations || [];
-    
-    // Manually set the building slots before initializing
-    this.buildingService.setBuildingSlots(buildingSlots, buildingSlotLocations);
-    this.buildingService.initializeBuildings();
+    this.initializeBuildings();
     
     // Initialize the tavern service
     this.initializeTavernService();
@@ -273,6 +249,17 @@ export class GameScene extends Phaser.Scene {
     this.tavernService = TavernService.getInstance();
     this.tavernService.init(this.resourceService);
     this.tavernService.setDeckService(this.playerDeck);
+  }
+  
+  /**
+   * Initialize buildings
+   */
+  private initializeBuildings(): void {
+    // Use the required building slots and locations from config
+    const { building_slots, building_slot_locations } = this.gameConfig;
+    
+    // Create BuildingService with slots and locations
+    this.buildingService = new BuildingService(building_slots, building_slot_locations);
   }
   
   /**

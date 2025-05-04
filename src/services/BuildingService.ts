@@ -1,18 +1,7 @@
-import { BuildingConfig } from '../entities/Building';
+import { v4 as uuidv4 } from 'uuid';
+import { BuildingConfig, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { Building as BuildingInterface } from '../types/game';
 import { BuildingRegistry } from './BuildingRegistry';
-
-interface BuildingSlot {
-  id: string;
-  already_constructed: string | null;
-  available_for_construction: string[];
-}
-
-interface BuildingSlotLocation {
-  x: number;
-  y: number;
-  slot_id: string;
-}
 
 /**
  * Service for managing buildings in the game
@@ -26,126 +15,36 @@ export class BuildingService {
 
   /**
    * Create a new BuildingService
+   * @param buildingSlots Initial building slots
+   * @param buildingSlotLocations Initial building slot locations
    */
-  constructor() {
+  constructor(
+    buildingSlots: BuildingSlot[],
+    buildingSlotLocations: BuildingSlotLocation[]
+  ) {
     this.buildingRegistry = BuildingRegistry.getInstance();
+    this.buildingSlots = [...buildingSlots];
+    this.buildingSlotLocations = [...buildingSlotLocations];
+
+    this.initializeBuildings();
   }
 
   /**
    * Initialize buildings from configuration
-   * Immediately constructs buildings that are marked as constructed_from_start 
-   * or are defined as already_constructed in the level config
+   * Immediately constructs buildings that are defined as already_constructed in the level config
    */
-  public initializeBuildings(): void {
-    console.log("BuildingService - Initializing buildings");
-    
-    // Load building slots from the game config
-    this.loadBuildingSlotsFromConfig();
-    
+  private initializeBuildings(): void {    
+    // Log building slots for debugging
     console.log("BuildingService - After loading config, slots:", this.buildingSlots);
     console.log("BuildingService - After loading config, locations:", this.buildingSlotLocations);
     
-    // First, construct buildings that are already constructed in level config
+    // Construct buildings that are already constructed in level config
     this.buildingSlots.forEach(slot => {
       if (slot.already_constructed) {
         console.log(`BuildingService - Constructing building ${slot.already_constructed} from slot ${slot.id}`);
         this.constructBuilding(slot.already_constructed, slot.id);
       }
     });
-    
-    // Then, construct buildings that are marked as constructed_from_start in the building config
-    // but only if they're not already constructed via level config
-    const buildingIds = this.buildingRegistry.getAllBuildingIds();
-    buildingIds.forEach(buildingId => {
-      const buildingConfig = this.buildingRegistry.getBuildingConfig(buildingId);
-      if (buildingConfig && buildingConfig.constructed_from_start && !this.isBuildingConstructed(buildingId)) {
-        // Find an empty slot for this building if available
-        const availableSlot = this.findAvailableSlotForBuilding(buildingId);
-        if (availableSlot) {
-          this.constructBuilding(buildingId, availableSlot.id);
-        } else {
-          // If no slot is available, just construct it without a slot
-          this.constructBuilding(buildingId);
-        }
-      }
-    });
-  }
-
-  /**
-   * Find an available slot that can construct the specified building
-   * @param buildingId The ID of the building to find a slot for
-   * @returns The first available slot that can construct this building, or undefined if none found
-   */
-  private findAvailableSlotForBuilding(buildingId: string): BuildingSlot | undefined {
-    return this.buildingSlots.find(slot => 
-      // Slot must not have a building already
-      !slot.already_constructed && 
-      // Slot must be able to construct this building
-      slot.available_for_construction.includes(buildingId) &&
-      // Slot must not be mapped to another building
-      !this.slotToBuildingMap[slot.id]
-    );
-  }
-
-  /**
-   * Load building slots from the game configuration
-   */
-  private loadBuildingSlotsFromConfig(): void {
-    // Try to get game config from registry
-    const game = (window as any).game;
-    if (!game || !game.registry) {
-      console.error("Game registry not available");
-      return;
-    }
-    
-    // First check the merged gameConfig
-    const gameConfig = game.registry.get('gameConfig');
-    if (gameConfig) {
-      console.log("BuildingService - Got gameConfig from registry:", gameConfig);
-      
-      // Load building slots
-      if (gameConfig.building_slots && Array.isArray(gameConfig.building_slots)) {
-        console.log("BuildingService - Loading building slots:", gameConfig.building_slots);
-        this.buildingSlots = gameConfig.building_slots;
-      } else {
-        console.warn("BuildingService - No building_slots array in gameConfig");
-      }
-      
-      // Load building slot locations
-      if (gameConfig.building_slot_locations && Array.isArray(gameConfig.building_slot_locations)) {
-        console.log("BuildingService - Loading building slot locations:", gameConfig.building_slot_locations);
-        this.buildingSlotLocations = gameConfig.building_slot_locations;
-      } else {
-        console.warn("BuildingService - No building_slot_locations array in gameConfig");
-      }
-      return;
-    } else {
-      console.warn("BuildingService - No gameConfig in registry");
-    }
-    
-    // For backward compatibility, check for levelConfig
-    const levelConfig = game.registry.get('levelConfig');
-    if (levelConfig) {
-      console.log("BuildingService - Got levelConfig from registry:", levelConfig);
-      
-      // Load building slots
-      if (levelConfig.building_slots && Array.isArray(levelConfig.building_slots)) {
-        console.log("BuildingService - Loading building slots from levelConfig:", levelConfig.building_slots);
-        this.buildingSlots = levelConfig.building_slots;
-      } else {
-        console.warn("BuildingService - No building_slots array in levelConfig");
-      }
-      
-      // Load building slot locations
-      if (levelConfig.building_slot_locations && Array.isArray(levelConfig.building_slot_locations)) {
-        console.log("BuildingService - Loading building slot locations from levelConfig:", levelConfig.building_slot_locations);
-        this.buildingSlotLocations = levelConfig.building_slot_locations;
-      } else {
-        console.warn("BuildingService - No building_slot_locations array in levelConfig");
-      }
-    } else {
-      console.warn("BuildingService - No levelConfig in registry");
-    }
   }
 
   /**
@@ -261,15 +160,19 @@ export class BuildingService {
   }
 
   /**
-   * Directly set the building slots and locations
-   * This is used to make sure the BuildingService has the correct building data
-   * @param buildingSlots Array of building slots
-   * @param buildingSlotLocations Array of building slot locations
+   * Create a new building slot with a UUID v4 identifier
+   * @param already_constructed ID of an already constructed building, or null
+   * @param available_for_construction Array of building IDs that can be constructed in this slot
+   * @returns A new BuildingSlot with a unique UUID
    */
-  public setBuildingSlots(buildingSlots: BuildingSlot[], buildingSlotLocations: BuildingSlotLocation[]): void {
-    console.log("BuildingService - Setting slots directly:", buildingSlots);
-    console.log("BuildingService - Setting locations directly:", buildingSlotLocations);
-    this.buildingSlots = buildingSlots;
-    this.buildingSlotLocations = buildingSlotLocations;
+  public createBuildingSlot(
+    already_constructed: string | null,
+    available_for_construction: string[]
+  ): BuildingSlot {
+    return {
+      id: uuidv4(),
+      already_constructed,
+      available_for_construction
+    };
   }
 } 

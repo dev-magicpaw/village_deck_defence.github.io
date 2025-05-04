@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { CardRegistry } from './CardRegistry';
 import { RecruitCardRegistry } from './RecruitCardRegistry';
 import { ResourceService } from './ResourceService';
@@ -41,22 +42,25 @@ export enum TavernServiceEvents {
   ADVENTURE_LEVELS_UPDATED = 'adventure-levels-updated',
   ADVENTURE_SUCCESS = 'adventure-success',
   ADVENTURE_FAILURE = 'adventure-failure',
+  TAVERN_STATE_CHANGED = 'tavern-state-changed',
 }
 
 /**
  * Service for managing the tavern building and its functionalities
  */
-export class TavernService {
+export class TavernService extends Phaser.Events.EventEmitter {
   private static instance: TavernService;
   private recruitCardRegistry: RecruitCardRegistry;
   private cardRegistry: CardRegistry;
   private resourceService: ResourceService | null = null; // TODO: make not optional
   private adventureOptions: Map<AdventureLevel, AdventureOption[]> = new Map();
+  private isOpen: boolean = false;
 
   /**
    * Private constructor to enforce singleton pattern
    */
   private constructor() {
+    super();
     this.recruitCardRegistry = RecruitCardRegistry.getInstance();
     this.cardRegistry = CardRegistry.getInstance();
     this.initAdventureOptions();
@@ -80,6 +84,25 @@ export class TavernService {
       this.resourceService = resourceService;
     }
     this.initAdventureOptions();
+  }
+
+  /**
+   * Set the tavern open state
+   * @param isOpen Whether the tavern is open
+   */
+  public setTavernOpen(isOpen: boolean): void {
+    if (this.isOpen !== isOpen) {
+      this.isOpen = isOpen;
+      this.emit(TavernServiceEvents.TAVERN_STATE_CHANGED, isOpen);
+    }
+  }
+
+  /**
+   * Get the current tavern open state
+   * @returns Whether the tavern is currently open
+   */
+  public isTavernOpen(): boolean {
+    return this.isOpen;
   }
 
   /**

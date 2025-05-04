@@ -1,0 +1,43 @@
+[
+    {
+        "id": "level_1",
+        "name": "Village",
+        "description": "Protect the village from the forces of evil",
+        "starting_cards": [
+            {"card_elf_scout": 1},
+            {"card_dwarf_builder": 1},
+            {"card_human_villager": 7},
+            {"card_gnome_student": 1}
+        ],
+        "invasion_distance": 100,
+        "invasion_difficulty": 20,
+        "building_slot_locations": [
+            { "x": 100, "y": 100, "slot_id": "tavern_slot"},
+            { "x": 200, "y": 100, "slot_id": "workshop_slot"},
+            { "x": 300, "y": 100, "slot_id": "architect_slot"},
+            { "x": 400, "y": 100, "slot_id": "village_slot"}
+        ],
+        "building_slots": [
+            {
+                "id": "tavern_slot", 
+                "already_constructed": "tavern",
+                "available_for_construction": []
+            },
+            {
+                "id": "workshop_slot",
+                "already_constructed": "workshop",
+                "available_for_construction": []
+            },
+            {
+                "id": "architect_slot",
+                "already_constructed": "architect",
+                "available_for_construction": []
+            },
+            {
+                "id": "village_slot",
+                "already_constructed": null,
+                "available_for_construction": []
+            }
+        ]
+    }
+]

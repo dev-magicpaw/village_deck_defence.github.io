@@ -4,6 +4,7 @@ import { PlayerHand } from '../entities/PlayerHand';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
+import { TavernService, TavernServiceEvents } from '../services/TavernService';
 import { CARD_HEIGHT, CARD_WIDTH, CardRenderer } from './CardRenderer';
 
 /**
@@ -28,6 +29,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private invasionService: InvasionService;
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
+  private tavernService: TavernService;
   private panelWidth: number;
   private panelHeight: number;
   private panelX: number;
@@ -40,6 +42,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private currentCards: Card[] = [];
   private selectedCards: Set<string> = new Set(); // Track selected cards by unique_id
   private isShopOpen: boolean = false; // Track if sticker shop is open
+  private isTavernOpen: boolean = false; // Track if tavern is open
   
   /**
    * Create a new player hand renderer
@@ -74,6 +77,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.invasionService = invasionService;
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
+    this.tavernService = TavernService.getInstance();
     
     // Get initial cards from hand
     this.currentCards = playerHand.getCards();
@@ -95,6 +99,13 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
         this
       );
     }
+    
+    // Subscribe to tavern state changes
+    this.tavernService.on(
+      TavernServiceEvents.TAVERN_STATE_CHANGED,
+      this.onTavernStateChanged,
+      this
+    );
   }
   
   /**
@@ -110,6 +121,20 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     }
     this.updateButtonVisibility();
   }
+
+  /**
+   * Handler for tavern state changes
+   * @param isOpen Whether the tavern is open
+   */
+    private onTavernStateChanged(isOpen: boolean): void {
+      this.isTavernOpen = isOpen;
+      
+      // If tavern is closing, deselect all cards
+      if (!isOpen) {
+        this.clearCardSelection();
+      }
+      this.updateButtonVisibility();
+    }
   
   /**
    * Handler for when cards in the hand change
@@ -390,7 +415,11 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
    * @param index Index of the clicked card
    */
   private onCardClick(index: number): void {
-    if (this.isShopOpen && index >= 0 && index < this.currentCards.length) {
+    if (index < 0 || index >= this.currentCards.length) {
+      throw new Error(`Invalid card index: ${index}`);
+    }
+
+    if (this.isShopOpen || this.isTavernOpen) {
       const card = this.currentCards[index];
       const uniqueId = card.unique_id;
       
@@ -426,6 +455,33 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     
     return total;
   }
+
+  public getSelectedPowerValue(): number {
+    let total = 0;
+    
+    this.currentCards.forEach(card => {
+      if (this.selectedCards.has(card.unique_id)) {
+        total += card.getPowerValue();
+      }
+    });
+    
+    return total;
+  }
+
+  public getSelectedConstructionValue(): number {
+    let total = 0;
+    
+    this.currentCards.forEach(card => {
+      if (this.selectedCards.has(card.unique_id)) {
+        total += card.getConstructionValue();
+      }
+    });
+    
+    return total;
+  }
+  
+  
+  
   
   /**
    * Clear selection from all cards
@@ -515,12 +571,11 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       this.updateDiscardButtonText();
     }
     
-    // Update interactivity based on visibility and shop state
     this.discardButton.disableInteractive();
     this.endDayButton.disableInteractive();
     
-    // Only make buttons interactive if they're visible AND shop is closed
-    if (!this.isShopOpen) {
+    // Only make buttons interactive if they're visible AND both shop and tavern are closed
+    if (!this.isShopOpen && !this.isTavernOpen) {
       if (!isDeckEmpty) {
         this.discardButton.setInteractive({ useHandCursor: true });
       } else {
@@ -594,6 +649,13 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
         this
       );
     }
+    
+    // Unsubscribe from tavern events
+    this.tavernService.off(
+      TavernServiceEvents.TAVERN_STATE_CHANGED,
+      this.onTavernStateChanged,
+      this
+    );
     
     // Unsubscribe from all card events
     this.currentCards.forEach(card => {

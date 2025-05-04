@@ -42,6 +42,8 @@ export interface CardSticker {
   effects: StickerEffect[];
   cost: number;
   getInventionValue(): number;
+  getPowerValue(): number;
+  getConstructionValue(): number;
 }
 
 /**
@@ -63,6 +65,32 @@ export class StickerFactory {
           if (effect.type === StickerEffectType.Resource) {
             const resourceEffect = effect as ResourceStickerEffect;
             if (resourceEffect.resourceType === ResourceType.Invention) {
+              return resourceEffect.value;
+            }
+          }
+        }
+        
+        return 0;
+      },
+
+      getPowerValue(): number {
+        for (const effect of stickerConfig.effects) {
+          if (effect.type === StickerEffectType.Resource) {
+            const resourceEffect = effect as ResourceStickerEffect;
+            if (resourceEffect.resourceType === ResourceType.Power) {
+              return resourceEffect.value;
+            } 
+          }
+        }
+        
+        return 0;
+      },
+
+      getConstructionValue(): number {
+        for (const effect of stickerConfig.effects) {
+          if (effect.type === StickerEffectType.Resource) {
+            const resourceEffect = effect as ResourceStickerEffect;
+            if (resourceEffect.resourceType === ResourceType.Construction) {  
               return resourceEffect.value;
             }
           }

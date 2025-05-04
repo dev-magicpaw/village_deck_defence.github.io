@@ -4,6 +4,7 @@ import { ResourceService } from '../services/ResourceService';
 import { AdventureLevel, TavernService } from '../services/TavernService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { GameUI } from './GameUI';
+import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 
 /**
  * Component that renders the tavern interface and adventure selection
@@ -14,6 +15,7 @@ export class TavernRenderer {
   private tavernService: TavernService;
   private resourceService: ResourceService | null = null;
   private deckService: DeckService<any> | null = null;
+  private playerHandRenderer: PlayerHandRenderer;
   private visible: boolean = false;
   
   private panelX: number;
@@ -34,7 +36,7 @@ export class TavernRenderer {
   // Resource panel elements
   private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
   private acquiredText: Phaser.GameObjects.Text | null = null;
-  private selectedText: Phaser.GameObjects.Text | null = null;
+  private selectionText: Phaser.GameObjects.Text | null = null;
   private selectAllButton: Phaser.GameObjects.NineSlice | null = null;
   private selectAllButtonText: Phaser.GameObjects.Text | null = null;
   private playCardsButton: Phaser.GameObjects.NineSlice | null = null;
@@ -54,6 +56,7 @@ export class TavernRenderer {
     panelY: number,
     width: number,
     height: number,
+    playerHandRenderer: PlayerHandRenderer,
     resourceService?: ResourceService,
     deckService?: DeckService<any>
   ) {
@@ -62,6 +65,7 @@ export class TavernRenderer {
     this.panelY = panelY;
     this.panelWidth = width;
     this.panelHeight = height;
+    this.playerHandRenderer = playerHandRenderer;
     this.resourceService = resourceService || null;
     this.deckService = deckService || null;
     this.tavernService = TavernService.getInstance();
@@ -88,6 +92,13 @@ export class TavernRenderer {
       this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
       this.escKey.on('down', this.handleEscKey, this);
     }
+    
+    // Subscribe to player hand card selection changes if available
+    this.playerHandRenderer.on(
+      PlayerHandRendererEvents.SELECTION_CHANGED,
+      this.onCardSelectionChanged,
+      this
+    );
     
     // Create background panel
     this.createBackgroundPanel();
@@ -209,7 +220,7 @@ export class TavernRenderer {
     
     // Add selected power text
     const selectedY = handPanelY + 90;
-    this.selectedText = this.scene.add.text(
+    this.selectionText = this.scene.add.text(
       resourceTextX,
       selectedY,
       'Selected: 0',
@@ -220,7 +231,7 @@ export class TavernRenderer {
         align: 'center'
       }
     );
-    this.selectedText.setOrigin(0.5, 1);
+    this.selectionText.setOrigin(0.5, 1);
     
     // Add power resource icon next to "Selected: X"
     const selectedIcon = this.scene.add.image(
@@ -304,6 +315,8 @@ export class TavernRenderer {
     
     // Set hover effects
     this.playCardsButton.setInteractive({ useHandCursor: true });
+    this.playCardsButton.setInteractive({ useHandCursor: true }).on('pointerdown', () => { this.playSelectedCards(); });
+
     this.playCardsButton.on('pointerover', () => {
       this.playCardsButton?.setScale(1.05);
       this.playCardsButtonText?.setScale(1.05);
@@ -345,7 +358,6 @@ export class TavernRenderer {
     this.setPlayCardsButtonState(false);
     
     // Add event listeners for buttons
-    this.selectAllButton.on('pointerdown', this.onSelectAllClicked.bind(this));
     this.playCardsButton.on('pointerdown', this.onPlayCardsClicked.bind(this));
     this.proceedButton.on('pointerdown', this.onProceedClicked.bind(this));
     
@@ -354,7 +366,7 @@ export class TavernRenderer {
       this.resourcePanel,
       this.acquiredText,
       resourceIcon,
-      this.selectedText,
+      this.selectionText,
       selectedIcon,
       this.selectAllButton,
       this.selectAllButtonText,
@@ -406,16 +418,207 @@ export class TavernRenderer {
    * Update the resource display with current values
    */
   private updateResourceDisplay(): void {
-    if (!this.acquiredText || !this.selectedText || !this.resourceService) return;
+    if (!this.acquiredText || !this.selectionText || !this.resourceService) return;
     
     const acquiredPower = this.resourceService.getPower();
     this.acquiredText.setText(`Acquired: ${acquiredPower}`);
-    this.selectedText.setText(`Selected: 0`); // This will be updated when we have card selection
+    
+    // Update the selection text
+    this.updateSelectionText();
     
     // Update proceed button state based on level selection and resources
     this.updateProceedButtonState();
   }
   
+  /**
+   * Update the selection text to show total selected power value
+   */
+  private updateSelectionText(): void {
+    if (this.selectionText) {
+      this.selectionText.setText(`Selected: ${this.playerHandRenderer.getSelectedPowerValue()}`);
+    }
+  }
+  
+  /**
+   * Handle Select All button click
+   */
+  private playSelectedCards(): void {
+    // 1. Get all selected card IDs
+    const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
+        
+    const selectedPowerValue = this.playerHandRenderer.getSelectedPowerValue();
+    
+    // 2. Add their invention value to ResourceService
+    if (this.resourceService) {
+      this.resourceService.addPower(selectedPowerValue);
+    }
+    
+    // 3. Discard all selected cards using PlayerHandRenderer's method
+    this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
+    
+    // 4. Deselect all cards
+    this.playerHandRenderer.clearCardSelection();
+    
+    // 5. Update the acquired text
+    this.updateResourceDisplay();
+    
+    // 6. Disable the play cards button since no cards are selected anymore
+    this.setPlayCardsButtonState(false);
+  }
+  
+  /**
+   * Handle Play Cards button click
+   */
+  private onPlayCardsClicked(): void {
+    if (!this.resourceService) return;
+    
+    const selectedIds = this.playerHandRenderer.getSelectedCardIds();
+    if (selectedIds.length === 0) return;
+    
+    // Get the cards being played
+    const cards = this.playerHandRenderer['currentCards'];
+    if (!cards) return;
+    
+    // Calculate total power from selected cards
+    let totalPower = 0;
+    const selectedCards = cards.filter(card => selectedIds.includes(card.unique_id));
+    
+    selectedCards.forEach(card => {
+      totalPower += card.getPowerValue();
+    });
+    
+    // Add power to resource service
+    if (totalPower > 0) {
+      this.resourceService.addPower(totalPower);
+    }
+    
+    // Discard played cards if deck service is available
+    if (this.deckService) {
+      selectedCards.forEach(card => {
+        this.deckService?.discard(card);
+      });
+    }
+    
+    // Clear selection
+    this.playerHandRenderer.clearCardSelection();
+    
+    // Update display
+    this.updateAcquiredText();
+  }
+
+  private updateAcquiredText(): void {
+    if (this.acquiredText) {
+      const acquiredPower = this.resourceService ? this.resourceService.getPower() : 0;
+      this.acquiredText.setText(`Acquired: ${acquiredPower}`);
+    }
+  }
+  
+  /**
+   * Handle Proceed button click
+   */
+  private onProceedClicked(): void {
+    if (!this.selectedLevel) return;
+    
+    // Get an adventure option for the selected level
+    try {
+      const option = this.tavernService.getAdventureOption(this.selectedLevel);
+      if (option) {
+        console.log(`Starting adventure: ${option.name}`);
+        // Attempt the adventure
+        const success = this.tavernService.attemptAdventure(option);
+        console.log(`Adventure ${success ? 'succeeded' : 'failed'}`);
+        
+        // Process the adventure result
+        this.tavernService.processAdventureResult(option, success);
+        
+        // Update resource display
+        this.updateResourceDisplay();
+      }
+    } catch (error) {
+      console.error('Failed to start adventure:', error);
+    }
+  }
+  
+  /**
+   * Show the tavern interface
+   */
+  public show(): void {
+    this.visible = true;
+    this.container.setVisible(true);
+    
+    // Update tavern open state in service
+    this.tavernService.setTavernOpen(true);
+    
+    // Refresh the display
+    this.renderAdventureLevelCards();
+    this.updateResourceDisplay();
+  }
+  
+  /**
+   * Hide the tavern interface
+   */
+  public hide(): void {
+    this.visible = false;
+    this.container.setVisible(false);
+    
+    // Update tavern open state in service
+    this.tavernService.setTavernOpen(false);
+  }
+  
+  /**
+   * Toggle tavern visibility
+   */
+  public toggle(): void {
+    if (this.visible) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+  
+  /**
+   * Handle ESC key press
+   */
+  private handleEscKey(): void {
+    if (this.visible) {
+      this.hide();
+    }
+  }
+
+  /**
+   * Update the tavern renderer (called every frame)
+   */
+  public update(): void {
+    // Only update if visible
+    if (!this.visible) {
+      return;
+    }
+    
+    // Update resource display
+    this.updateResourceDisplay();
+  }
+
+  /**
+   * Clean up resources when destroying this object
+   */
+  public destroy(): void {
+    // Remove keyboard controls
+    if (this.escKey) {
+      this.escKey.removeListener('down', this.handleEscKey, this);
+      this.escKey.destroy();
+      this.escKey = null;
+    }
+    
+    // Remove event listeners
+    this.playerHandRenderer.off(
+      PlayerHandRendererEvents.SELECTION_CHANGED,
+      this.onCardSelectionChanged,
+      this
+    );
+    
+    this.container.destroy();
+  }
+
   /**
    * Update the proceed button state based on current selection and resources
    */
@@ -578,115 +781,15 @@ export class TavernRenderer {
     // Update proceed button state
     this.updateProceedButtonState();
   }
-  
-  /**
-   * Handle Select All button click
-   */
-  private onSelectAllClicked(): void {
-    console.log('Select All button clicked');
-    // This would typically use the player hand renderer to select all cards
-    // For now, just log to console
-  }
-  
-  /**
-   * Handle Play Cards button click
-   */
-  private onPlayCardsClicked(): void {
-    console.log('Play Cards button clicked');
-    // This would typically use the player hand renderer to play selected cards
-    // For now, just log to console
-  }
-  
-  /**
-   * Handle Proceed button click
-   */
-  private onProceedClicked(): void {
-    if (!this.selectedLevel) return;
-    
-    // Get an adventure option for the selected level
-    try {
-      const option = this.tavernService.getAdventureOption(this.selectedLevel);
-      if (option) {
-        console.log(`Starting adventure: ${option.name}`);
-        // Attempt the adventure
-        const success = this.tavernService.attemptAdventure(option);
-        console.log(`Adventure ${success ? 'succeeded' : 'failed'}`);
-        
-        // Process the adventure result
-        this.tavernService.processAdventureResult(option, success);
-        
-        // Update resource display
-        this.updateResourceDisplay();
-      }
-    } catch (error) {
-      console.error('Failed to start adventure:', error);
-    }
-  }
-  
-  /**
-   * Show the tavern interface
-   */
-  public show(): void {
-    this.visible = true;
-    this.container.setVisible(true);
-    
-    // Refresh the display
-    this.renderAdventureLevelCards();
-    this.updateResourceDisplay();
-  }
-  
-  /**
-   * Hide the tavern interface
-   */
-  public hide(): void {
-    this.visible = false;
-    this.container.setVisible(false);
-  }
-  
-  /**
-   * Toggle tavern visibility
-   */
-  public toggle(): void {
-    if (this.visible) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-  
-  /**
-   * Handle ESC key press
-   */
-  private handleEscKey(): void {
-    if (this.visible) {
-      this.hide();
-    }
-  }
 
   /**
-   * Update the tavern renderer (called every frame)
+   * Handler for card selection changes
    */
-  public update(): void {
-    // Only update if visible
-    if (!this.visible) {
-      return;
-    }
-    
-    // Update resource display
-    this.updateResourceDisplay();
-  }
+  private onCardSelectionChanged(): void {
+    this.updateSelectionText();
 
-  /**
-   * Clean up resources when destroying this object
-   */
-  public destroy(): void {
-    // Remove keyboard controls
-    if (this.escKey) {
-      this.escKey.removeListener('down', this.handleEscKey, this);
-      this.escKey.destroy();
-      this.escKey = null;
-    }
-    
-    this.container.destroy();
+    // Check if any cards are selected and update play cards button state
+    const hasSelectedCards = this.playerHandRenderer.getSelectedCardIds().length > 0;
+    this.setPlayCardsButtonState(hasSelectedCards);
   }
 } 

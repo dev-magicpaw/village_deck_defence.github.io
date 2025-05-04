@@ -114,6 +114,36 @@ export class Card extends Phaser.Events.EventEmitter {
   }
 
   /**
+   * Calculate the total power value of this card
+   * This includes any contributions from stickers
+   */
+  public getPowerValue(): number {    
+    let total = 0;
+    // Add power values from stickers
+    this._slots.forEach(slot => {
+      if (slot.sticker) {
+        // If the sticker has a power value, add it
+        total += slot.sticker.getPowerValue();
+      }
+    });
+    
+    return total;
+  }
+
+  public getConstructionValue(): number {
+    let total = 0;
+    // Add construction values from stickers
+    this._slots.forEach(slot => {
+      if (slot.sticker) {
+        // If the sticker has a construction value, add it
+        total += slot.sticker.getConstructionValue();
+      }
+    });
+    
+    return total;
+  }
+
+  /**
    * Apply a sticker to a specific slot
    * @param sticker The sticker configuration to apply
    * @param slotIndex The index of the slot to apply the sticker to

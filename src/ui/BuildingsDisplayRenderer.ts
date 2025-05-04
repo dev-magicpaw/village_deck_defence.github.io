@@ -120,6 +120,7 @@ export class BuildingsDisplayRenderer {
         this.panelY,
         this.panelWidth,
         this.panelHeight,
+        this.playerHandRenderer,
         this.resourceService,
         this.deckService
       );

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BuildingRegistry } from '../services/BuildingRegistry';
+import { RecruitCardRegistry } from '../services/RecruitCardRegistry';
 import { StickerRegistry } from '../services/StickerRegistry';
 
 export class BootScene extends Phaser.Scene {
@@ -65,6 +66,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image('gnome_student', 'assets/images/portraits/gnome_student.png');
     this.load.image('human_villager', 'assets/images/portraits/human_villager.png');
 
+    // Load recruit card images
+    this.load.image('recruit_card_human_villager', 'assets/images/recruit_cards/recruit_villager.png');
+
     this.load.image('physical_card_back', 'assets/images/card_backs/Card_shirt_01.png');
     this.load.image('magic_card_back', 'assets/images/card_backs/Card_shirt_04.png');
     
@@ -84,12 +88,14 @@ export class BootScene extends Phaser.Scene {
     this.load.json('cardsConfig', 'config/cards.json'); 
     this.load.json('gameConfig', 'config/game.json');
     this.load.json('buildingsConfig', 'config/buildings.json');
+    this.load.json('recruitCardsConfig', 'config/recruit_cards.json');
   }
 
   create(): void {
     // Initialize registries with loaded data
     this.initializeStickerRegistry();
     this.initializeBuildingRegistry();
+    this.initializeRecruitCardRegistry();
     
     // Transition to the level select scene
     // this.scene.start('LevelSelectScene');
@@ -119,6 +125,19 @@ export class BootScene extends Phaser.Scene {
       registry.loadBuildings(buildingData);
     } else {
       console.error('Failed to load buildings.json');
+    }
+  }
+
+  /**
+   * Load recruit card configs into the global registry
+   */
+  private initializeRecruitCardRegistry(): void {
+    const recruitCardData = this.cache.json.get('recruitCardsConfig');
+    if (recruitCardData) {
+      const registry = RecruitCardRegistry.getInstance();
+      registry.loadRecruitCards(recruitCardData);
+    } else {
+      console.error('Failed to load recruit_cards.json');
     }
   }
 } 

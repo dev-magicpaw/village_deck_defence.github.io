@@ -308,6 +308,8 @@ export class StickerShopRenderer {
     
     // Calculate the position based on the player hand panel
     const handPanelY = height - panelHeight;
+    console.log('handPanelY', handPanelY);
+    console.log('panelHeight', panelHeight);
     
     // Create selection panel with the same dimensions as the discard button
     this.resourcePanel = this.scene.add['nineslice'](
@@ -333,7 +335,7 @@ export class StickerShopRenderer {
       selectedY,
       'Selected: 0',
       {
-        fontSize: '18px',
+        fontSize: '18px', 
         color: '#ffffff',
         align: 'center'
       }

@@ -7,6 +7,7 @@ import { BuildingService } from '../services/BuildingService';
 import { CardRegistry } from '../services/CardRegistry';
 import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
+import { RecruitCardRegistry } from '../services/RecruitCardRegistry';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService } from '../services/TavernService';
@@ -34,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   private buildingService!: BuildingService;
   private tavernService!: TavernService;
   private stickerShopService!: StickerShopService;
+  private recruitCardRegistry!: RecruitCardRegistry;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -44,6 +46,7 @@ export class GameScene extends Phaser.Scene {
     this.load.json('gameConfig', 'config/game.json');
     this.load.json('cardsConfig', 'config/cards.json');
     this.load.json('buildingsConfig', 'config/buildings.json');
+    this.load.json('recruitCardsConfig', 'config/recruit_cards.json');
   }
 
   create(): void {
@@ -64,8 +67,7 @@ export class GameScene extends Phaser.Scene {
     this.buildingService.initializeBuildings();
     
     // Initialize the tavern service
-    this.tavernService = TavernService.getInstance();
-    this.tavernService.init();
+    this.initializeTavernService();
     
     // Initialize the sticker shop service
     this.stickerShopService = new StickerShopService();
@@ -108,6 +110,10 @@ export class GameScene extends Phaser.Scene {
     // Initialize the building registry
     this.buildingRegistry = BuildingRegistry.getInstance();
     this.buildingRegistry.loadBuildings(this.cache.json.get('buildingsConfig'));
+    
+    // Initialize the recruit card registry
+    this.recruitCardRegistry = RecruitCardRegistry.getInstance();
+    this.recruitCardRegistry.loadRecruitCards(this.cache.json.get('recruitCardsConfig'));
   }
 
   /**
@@ -186,6 +192,14 @@ export class GameScene extends Phaser.Scene {
     
     // Initialize and render the hand
     this.playerHandRenderer.init();
+  }
+  
+  /**
+   * Initialize the tavern service
+   */
+  private initializeTavernService(): void {
+    this.tavernService = TavernService.getInstance();
+    this.tavernService.init(this.resourceService);
   }
   
   /**

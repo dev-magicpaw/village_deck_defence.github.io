@@ -119,7 +119,9 @@ export class BuildingsDisplayRenderer {
         this.panelX,
         this.panelY,
         this.panelWidth,
-        this.panelHeight
+        this.panelHeight,
+        this.resourceService,
+        this.deckService
       );
       this.tavernRenderer.init();
     }
@@ -230,7 +232,7 @@ export class BuildingsDisplayRenderer {
     } else if (building.id === this.tavernBuildingId) {
       // Show tavern UI
       if (this.tavernRenderer) {
-        this.tavernRenderer.setVisibility(true);
+        this.tavernRenderer.show();
       }
     }
   }

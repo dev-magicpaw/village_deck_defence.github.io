@@ -1,9 +1,9 @@
 [
     {
-      "id": "recruit_card_human_villager",
+      "id": "recruit_card",
       "name": "Recruit Villagers",
       "description": "Recruit some local villagers",
-      "image": "recruit_card_human_villager",
+      "image": "recruit_card",
       "cost": 5,
       "success_effects": [
         {

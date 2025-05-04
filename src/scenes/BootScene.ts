@@ -66,11 +66,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image('gnome_student', 'assets/images/portraits/gnome_student.png');
     this.load.image('human_villager', 'assets/images/portraits/human_villager.png');
 
-    // Load recruit card images
-    this.load.image('recruit_card_human_villager', 'assets/images/recruit_cards/recruit_villager.png');
-
     this.load.image('physical_card_back', 'assets/images/card_backs/Card_shirt_01.png');
     this.load.image('magic_card_back', 'assets/images/card_backs/Card_shirt_04.png');
+    this.load.image('recruit_card', 'assets/images/card_backs/recruit_card.png');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/Sword1.png');

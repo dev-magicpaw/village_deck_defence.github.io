@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BuildingService } from '../services/BuildingService';
 import { DeckService } from '../services/DeckService';
+import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
@@ -18,6 +19,9 @@ export class GameUI {
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
   private deckService: DeckService;
+  private invasionService: InvasionService;
+  private invasionTitle!: Phaser.GameObjects.Text;
+  private lastKnownDay: number = 1;
   
   constructor(
     scene: Phaser.Scene, 
@@ -25,7 +29,8 @@ export class GameUI {
     resourceService: ResourceService, 
     stickerShopService: StickerShopService,
     playerHandRenderer: PlayerHandRenderer,
-    deckService: DeckService
+    deckService: DeckService,
+    invasionService: InvasionService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -33,6 +38,7 @@ export class GameUI {
     this.stickerShopService = stickerShopService;
     this.playerHandRenderer = playerHandRenderer;
     this.deckService = deckService;
+    this.invasionService = invasionService;
   }
   
   /**
@@ -48,6 +54,7 @@ export class GameUI {
   /**
    * Create the invasion progress panel at the top of the screen
    */
+  // TODO: move invasion panel and title to a separate class InvasionRenderer
   private createInvasionProgressPanel(): void {
     const { width, height } = this.scene.cameras.main;
     const panelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
@@ -69,12 +76,13 @@ export class GameUI {
     // Set the origin to the top-left corner
     invasionPanel.setOrigin(0, 0);
     
-    // Add the panel title
-    const invasionTitle = this.scene.add.text(width / 2, panelHeight / 2, 'Invasion progress track', {
+    // Add the panel title with current day
+    this.lastKnownDay = this.invasionService.getCurrentDay();
+    this.invasionTitle = this.scene.add.text(width / 2, panelHeight / 2, `Invasion progress track: day ${this.lastKnownDay}`, {
       fontSize: '24px',
       color: '#ffffff'
     });
-    invasionTitle.setOrigin(0.5, 0.5);
+    this.invasionTitle.setOrigin(0.5, 0.5);
   }
   
   /**
@@ -214,6 +222,13 @@ export class GameUI {
     // Update buildings display if it exists
     if (this.buildingsDisplayRenderer) {
       this.buildingsDisplayRenderer.update();
+    }
+    
+    // Update invasion title if day has changed
+    const currentDay = this.invasionService.getCurrentDay();
+    if (currentDay !== this.lastKnownDay) {
+      this.lastKnownDay = currentDay;
+      this.invasionTitle.setText(`Invasion progress track: day ${currentDay}`);
     }
   }
 } 

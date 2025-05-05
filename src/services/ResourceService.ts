@@ -2,7 +2,27 @@
  * Service for managing player resources
  * Tracks invention, construction, and power resources
  */
-export class ResourceService {
+
+import Phaser from 'phaser';
+import { ResourceType } from '../entities/Types';
+
+/**
+ * Events emitted by the ResourceService
+ */
+export enum ResourceServiceEvents {
+  RESOURCE_CHANGED = 'resource-changed'
+}
+
+/**
+ * Event data emitted when a resource changes
+ */
+export interface ResourceChangeEvent {
+  type: ResourceType;
+  amount: number;
+  previousAmount: number;
+}
+
+export class ResourceService extends Phaser.Events.EventEmitter {
   private invention: number = 0;
   private construction: number = 0;
   private power: number = 0;
@@ -11,6 +31,7 @@ export class ResourceService {
    * Create a new resource service with initial values set to 0
    */
   constructor() {
+    super();
     this.resetResources();
   }
 
@@ -19,9 +40,23 @@ export class ResourceService {
    * Called at the beginning of each turn
    */
   public resetResources(): void {
+    const oldInvention = this.invention;
+    const oldConstruction = this.construction;
+    const oldPower = this.power;
+    
     this.invention = 0;
     this.construction = 0;
     this.power = 0;
+    
+    if (oldInvention !== 0) {
+      this.emitResourceChange(ResourceType.Invention, 0, oldInvention);
+    }
+    if (oldConstruction !== 0) {
+      this.emitResourceChange(ResourceType.Construction, 0, oldConstruction);
+    }
+    if (oldPower !== 0) {
+      this.emitResourceChange(ResourceType.Power, 0, oldPower);
+    }
   }
 
   /**
@@ -29,8 +64,10 @@ export class ResourceService {
    * @param amount Amount to add
    */
   public addInvention(amount: number): void {
-    if (amount < 0) return;
+    if (amount < 0) throw new Error('Amount of invention to add must be positive');
+    const previousAmount = this.invention;
     this.invention += amount;
+    this.emitResourceChange(ResourceType.Invention, this.invention, previousAmount);
   }
 
   /**
@@ -38,8 +75,10 @@ export class ResourceService {
    * @param amount Amount to add
    */
   public addConstruction(amount: number): void {
-    if (amount < 0) return;
+    if (amount < 0) throw new Error('Amount of construction to add must be positive');
+    const previousAmount = this.construction;
     this.construction += amount;
+    this.emitResourceChange(ResourceType.Construction, this.construction, previousAmount);
   }
 
   /**
@@ -47,8 +86,10 @@ export class ResourceService {
    * @param amount Amount to add
    */
   public addPower(amount: number): void {
-    if (amount < 0) return;
+    if (amount < 0) throw new Error('Amount of power to add must be positive');
+    const previousAmount = this.power;
     this.power += amount;
+    this.emitResourceChange(ResourceType.Power, this.power, previousAmount);
   }
 
   /**
@@ -57,8 +98,11 @@ export class ResourceService {
    * @returns True if consumption was successful, false if not enough resources
    */
   public consumeInvention(amount: number): boolean {
-    if (amount < 0 || amount > this.invention) return false;
+    if (amount < 0) throw new Error('Amount of invention to consume must be positive');
+    if (amount > this.invention) return false;
+    const previousAmount = this.invention;
     this.invention -= amount;
+    this.emitResourceChange(ResourceType.Invention, this.invention, previousAmount);
     return true;
   }
 
@@ -68,8 +112,11 @@ export class ResourceService {
    * @returns True if consumption was successful, false if not enough resources
    */
   public consumeConstruction(amount: number): boolean {
-    if (amount < 0 || amount > this.construction) return false;
+    if (amount < 0) throw new Error('Amount of construction to consume must be positive');
+    if (amount > this.construction) return false;
+    const previousAmount = this.construction;
     this.construction -= amount;
+    this.emitResourceChange(ResourceType.Construction, this.construction, previousAmount);
     return true;
   }
 
@@ -79,8 +126,11 @@ export class ResourceService {
    * @returns True if consumption was successful, false if not enough resources
    */
   public consumePower(amount: number): boolean {
-    if (amount < 0 || amount > this.power) return false;
+    if (amount < 0) throw new Error('Amount of power to consume must be positive');
+    if (amount > this.power) return false;
+    const previousAmount = this.power;
     this.power -= amount;
+    this.emitResourceChange(ResourceType.Power, this.power, previousAmount);
     return true;
   }
 
@@ -133,5 +183,21 @@ export class ResourceService {
    */
   public hasEnoughPower(amount: number): boolean {
     return this.power >= amount;
+  }
+
+  /**
+   * Emit a resource change event
+   * @param type Type of resource that changed
+   * @param amount New amount
+   * @param previousAmount Previous amount
+   */
+  private emitResourceChange(type: ResourceType, amount: number, previousAmount: number): void {
+    const event: ResourceChangeEvent = {
+      type,
+      amount,
+      previousAmount
+    };
+    
+    this.emit(ResourceServiceEvents.RESOURCE_CHANGED, event);
   }
 } 

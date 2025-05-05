@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Card, CardEvents } from '../entities/Card';
 import { PlayerHand } from '../entities/PlayerHand';
+import { BuildingService, BuildingServiceEvents } from '../services/BuildingService';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
@@ -30,6 +31,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
   private tavernService: TavernService;
+  private buildingService: BuildingService;
   private panelWidth: number;
   private panelHeight: number;
   private panelX: number;
@@ -43,6 +45,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private selectedCards: Set<string> = new Set(); // Track selected cards by unique_id
   private isShopOpen: boolean = false; // Track if sticker shop is open
   private isTavernOpen: boolean = false; // Track if tavern is open
+  private isBuildingMenuOpen: boolean = false; // Track if building menu is open
   
   /**
    * Create a new player hand renderer
@@ -55,6 +58,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
    * @param invasionService Invasion service for day progression
    * @param resourceService Resource service for resetting resources
    * @param stickerShopService Sticker shop service for shop state
+   * @param buildingService Building service for building menu state
    */
   constructor(
     scene: Phaser.Scene, 
@@ -65,7 +69,8 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     panelHeight: number,
     invasionService: InvasionService,
     resourceService: ResourceService,
-    stickerShopService: StickerShopService
+    stickerShopService: StickerShopService,
+    buildingService: BuildingService
   ) {
     super();
     this.scene = scene;
@@ -78,6 +83,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
     this.tavernService = TavernService.getInstance();
+    this.buildingService = buildingService;
     
     // Get initial cards from hand
     this.currentCards = playerHand.getCards();
@@ -104,6 +110,13 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.tavernService.on(
       TavernServiceEvents.TAVERN_STATE_CHANGED,
       this.onTavernStateChanged,
+      this
+    );
+    
+    // Subscribe to building menu state changes
+    this.buildingService.on(
+      BuildingServiceEvents.MENU_STATE_CHANGED,
+      this.onBuildingMenuStateChanged,
       this
     );
   }
@@ -419,7 +432,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       throw new Error(`Invalid card index: ${index}`);
     }
 
-    if (this.isShopOpen || this.isTavernOpen) {
+    if (this.isShopOpen || this.isTavernOpen || this.isBuildingMenuOpen) {
       const card = this.currentCards[index];
       const uniqueId = card.unique_id;
       
@@ -435,7 +448,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       // Emit event that selection has changed - don't pass the value
       this.emit(PlayerHandRendererEvents.SELECTION_CHANGED);
     } else {
-      // Default behavior when shop is not open
+      // Default behavior when no menu is open
       console.log(`Card ${index} clicked`);
     }
   }
@@ -574,8 +587,8 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.discardButton.disableInteractive();
     this.endDayButton.disableInteractive();
     
-    // Only make buttons interactive if they're visible AND both shop and tavern are closed
-    if (!this.isShopOpen && !this.isTavernOpen) {
+    // Only make buttons interactive if they're visible AND all menus are closed
+    if (!this.isShopOpen && !this.isTavernOpen && !this.isBuildingMenuOpen) {
       if (!isDeckEmpty) {
         this.discardButton.setInteractive({ useHandCursor: true });
       } else {
@@ -657,6 +670,13 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       this
     );
     
+    // Unsubscribe from building menu events
+    this.buildingService.off(
+      BuildingServiceEvents.MENU_STATE_CHANGED,
+      this.onBuildingMenuStateChanged,
+      this
+    );
+    
     // Unsubscribe from all card events
     this.currentCards.forEach(card => {
       card.off(CardEvents.STICKER_APPLIED, this.onCardStickerApplied, this);
@@ -671,5 +691,20 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.discardButtonText.destroy();
     this.endDayButton.destroy();
     this.endDayButtonText.destroy();
+  }
+
+  /**
+   * Handler for building menu state changes
+   * @param isOpen Whether the building menu is open
+   */
+  private onBuildingMenuStateChanged(isOpen: boolean): void {
+    this.isBuildingMenuOpen = isOpen;
+    
+    // If menu is closing, deselect all cards
+    if (!isOpen) {
+      this.clearCardSelection();
+    }
+    
+    this.updateButtonVisibility();
   }
 } 

@@ -72,25 +72,14 @@ export class GameScene extends Phaser.Scene {
     // Load configs
     this.loadConfigurations();
     
-    // Initialize the invasion service
     this.initializeInvasionService();
-    
-    // Initialize the resource service
     this.initializeResourceService();
-    
-    // Initialize the deck and hand
     this.initializePlayerDeck();
-    
-    // Initialize buildings
     this.initializeBuildings();
-    
-    // Initialize the tavern service
     this.initializeTavernService();
-    
-    // Initialize the sticker shop service
     this.stickerShopService = new StickerShopService();
-    
-    // Initialize the player hand UI first so we can pass it to the UI manager
+
+    // Initialize the player hand UI
     this.initializePlayerHandUI();
     
     // Initialize the UI manager with player hand renderer
@@ -235,7 +224,8 @@ export class GameScene extends Phaser.Scene {
       dimensions.height,
       this.invasionService,
       this.resourceService,
-      this.stickerShopService
+      this.stickerShopService,
+      this.buildingService
     );
     
     // Initialize and render the hand

@@ -3,6 +3,9 @@ export interface BuildingConfig {
   name: string;
   description: string;
   image: string;
+  cost?: {
+    construction: number;
+  };
 }
 
 /**
@@ -33,6 +36,9 @@ export class Building {
   public readonly name: string;
   public readonly description: string;
   public readonly image: string;
+  public readonly cost?: {
+    construction: number;
+  };
 
   /**
    * Create a new Building instance
@@ -43,6 +49,7 @@ export class Building {
     this.name = config.name;
     this.description = config.description;
     this.image = config.image;
+    this.cost = config.cost;
   }
 
   /**
@@ -61,6 +68,9 @@ export function convertBuildingJsonToConfig(buildingJson: any): BuildingConfig {
     id: buildingJson.id,
     name: buildingJson.name,
     description: buildingJson.description,
-    image: buildingJson.image
+    image: buildingJson.image,
+    cost: buildingJson.cost ? {
+      construction: buildingJson.cost.construction || 0
+    } : undefined
   };
 } 

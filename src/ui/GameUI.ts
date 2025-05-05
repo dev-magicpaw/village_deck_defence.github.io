@@ -139,7 +139,9 @@ export class GameUI {
       panelX,
       panelY,
       panelWidth,
-      panelHeight
+      panelHeight,
+      this.playerHandRenderer,
+      this.resourceService
     );
     
     // Initialize buildings display if building service is available

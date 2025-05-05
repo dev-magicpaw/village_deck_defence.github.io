@@ -1,17 +1,27 @@
+import Phaser from 'phaser';
 import { v4 as uuidv4 } from 'uuid';
 import { BuildingConfig, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { Building as BuildingInterface } from '../types/game';
 import { BuildingRegistry } from './BuildingRegistry';
 
 /**
+ * Events emitted by the BuildingService
+ */
+export enum BuildingServiceEvents {
+  MENU_STATE_CHANGED = 'menu-state-changed'
+}
+
+/**
  * Service for managing buildings in the game
  */
-export class BuildingService {
+export class BuildingService extends Phaser.Events.EventEmitter {
   private buildingRegistry: BuildingRegistry;
   private constructedBuildings: BuildingInterface[] = [];
   private buildingSlots: BuildingSlot[] = [];
   private buildingSlotLocations: BuildingSlotLocation[] = [];
   private slotToBuildingMap: Record<string, string> = {};
+  private isMenuOpen: boolean = false;
+  private currentSlotId: string | null = null;
 
   /**
    * Create a new BuildingService
@@ -22,6 +32,7 @@ export class BuildingService {
     buildingSlotsConfig: BuildingSlot[],
     buildingSlotLocations: BuildingSlotLocation[]
   ) {
+    super();
     this.buildingRegistry = BuildingRegistry.getInstance();
     
     this.initializeBuildingSlots(buildingSlotsConfig, buildingSlotLocations);
@@ -221,5 +232,32 @@ export class BuildingService {
       already_constructed,
       available_for_construction
     };
+  }
+
+  /**
+   * Get the current state of the building menu
+   * @returns Whether the building menu is open
+   */
+  public isMenuVisible(): boolean {
+    return this.isMenuOpen;
+  }
+
+  /**
+   * Open the building menu for a specific slot
+   * @param slotUniqueId The unique ID of the slot to open the menu for
+   */
+  public openMenu(slotUniqueId: string): void {
+    this.isMenuOpen = true;
+    this.currentSlotId = slotUniqueId;
+    this.emit(BuildingServiceEvents.MENU_STATE_CHANGED, true, slotUniqueId);
+  }
+
+  /**
+   * Close the building menu
+   */
+  public closeMenu(): void {
+    this.isMenuOpen = false;
+    this.currentSlotId = null;
+    this.emit(BuildingServiceEvents.MENU_STATE_CHANGED, false, null);
   }
 } 

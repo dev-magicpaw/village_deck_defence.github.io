@@ -3,6 +3,9 @@ export interface Building {
   name: string;
   description: string;
   image: string;
+  cost?: {
+    construction: number;
+  };
 }
 
 export interface Adventure {

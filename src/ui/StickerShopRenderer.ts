@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
+import { ResourceType } from '../entities/Types';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
 import { StickerShopService } from '../services/StickerShopService';
 import { CardOverlayRenderer } from './CardOverlayRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
-import { ResourcePanelRenderer, ResourceType } from './ResourcePanelRenderer';
+import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
 
 /**
@@ -112,7 +113,7 @@ export class StickerShopRenderer {
     this.resourcePanelRenderer = new ResourcePanelRenderer(
       this.scene,
       this.playerHandRenderer,
-      ResourceType.INVENTION,
+      ResourceType.Invention,
       'Purchase',
       () => this.purchaseSticker(),
       this.resourceService as ResourceService
@@ -125,7 +126,7 @@ export class StickerShopRenderer {
   private setupResourcePanelEventHandlers(): void {
     // Handle resource panel play cards event
     this.scene.events.on('resourcePanel-playCards', (data: any) => {
-      if (data.type === ResourceType.INVENTION) {
+      if (data.type === ResourceType.Invention) {
         // Add resources to the resource service
         if (this.resourceService) {
           this.resourceService.addInvention(data.value);

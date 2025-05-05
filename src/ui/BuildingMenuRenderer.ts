@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
 import { BuildingConfig as OriginalBuildingConfig } from '../entities/Building';
+import { ResourceType } from '../entities/Types';
 import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
-import { ResourcePanelRenderer, ResourceType } from './ResourcePanelRenderer';
+import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 
 /**
  * Extend the BuildingConfig interface to include cost
@@ -160,7 +161,7 @@ export class BuildingMenuRenderer {
     this.resourcePanelRenderer = new ResourcePanelRenderer(
       this.scene,
       this.playerHandRenderer,
-      ResourceType.CONSTRUCTION,
+      ResourceType.Construction,
       'Construct',
       () => this.constructSelectedBuilding(),
       this.resourceService

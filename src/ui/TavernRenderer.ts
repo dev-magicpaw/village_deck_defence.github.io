@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
+import { ResourceType } from '../entities/Types';
 import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { AdventureLevel, TavernService } from '../services/TavernService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
-import { ResourcePanelRenderer, ResourceType } from './ResourcePanelRenderer';
+import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 import { SimpleCardRenderer } from './SimpleCardRenderer';
 
 /**
@@ -152,7 +153,7 @@ export class TavernRenderer {
     this.resourcePanelRenderer = new ResourcePanelRenderer(
       this.scene,
       this.playerHandRenderer,
-      ResourceType.POWER,
+      ResourceType.Power,
       'Proceed',
       () => this.proceedWithAdventure(),
       this.resourceService as ResourceService

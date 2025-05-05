@@ -1,17 +1,9 @@
 import Phaser from 'phaser';
+import { ResourceType } from '../entities/Types';
 import { ResourceService } from '../services/ResourceService';
 import { GameUI } from '../ui/GameUI';
 import { CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
-
-/**
- * Type of resource that can be tracked in the resource panel
- */
-export enum ResourceType {
-  POWER = 'power',
-  CONSTRUCTION = 'construction',
-  INVENTION = 'invention'
-}
 
 /**
  * Renders a resource panel that allows the player to select cards,
@@ -324,11 +316,11 @@ export class ResourcePanelRenderer {
    */
   private getResourceIconKey(): string {
     switch (this.resourceType) {
-      case ResourceType.POWER:
+      case ResourceType.Power:
         return 'resource_power';
-      case ResourceType.CONSTRUCTION:
+      case ResourceType.Construction:
         return 'resource_construction';
-      case ResourceType.INVENTION:
+      case ResourceType.Invention:
         return 'resource_invention';
       default:
         throw new Error(`Unknown resource type: ${this.resourceType}`);
@@ -402,11 +394,11 @@ export class ResourcePanelRenderer {
    */
   private getSelectedResourceValue(): number {
     switch (this.resourceType) {
-      case ResourceType.POWER:
+      case ResourceType.Power:
         return this.playerHandRenderer.getSelectedPowerValue();
-      case ResourceType.CONSTRUCTION:
+      case ResourceType.Construction:
         return this.playerHandRenderer.getSelectedConstructionValue();
-      case ResourceType.INVENTION:
+      case ResourceType.Invention:
         return this.playerHandRenderer.getSelectedInventionValue();
       default:
         throw new Error(`Unknown resource type: ${this.resourceType}`);
@@ -428,13 +420,13 @@ export class ResourcePanelRenderer {
       let resourceValue = 0;
       
       switch (this.resourceType) {
-        case ResourceType.POWER:
+        case ResourceType.Power:
           resourceValue = card.getPowerValue();
           break;
-        case ResourceType.CONSTRUCTION:
+        case ResourceType.Construction:
           resourceValue = card.getConstructionValue();
           break;
-        case ResourceType.INVENTION:
+        case ResourceType.Invention:
           resourceValue = card.getInventionValue();
           break;
       }
@@ -476,13 +468,13 @@ export class ResourcePanelRenderer {
     // 6. Add resources to the resource service
     // TODO move this to a method
     switch (this.resourceType) {
-      case ResourceType.POWER:
+      case ResourceType.Power:
         this.resourceService.addPower(selectedResourceValue);
         break;
-      case ResourceType.CONSTRUCTION:
+      case ResourceType.Construction:
         this.resourceService.addConstruction(selectedResourceValue);
         break;
-      case ResourceType.INVENTION:
+      case ResourceType.Invention:
         this.resourceService.addInvention(selectedResourceValue);
         break;
     }
@@ -533,11 +525,11 @@ export class ResourcePanelRenderer {
    */
   private getAcquiredResourceValue(): number {
     switch (this.resourceType) {
-      case ResourceType.POWER:
+      case ResourceType.Power:
         return this.resourceService.getPower();
-      case ResourceType.CONSTRUCTION:
+      case ResourceType.Construction:
         return this.resourceService.getConstruction();
-      case ResourceType.INVENTION:
+      case ResourceType.Invention:
         return this.resourceService.getInvention();
       default:
         throw new Error(`Unknown resource type: ${this.resourceType}`);
@@ -609,17 +601,17 @@ export class ResourcePanelRenderer {
     // This method is maintained for backward compatibility
     // Set the value in the resource service instead
     switch (this.resourceType) {
-      case ResourceType.POWER:
+      case ResourceType.Power:
         // Reset existing power and add new value
         this.resourceService.consumePower(this.resourceService.getPower());
         this.resourceService.addPower(value);
         break;
-      case ResourceType.CONSTRUCTION:
+      case ResourceType.Construction:
         // Reset existing construction and add new value
         this.resourceService.consumeConstruction(this.resourceService.getConstruction());
         this.resourceService.addConstruction(value);
         break;
-      case ResourceType.INVENTION:
+      case ResourceType.Invention:
         // Reset existing invention and add new value
         this.resourceService.consumeInvention(this.resourceService.getInvention());
         this.resourceService.addInvention(value);

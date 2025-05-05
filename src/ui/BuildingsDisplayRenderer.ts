@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Building, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
+import { StickerShopService } from '../services/StickerShopService';
 import { TavernService, TavernServiceEvents } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { CARD_WIDTH, CARD_WIDTH_TO_HEIGHT_RATIO } from './CardRenderer';
@@ -19,6 +20,7 @@ export class BuildingsDisplayRenderer {
   private stickerShopRenderer: StickerShopRenderer;
   private tavernRenderer: TavernRenderer;
   private tavernService: TavernService;
+  private stickerShopService: StickerShopService;
   private buildingMenuRenderer: BuildingMenuRenderer;
   private stickerShopBuildingId: string = '';
   private tavernBuildingId: string = '';
@@ -56,7 +58,8 @@ export class BuildingsDisplayRenderer {
     panelY: number,
     stickerShopRenderer: StickerShopRenderer,
     tavernRenderer: TavernRenderer,
-    buildingMenuRenderer: BuildingMenuRenderer
+    buildingMenuRenderer: BuildingMenuRenderer,
+    stickerShopService?: StickerShopService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -66,12 +69,16 @@ export class BuildingsDisplayRenderer {
     this.tavernRenderer = tavernRenderer;
     this.buildingMenuRenderer = buildingMenuRenderer;
     this.tavernService = TavernService.getInstance();
+    this.stickerShopService = stickerShopService || new StickerShopService();
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
     
     // Subscribe to tavern state changes to detect when it closes
     this.tavernService.on(TavernServiceEvents.TAVERN_STATE_CHANGED, this.onTavernStateChanged, this);
+    
+    // Subscribe to sticker shop state changes to detect when it closes
+    this.stickerShopService.on(StickerShopService.Events.SHOP_STATE_CHANGED, this.onStickerShopStateChanged, this);
   }
 
   /**
@@ -80,6 +87,17 @@ export class BuildingsDisplayRenderer {
    */
   private onTavernStateChanged(isOpen: boolean): void {
     // If tavern is closed, make buildings display visible again
+    if (!isOpen) {
+      this.displayContainer.setVisible(true);
+    }
+  }
+  
+  /**
+   * Handle sticker shop state changes
+   * @param isOpen Whether the sticker shop is open
+   */
+  private onStickerShopStateChanged(isOpen: boolean): void {
+    // If sticker shop is closed, make buildings display visible again
     if (!isOpen) {
       this.displayContainer.setVisible(true);
     }
@@ -300,6 +318,7 @@ export class BuildingsDisplayRenderer {
     
     // Remove event listeners
     this.tavernService.off(TavernServiceEvents.TAVERN_STATE_CHANGED, this.onTavernStateChanged, this);
+    this.stickerShopService.off(StickerShopService.Events.SHOP_STATE_CHANGED, this.onStickerShopStateChanged, this);
     
     this.stickerShopRenderer.destroy();
     

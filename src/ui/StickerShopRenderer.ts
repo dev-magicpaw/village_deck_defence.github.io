@@ -166,10 +166,14 @@ export class StickerShopRenderer {
    * Handler for shop state changes
    */
   private onShopStateChanged(isOpen: boolean): void {
-    if (isOpen) {
-      this._show();
-    } else {
-      this._hide();
+    // Only react to service state changes if they don't match our current state
+    // This prevents infinite loops when we update the service in our show/hide methods
+    if (isOpen !== this.isVisible) {
+      if (isOpen) {
+        this.show();
+      } else {
+        this.hide();
+      }
     }
   }
   
@@ -214,7 +218,9 @@ export class StickerShopRenderer {
     );
     closeButton.setScale(1.2);
     closeButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', this.handleCloseButtonClick, this);
+      .on('pointerdown', () => {
+        this.hide();
+      });
     
     // Add hover effects for close button
     closeButton.on('pointerover', () => {
@@ -238,13 +244,6 @@ export class StickerShopRenderer {
     
     // Render all stickers
     this.renderStickers();
-  }
-  
-  /**
-   * Handle close button click
-   */
-  private handleCloseButtonClick(): void {
-    this.stickerShopService.setShopState(false);
   }
   
   /**
@@ -669,16 +668,12 @@ export class StickerShopRenderer {
    * Public method to show the sticker shop
    */
   public show(): void {
-    this._show();
-  }
-  
-  /**
-   * Internal method to show the shop UI
-   */
-  private _show(): void {
     if (!this.isVisible) {
       this.isVisible = true;
       this.displayContainer.setVisible(true);
+      
+      // Set the shop state in the service to maintain consistency
+      this.stickerShopService.setShopState(true);
       
       // Setup Esc key to close the shop
       if (this.scene.input.keyboard) {
@@ -708,16 +703,19 @@ export class StickerShopRenderer {
    * Handle Escape key press to close the shop
    */
   private handleEscapeKey(): void {
-    this.stickerShopService.setShopState(false);
+    this.hide();
   }
   
   /**
-   * Internal method to hide the shop UI
+   * Hide the shop UI
    */
-  private _hide(): void {
+  public hide(): void {
     if (this.isVisible) {
       this.isVisible = false;
       this.displayContainer.setVisible(false);
+      
+      // Set the shop state in the service to maintain consistency
+      this.stickerShopService.setShopState(false);
       
       // Remove Esc key listener
       if (this.escKey) {
@@ -727,6 +725,17 @@ export class StickerShopRenderer {
       
       // Deselect sticker when closing the shop
       this.deselectSticker();
+    }
+  }
+  
+  /**
+   * Toggle the shop visibility
+   */
+  public toggle(): void {
+    if (this.isVisible) {
+      this.hide();
+    } else {
+      this.show();
     }
   }
   

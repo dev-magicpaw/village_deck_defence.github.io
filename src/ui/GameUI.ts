@@ -151,7 +151,8 @@ export class GameUI {
         panelY,
         this.stickerShopRenderer,
         this.tavernRenderer,
-        this.buildingMenuRenderer
+        this.buildingMenuRenderer,
+        this.stickerShopService
       );
       
       this.buildingsDisplayRenderer.init();

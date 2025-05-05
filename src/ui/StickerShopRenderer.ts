@@ -4,10 +4,9 @@ import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
 import { StickerShopService } from '../services/StickerShopService';
-import { GameUI } from '../ui/GameUI';
 import { CardOverlayRenderer } from './CardOverlayRenderer';
-import { CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
+import { ResourcePanelRenderer, ResourceType } from './ResourcePanelRenderer';
 import { StickerInShopRenderer } from './StickerInShopRenderer';
 
 /**
@@ -21,24 +20,13 @@ export class StickerShopRenderer {
   private shopPanel: Phaser.GameObjects.NineSlice | null = null;
   private stickerRenderers: StickerInShopRenderer[] = [];
   private selectedSticker: StickerConfig | null = null;
-  private purchaseButton: Phaser.GameObjects.NineSlice | null = null;
-  private purchaseButtonText: Phaser.GameObjects.Text | null = null;
-  private playCardsButton: Phaser.GameObjects.NineSlice | null = null;
-  private playCardsButtonText: Phaser.GameObjects.Text | null = null;
   private resourceService?: ResourceService;
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
-  private inventionIcon: Phaser.GameObjects.Image | null = null;
   private cardOverlayRenderer: CardOverlayRenderer | null = null;
   private deckService: DeckService;
   private escKey: Phaser.Input.Keyboard.Key | null = null;
-  
-  // Selection panel elements
-  private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
-  private selectionText: Phaser.GameObjects.Text | null = null;
-  private acquiredText: Phaser.GameObjects.Text | null = null;
-  private selectAllButton: Phaser.GameObjects.NineSlice | null = null;
-  private selectAllButtonText: Phaser.GameObjects.Text | null = null;
+  private resourcePanelRenderer!: ResourcePanelRenderer;
   
   // Panel dimensions and position
   private panelX: number;
@@ -108,6 +96,47 @@ export class StickerShopRenderer {
       this.onCardSelectionChanged,
       this
     );
+    
+    // Initialize resource panel renderer
+    this.initResourcePanelRenderer();
+    
+    // Set up event handlers for resource panel events
+    this.setupResourcePanelEventHandlers();
+  }
+  
+  /**
+   * Initialize the resource panel renderer
+   */
+  private initResourcePanelRenderer(): void {
+    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
+    
+    // Create the resource panel renderer
+    this.resourcePanelRenderer = new ResourcePanelRenderer(
+      this.scene,
+      this.playerHandRenderer,
+      ResourceType.INVENTION,
+      acquiredInvention,
+      'Purchase',
+      () => this.purchaseSticker()
+    );
+  }
+  
+  /**
+   * Set up event handlers for resource panel events
+   */
+  private setupResourcePanelEventHandlers(): void {
+    // Handle resource panel play cards event
+    this.scene.events.on('resourcePanel-playCards', (data: any) => {
+      if (data.type === ResourceType.INVENTION) {
+        // Add resources to the resource service
+        if (this.resourceService) {
+          this.resourceService.addInvention(data.value);
+        }
+        
+        // Update sticker affordability
+        this.updateStickersAffordability();
+      }
+    });
   }
   
   /**
@@ -130,15 +159,9 @@ export class StickerShopRenderer {
    * Handler for card selection changes
    */
   private onCardSelectionChanged(): void {
-    this.updateSelectionText();
-    
-    // Check if any cards are selected and update play cards button state
-    const hasSelectedCards = this.playerHandRenderer.getSelectedCardIds().length > 0;
-    this.setPlayCardsButtonState(hasSelectedCards);
-    
-    // If a sticker is selected, check if we still have enough resources
+    // If a sticker is selected, update its affordability based on current selected cards
     if (this.selectedSticker) {
-      this.setPurchaseButtonState(this.canAffordSticker());
+      this.resourcePanelRenderer.setTarget(this.canAffordSticker(), this.selectedSticker.cost);
     }
     
     // Update affordability status for all stickers
@@ -235,9 +258,7 @@ export class StickerShopRenderer {
     this.displayContainer.add(this.shopPanel);
     this.displayContainer.add(titleText);
     this.displayContainer.add(closeButton);
-    
-    // Create the resource panel that covers the "Discard and draw" button
-    this.createResourcePanel();
+    this.displayContainer.add(this.resourcePanelRenderer.getContainer());
     
     // Initialize card overlay renderer
     this.initCardOverlayRenderer();
@@ -257,308 +278,6 @@ export class StickerShopRenderer {
       this.deckService,
       undefined,
     );
-  }
-  
-  /**
-   * Set the state of the apply button (enabled/disabled)
-   * @param enabled Whether the button should be enabled
-   */
-  private setPurchaseButtonState(enabled: boolean): void {
-    if (this.purchaseButton && this.purchaseButtonText) {
-      if (enabled) {
-        // Enable the button
-        this.purchaseButton.clearTint();
-        this.purchaseButton.setInteractive({ useHandCursor: true });
-        this.purchaseButtonText.setColor('#ffffff');
-      } else {
-        // Disable the button
-        this.purchaseButton.setTint(0x555555);
-        this.purchaseButton.disableInteractive();
-        this.purchaseButtonText.setColor('#888888');
-      }
-    }
-  }
-  
-  /**
-   * Set the state of the play cards button (enabled/disabled)
-   * @param enabled Whether the button should be enabled
-   */
-  private setPlayCardsButtonState(enabled: boolean): void {
-    if (this.playCardsButton && this.playCardsButtonText) {
-      if (enabled) {
-        // Enable the button
-        this.playCardsButton.clearTint();
-        this.playCardsButton.setInteractive({ useHandCursor: true });
-        this.playCardsButtonText.setColor('#ffffff');
-      } else {
-        // Disable the button
-        this.playCardsButton.setTint(0x555555);
-        this.playCardsButton.disableInteractive();
-        this.playCardsButtonText.setColor('#888888');
-      }
-    }
-  }
-  
-  /**
-   * Creates the resource panel that covers the "Discard and draw" button
-   */
-  private createResourcePanel(): void {
-    const cardWidth = CARD_WIDTH;
-    // Use the player hand panel height dimensions from GameUI class calculation
-    const { width, height } = this.scene.cameras.main;
-    const panelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
-    const marginX = 20;
-    const panelWidth = cardWidth + 2 * marginX
-    
-    // Calculate the position based on the player hand panel
-    const handPanelY = height - panelHeight;
-    
-    // Create selection panel with the same dimensions as the discard button
-    this.resourcePanel = this.scene.add['nineslice'](
-      0,
-      handPanelY,
-      'panel_metal_corners_metal_nice',
-      undefined,
-      panelWidth,
-      panelHeight,
-      20,
-      20,
-      20,
-      20
-    );
-    this.resourcePanel.setOrigin(0, 0);
-    this.resourcePanel.setTint(0x666666); // Same dark grey tint as main panel
-    
-    // Add "Selected: X" text with the invention resource icon
-    const resourceTextX = panelWidth / 2 - marginX // centered horizontaly. -marginX to give space for the image
-    const selectedY = handPanelY + 90;
-    this.selectionText = this.scene.add.text(
-      resourceTextX,
-      selectedY,
-      'Selected: 0',
-      {
-        fontSize: '18px', 
-        color: '#ffffff',
-        align: 'center'
-      }
-    );
-    this.selectionText.setOrigin(0.5, 1);
-    
-    // Add invention resource icon next to "Selected: X"
-    this.inventionIcon = this.scene.add.image(
-      panelWidth - marginX / 2,
-      selectedY + 5,
-      'resource_invention'
-    );
-    this.inventionIcon.setOrigin(1, 1);
-    this.inventionIcon.setScale(0.6);
-    
-    // Add "Acquired: X" text with invention resource icon
-    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
-    const acquiredY = handPanelY + 50
-    this.acquiredText = this.scene.add.text(
-      resourceTextX,
-      acquiredY,
-      `Acquired: ${acquiredInvention}`,
-      {
-        fontSize: '18px',
-        color: '#ffffff',
-        align: 'center'
-      }
-    );
-    this.acquiredText.setOrigin(0.5,1);
-    
-    // Add invention resource icon
-    const resourceIcon = this.scene.add.image(
-      panelWidth - marginX / 2, 
-      acquiredY + 5,
-      'resource_invention'
-    );
-    resourceIcon.setOrigin(1, 1);
-    resourceIcon.setScale(0.6);
-    
-    // Create "Select All" button
-    const buttonWidth = 150;
-    const buttonHeight = 35;
-    const buttonX = marginX + (cardWidth / 2);
-    const buttonY = handPanelY + 130;
-    const buttonSpacingY = 10;
-    
-    this.selectAllButton = this.scene.add['nineslice'](
-      buttonX,
-      buttonY,
-      'panel_wood_corners_metal',
-      undefined,
-      buttonWidth,
-      buttonHeight,
-      20,
-      20,
-      20,
-      20
-    );
-    this.selectAllButton.setOrigin(0.5, 0.5);
-    
-    // Create button text
-    this.selectAllButtonText = this.scene.add.text(
-      buttonX,
-      buttonY,
-      'Select All',
-      {
-        fontSize: '16px',
-        color: '#ffffff',
-        fontStyle: 'bold'
-      }
-    );
-    this.selectAllButtonText.setOrigin(0.5, 0.5);
-    
-    this.selectAllButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.selectAllCardsWithInvention();
-      });
-    
-    this.selectAllButton.on('pointerover', () => {
-      this.selectAllButton?.setScale(1.05);
-      this.selectAllButtonText?.setScale(1.05);
-    });
-    
-    this.selectAllButton.on('pointerout', () => {
-      this.selectAllButton?.setScale(1);
-      this.selectAllButtonText?.setScale(1);
-    });
-    
-    // Create Play Cards button
-    const playCardsButtonY = buttonY + buttonHeight + buttonSpacingY;
-    
-    this.playCardsButton = this.scene.add['nineslice'](
-      buttonX,
-      playCardsButtonY,
-      'panel_wood_corners_metal',
-      undefined,
-      buttonWidth,
-      buttonHeight,
-      20,
-      20,
-      20,
-      20
-    );
-    this.playCardsButton.setOrigin(0.5, 0.5);
-    
-    // Create play cards button text
-    this.playCardsButtonText = this.scene.add.text(
-      buttonX,
-      playCardsButtonY,
-      'Play Cards',
-      {
-        fontSize: '16px',
-        color: '#ffffff',
-        fontStyle: 'bold'
-      }
-    );
-    this.playCardsButtonText.setOrigin(0.5, 0.5);
-    
-    // Make play cards button interactive
-    this.playCardsButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.playSelectedCards();
-      });
-    
-    // Add hover effects for play cards button
-    this.playCardsButton.on('pointerover', () => {
-      this.playCardsButton?.setScale(1.05);
-      this.playCardsButtonText?.setScale(1.05);
-    });
-    
-    this.playCardsButton.on('pointerout', () => {
-      this.playCardsButton?.setScale(1);
-      this.playCardsButtonText?.setScale(1);
-    });
-
-    // Create Purchase button
-    const purchaseButtonY = playCardsButtonY + buttonHeight + buttonSpacingY;
-
-    this.purchaseButton = this.scene.add['nineslice'](
-      buttonX,
-      purchaseButtonY,
-      'panel_wood_corners_metal',
-      undefined,
-      buttonWidth,
-      buttonHeight,
-      20,
-      20,
-      20,
-      20
-    );
-    this.purchaseButton.setOrigin(0.5, 0.5);
-    
-    // Create purchase button text
-    this.purchaseButtonText = this.scene.add.text(
-      buttonX,
-      purchaseButtonY,
-      'Purchase',
-      {
-        fontSize: '16px',
-        color: '#ffffff',
-        fontStyle: 'bold'
-      }
-    );
-    this.purchaseButtonText.setOrigin(0.5, 0.5);
-    
-    // Initially disable the purchase button
-    this.setPurchaseButtonState(false);
-    
-    // Make purchase button interactive
-    this.purchaseButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.purchaseSticker();
-      });
-    
-    // Add hover effects for purchase button
-    this.purchaseButton.on('pointerover', () => {
-      if (this.selectedSticker && this.canAffordSticker()) {
-        this.purchaseButton?.setScale(1.05);
-        this.purchaseButtonText?.setScale(1.05);
-      }
-    });
-    
-    this.purchaseButton.on('pointerout', () => {
-      this.purchaseButton?.setScale(1);
-      this.purchaseButtonText?.setScale(1);
-    });
-    
-    // Add to display container
-    this.displayContainer.add(this.resourcePanel);
-    this.displayContainer.add(this.selectionText);
-    this.displayContainer.add(this.inventionIcon);
-    this.displayContainer.add(this.acquiredText);
-    this.displayContainer.add(resourceIcon);
-    this.displayContainer.add(this.selectAllButton);
-    this.displayContainer.add(this.selectAllButtonText);
-    this.displayContainer.add(this.playCardsButton);
-    this.displayContainer.add(this.playCardsButtonText);
-    this.displayContainer.add(this.purchaseButton);
-    this.displayContainer.add(this.purchaseButtonText);
-  }
-  
-  /**
-   * Selects all cards in the player's hand that have at least 1 invention value
-   */
-  private selectAllCardsWithInvention(): void {
-    // Get all cards from the player hand renderer
-    const cards = this.playerHandRenderer['currentCards'];
-    const idsToSelect: string[] = [];
-    const idsToDeselect: string[] = [];
-    
-    // Determine which cards to select and deselect based on invention value
-    cards.forEach(card => {
-      if (card.getInventionValue() >= 1) {
-        idsToSelect.push(card.unique_id);
-      } else {
-        idsToDeselect.push(card.unique_id);
-      }
-    });
-    
-    // Pass the IDs to the player hand renderer
-    this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);
   }
   
   /**
@@ -661,7 +380,8 @@ export class StickerShopRenderer {
       renderer.setSelected(renderer.getStickerConfig().id === stickerConfig.id);
     });
     
-    this.setPurchaseButtonState(this.canAffordSticker());
+    // Update the resource panel target state with sticker cost
+    this.resourcePanelRenderer.setTarget(this.canAffordSticker(), stickerConfig.cost);
   }
   
   /**
@@ -684,15 +404,13 @@ export class StickerShopRenderer {
         }
       }
       
-      // Update the selection text when showing the shop
-      this.updateSelectionText();
+      // Show and update the resource panel
+      this.resourcePanelRenderer.show();
       
       // Update acquired invention value from resource service
-      this.updateAcquiredText();
-      
-      // Initialize play cards button state based on card selection
-      const hasSelectedCards = this.playerHandRenderer.getSelectedCardIds().length > 0;
-      this.setPlayCardsButtonState(hasSelectedCards);
+      if (this.resourceService) {
+        this.resourcePanelRenderer.setAcquiredResourceValue(this.resourceService.getInvention());
+      }
       
       // Update sticker affordability based on current resources and selections
       this.updateStickersAffordability();
@@ -722,6 +440,9 @@ export class StickerShopRenderer {
         this.escKey.removeListener('down', this.handleEscapeKey, this);
         this.escKey = null;
       }
+      
+      // Hide the resource panel
+      this.resourcePanelRenderer.hide();
       
       // Deselect sticker when closing the shop
       this.deselectSticker();
@@ -769,7 +490,7 @@ export class StickerShopRenderer {
    * Destroy this renderer and all its visual elements
    */
   public destroy(): void {
-    // Remove event listener
+    // Remove event listener from sticker shop service
     this.stickerShopService.off(
       StickerShopService.Events.SHOP_STATE_CHANGED, 
       this.onShopStateChanged,
@@ -782,6 +503,9 @@ export class StickerShopRenderer {
       this.escKey = null;
     }
     
+    // Remove resource panel event listeners
+    this.scene.events.off('resourcePanel-playCards');
+    
     // Clear all sticker renderers
     this.clearStickerRenderers();
     
@@ -790,44 +514,14 @@ export class StickerShopRenderer {
       this.cardOverlayRenderer.destroy();
     }
     
-    // Make sure to remove all event listeners before destroying objects
-    // All other UI elements will have their event listeners automatically removed
-    // when they are destroyed by Phaser
+    // Destroy the resource panel
+    this.resourcePanelRenderer.destroy();
     
     // Destroy all UI elements
     if (this.shopPanel) {
       this.shopPanel.destroy();
     }
-    if (this.purchaseButton) {
-      this.purchaseButton.destroy();
-    }
-    if (this.purchaseButtonText) {
-      this.purchaseButtonText.destroy();
-    }
-    if (this.resourcePanel) {
-      this.resourcePanel.destroy();
-    }
-    if (this.selectionText) {
-      this.selectionText.destroy();
-    }
-    if (this.acquiredText) {
-      this.acquiredText.destroy();
-    }
-    if (this.selectAllButton) {
-      this.selectAllButton.destroy();
-    }
-    if (this.selectAllButtonText) {
-      this.selectAllButtonText.destroy();
-    }
-    if (this.playCardsButton) {
-      this.playCardsButton.destroy();
-    }
-    if (this.playCardsButtonText) {
-      this.playCardsButtonText.destroy();
-    }
-    if (this.inventionIcon) {
-      this.inventionIcon.destroy();
-    }
+    
     this.displayContainer.destroy();
   }
   
@@ -836,15 +530,6 @@ export class StickerShopRenderer {
    */
   public getSelectedSticker(): StickerConfig | null {
     return this.selectedSticker;
-  }
-  
-  /**
-   * Update the selection text to show total selected invention value
-   */
-  private updateSelectionText(): void {
-    if (this.selectionText) {
-      this.selectionText.setText(`Selected: ${this.playerHandRenderer.getSelectedInventionValue()}`);
-    }
   }
   
   /**
@@ -859,13 +544,8 @@ export class StickerShopRenderer {
       renderer.setSelected(false);
     });
     
-    // Disable the apply button
-    this.setPurchaseButtonState(false);
-    
-    // Update selection text
-    if (this.selectionText) {
-      this.selectionText.setText('Selected: 0');
-    }
+    // Update the resource panel target with no target and zero cost
+    this.resourcePanelRenderer.setTarget(false, 0);
   }
   
   /**
@@ -876,68 +556,20 @@ export class StickerShopRenderer {
 
     // Store the selected sticker in a local variable
     const stickerToApply = this.selectedSticker;
-
-    // 1. Play any selected cards
-    this.playSelectedCards();
     
-    // 2. Deduct the sticker cost from ResourceService
+    // Deduct the sticker cost from ResourceService
     if (this.resourceService) {
       this.resourceService.consumeInvention(stickerToApply.cost);
+      
+      // Update the acquired resource value in the panel
+      this.resourcePanelRenderer.setAcquiredResourceValue(this.resourceService.getInvention());
     }
-
-    // 3. Update the acquired text
-    this.updateAcquiredText();
     
-    // 4. Deselect the current sticker from the shop
+    // Deselect the current sticker from the shop
     this.deselectSticker();
       
-    // 5. Set the sticker in the card overlay and show it
+    // Set the sticker in the card overlay and show it
     this.cardOverlayRenderer?.setSticker(stickerToApply);
     this.cardOverlayRenderer?.show();
-  }
-  
-  /**
-   * Update the acquired text to show the current invention value
-   */
-  private updateAcquiredText(): void {
-    if (this.acquiredText) {
-      const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
-      this.acquiredText.setText(`Acquired: ${acquiredInvention}`);
-      
-      // Update purchase button state when acquired resources change
-      if (this.selectedSticker) {
-        this.setPurchaseButtonState(this.canAffordSticker());
-      }
-      
-      // Update sticker affordability
-      this.updateStickersAffordability();
-    }
-  }
-  
-  /**
-   * Play selected cards from the player's hand
-   */
-  private playSelectedCards(): void {
-    // 1. Get all selected card IDs
-    const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
-    
-    const selectedInventionValue = this.playerHandRenderer.getSelectedInventionValue();
-    
-    // 2. Add their invention value to ResourceService
-    if (this.resourceService) {
-      this.resourceService.addInvention(selectedInventionValue);
-    }
-    
-    // 3. Discard all selected cards using PlayerHandRenderer's method
-    this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
-    
-    // 4. Deselect all cards
-    this.playerHandRenderer.clearCardSelection();
-    
-    // 5. Update the acquired text
-    this.updateAcquiredText();
-    
-    // 6. Disable the play cards button since no cards are selected anymore
-    this.setPlayCardsButtonState(false);
   }
 } 

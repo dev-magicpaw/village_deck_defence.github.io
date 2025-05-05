@@ -1,0 +1,582 @@
+import Phaser from 'phaser';
+import { GameUI } from '../ui/GameUI';
+import { CARD_WIDTH } from './CardRenderer';
+import { PlayerHandRenderer } from './PlayerHandRenderer';
+
+/**
+ * Type of resource that can be tracked in the resource panel
+ */
+export enum ResourceType {
+  POWER = 'power',
+  CONSTRUCTION = 'construction',
+  INVENTION = 'invention'
+}
+
+/**
+ * Renders a resource panel that allows the player to select cards,
+ * see acquired and selected resource values, and perform an action with them
+ */
+export class ResourcePanelRenderer {
+  private scene: Phaser.Scene;
+  private playerHandRenderer: PlayerHandRenderer;
+  private displayContainer: Phaser.GameObjects.Container;
+  private resourcePanel!: Phaser.GameObjects.NineSlice;
+  private selectionText!: Phaser.GameObjects.Text;
+  private acquiredText!: Phaser.GameObjects.Text;
+  private selectAllButton!: Phaser.GameObjects.NineSlice;
+  private selectAllButtonText!: Phaser.GameObjects.Text;
+  private playCardsButton!: Phaser.GameObjects.NineSlice;
+  private playCardsButtonText!: Phaser.GameObjects.Text;
+  private applyButton!: Phaser.GameObjects.NineSlice;
+  private applyButtonText!: Phaser.GameObjects.Text;
+  private resourceIcon!: Phaser.GameObjects.Image;
+  private selectedResourceIcon!: Phaser.GameObjects.Image;
+  
+  private resourceType: ResourceType;
+  private applyButtonLabel: string;
+  private applyCallback: () => void;
+  private acquiredResourceValue: number = 0;
+  private hasTarget: boolean = false;
+  private targetCost: number = 0;
+
+  /**
+   * Create a new ResourcePanelRenderer
+   * @param scene The Phaser scene to render in
+   * @param playerHandRenderer The player hand renderer for card selection
+   * @param resourceType The type of resource to track (power/construction/invention)
+   * @param acquiredResourceValue The current acquired resource value
+   * @param applyButtonLabel Label for the apply button (e.g., "Purchase", "Construct")
+   * @param applyCallback Callback function when apply button is clicked
+   */
+  constructor(
+    scene: Phaser.Scene,
+    playerHandRenderer: PlayerHandRenderer,
+    resourceType: ResourceType,
+    acquiredResourceValue: number,
+    applyButtonLabel: string,
+    applyCallback: () => void
+  ) {
+    this.scene = scene;
+    this.playerHandRenderer = playerHandRenderer;
+    this.resourceType = resourceType;
+    this.acquiredResourceValue = acquiredResourceValue;
+    this.applyButtonLabel = applyButtonLabel;
+    this.applyCallback = applyCallback;
+    
+    // Create container to hold all panel elements
+    this.displayContainer = this.scene.add.container(0, 0);
+    
+    // Create the resource panel
+    this.createResourcePanel();
+    
+    // Subscribe to player hand card selection changes
+    this.playerHandRenderer.on(
+      'selection-changed',
+      this.onCardSelectionChanged,
+      this
+    );
+  }
+  
+  /**
+   * Creates the resource panel that covers the "Discard and draw" button
+   */
+  private createResourcePanel(): void {
+    const cardWidth = CARD_WIDTH;
+    // Use the player hand panel height dimensions from GameUI class calculation
+    const { width, height } = this.scene.cameras.main;
+    const panelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
+    const marginX = 20;
+    const panelWidth = cardWidth + 2 * marginX;
+    
+    // Calculate the position based on the player hand panel
+    const handPanelY = height - panelHeight;
+    
+    // Create selection panel with the same dimensions as the discard button
+    this.resourcePanel = this.scene.add['nineslice'](
+      0,
+      handPanelY,
+      'panel_metal_corners_metal_nice',
+      undefined,
+      panelWidth,
+      panelHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.resourcePanel.setOrigin(0, 0);
+    this.resourcePanel.setTint(0x666666); // Dark grey tint
+    
+    // Add "Selected: X" text with the resource icon
+    const resourceTextX = panelWidth / 2 - marginX // centered horizontally. -marginX to give space for the image
+    const selectedY = handPanelY + 90;
+    this.selectionText = this.scene.add.text(
+      resourceTextX,
+      selectedY,
+      'Selected: 0',
+      {
+        fontSize: '18px', 
+        color: '#ffffff',
+        align: 'center'
+      }
+    );
+    this.selectionText.setOrigin(0.5, 1);
+    
+    // Add resource icon next to "Selected: X"
+    const resourceIconKey = this.getResourceIconKey();
+    this.selectedResourceIcon = this.scene.add.image(
+      panelWidth - marginX / 2,
+      selectedY + 5,
+      resourceIconKey
+    );
+    this.selectedResourceIcon.setOrigin(1, 1);
+    this.selectedResourceIcon.setScale(0.6);
+    
+    // Add "Acquired: X" text with resource icon
+    const acquiredY = handPanelY + 50;
+    this.acquiredText = this.scene.add.text(
+      resourceTextX,
+      acquiredY,
+      `Acquired: ${this.acquiredResourceValue}`,
+      {
+        fontSize: '18px',
+        color: '#ffffff',
+        align: 'center'
+      }
+    );
+    this.acquiredText.setOrigin(0.5, 1);
+    
+    // Add resource icon
+    this.resourceIcon = this.scene.add.image(
+      panelWidth - marginX / 2, 
+      acquiredY + 5,
+      resourceIconKey
+    );
+    this.resourceIcon.setOrigin(1, 1);
+    this.resourceIcon.setScale(0.6);
+    
+    // Create "Select All" button
+    const buttonWidth = 150;
+    const buttonHeight = 35;
+    const buttonX = marginX + (cardWidth / 2);
+    const buttonY = handPanelY + 130;
+    const buttonSpacingY = 10;
+    
+    this.selectAllButton = this.scene.add['nineslice'](
+      buttonX,
+      buttonY,
+      'panel_wood_corners_metal',
+      undefined,
+      buttonWidth,
+      buttonHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.selectAllButton.setOrigin(0.5, 0.5);
+    
+    // Create button text
+    this.selectAllButtonText = this.scene.add.text(
+      buttonX,
+      buttonY,
+      'Select All',
+      {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }
+    );
+    this.selectAllButtonText.setOrigin(0.5, 0.5);
+    
+    this.selectAllButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        this.selectAllCardsWithResource();
+      });
+    
+    this.selectAllButton.on('pointerover', () => {
+      this.selectAllButton.setScale(1.05);
+      this.selectAllButtonText.setScale(1.05);
+    });
+    
+    this.selectAllButton.on('pointerout', () => {
+      this.selectAllButton.setScale(1);
+      this.selectAllButtonText.setScale(1);
+    });
+    
+    // Create Play Cards button
+    const playCardsButtonY = buttonY + buttonHeight + buttonSpacingY;
+    
+    this.playCardsButton = this.scene.add['nineslice'](
+      buttonX,
+      playCardsButtonY,
+      'panel_wood_corners_metal',
+      undefined,
+      buttonWidth,
+      buttonHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.playCardsButton.setOrigin(0.5, 0.5);
+    
+    // Create play cards button text
+    this.playCardsButtonText = this.scene.add.text(
+      buttonX,
+      playCardsButtonY,
+      'Play Cards',
+      {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }
+    );
+    this.playCardsButtonText.setOrigin(0.5, 0.5);
+    
+    // Make play cards button interactive
+    this.playCardsButton.setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        this.playSelectedCards();
+      });
+    
+    // Add hover effects for play cards button
+    this.playCardsButton.on('pointerover', () => {
+      this.playCardsButton.setScale(1.05);
+      this.playCardsButtonText.setScale(1.05);
+    });
+    
+    this.playCardsButton.on('pointerout', () => {
+      this.playCardsButton.setScale(1);
+      this.playCardsButtonText.setScale(1);
+    });
+
+    // Create Apply button (Purchase, Construct, etc.)
+    const applyButtonY = playCardsButtonY + buttonHeight + buttonSpacingY;
+
+    this.applyButton = this.scene.add['nineslice'](
+      buttonX,
+      applyButtonY,
+      'panel_wood_corners_metal',
+      undefined,
+      buttonWidth,
+      buttonHeight,
+      20,
+      20,
+      20,
+      20
+    );
+    this.applyButton.setOrigin(0.5, 0.5);
+    
+    // Create apply button text
+    this.applyButtonText = this.scene.add.text(
+      buttonX,
+      applyButtonY,
+      this.applyButtonLabel,
+      {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }
+    );
+    this.applyButtonText.setOrigin(0.5, 0.5);
+    
+    // Initially disable the apply button
+    this.setApplyButtonState(false);
+    
+    // Make apply button interactive
+    this.applyButton.setInteractive({ useHandCursor: true });
+    this.applyButton.on('pointerdown', () => { this.onApplyButtonClicked(); });
+    
+    // Add hover effects for apply button
+    this.applyButton.on('pointerover', () => {
+      if (this.canAfford()) {
+        this.applyButton.setScale(1.05);
+        this.applyButtonText.setScale(1.05);
+      }
+    });
+    
+    this.applyButton.on('pointerout', () => {
+      this.applyButton.setScale(1);
+      this.applyButtonText.setScale(1);
+    });
+    
+    // Add all elements to the display container
+    this.displayContainer.add(this.resourcePanel);
+    this.displayContainer.add(this.selectionText);
+    this.displayContainer.add(this.selectedResourceIcon);
+    this.displayContainer.add(this.acquiredText);
+    this.displayContainer.add(this.resourceIcon);
+    this.displayContainer.add(this.selectAllButton);
+    this.displayContainer.add(this.selectAllButtonText);
+    this.displayContainer.add(this.playCardsButton);
+    this.displayContainer.add(this.playCardsButtonText);
+    this.displayContainer.add(this.applyButton);
+    this.displayContainer.add(this.applyButtonText);
+    
+    // Initialize the buttons state
+    this.updateButtonStates();
+  }
+  
+  /**
+   * Get the resource icon key based on the resource type
+   */
+  private getResourceIconKey(): string {
+    switch (this.resourceType) {
+      case ResourceType.POWER:
+        return 'resource_power';
+      case ResourceType.CONSTRUCTION:
+        return 'resource_construction';
+      case ResourceType.INVENTION:
+        return 'resource_invention';
+      default:
+        throw new Error(`Unknown resource type: ${this.resourceType}`);
+    }
+  }
+  
+  /**
+   * Handler for card selection changes
+   */
+  private onCardSelectionChanged(): void {
+    this.updateSelectionText();
+    this.updateButtonStates();
+  }
+  
+  /**
+   * Update all button states based on current selections
+   */
+  private updateButtonStates(): void {
+    // Check if any cards are selected and update play cards button state
+    const hasSelectedCards = this.playerHandRenderer.getSelectedCardIds().length > 0;
+    this.setPlayCardsButtonState(hasSelectedCards);
+    
+    // Update apply button state
+    this.setApplyButtonState(this.hasTarget && this.canAfford());
+  }
+  
+  /**
+   * Set the state of the apply button (enabled/disabled)
+   */
+  private setApplyButtonState(enabled: boolean): void {
+    if (enabled) {
+        // Enable the button
+        this.applyButton.clearTint();
+        this.applyButton.setInteractive({ useHandCursor: true });
+        this.applyButtonText.setColor('#ffffff');
+    } else {
+        // Disable the button
+        this.applyButton.setTint(0x555555);
+        this.applyButton.disableInteractive();
+        this.applyButtonText.setColor('#888888');
+    }
+  }
+  
+  /**
+   * Set the state of the play cards button (enabled/disabled)
+   */
+  private setPlayCardsButtonState(enabled: boolean): void {
+    if (enabled) {
+        // Enable the button
+        this.playCardsButton.clearTint();
+        this.playCardsButton.setInteractive({ useHandCursor: true });
+        this.playCardsButtonText.setColor('#ffffff');
+    } else {
+        // Disable the button
+        this.playCardsButton.setTint(0x555555);
+        this.playCardsButton.disableInteractive();
+        this.playCardsButtonText.setColor('#888888');
+    }
+  }
+  
+  /**
+   * Update the selection text to show total selected resource value
+   */
+  private updateSelectionText(): void {
+    const selectedValue = this.getSelectedResourceValue();
+    this.selectionText.setText(`Selected: ${selectedValue}`);
+  }
+  
+  /**
+   * Get the selected resource value based on resource type
+   */
+  private getSelectedResourceValue(): number {
+    switch (this.resourceType) {
+      case ResourceType.POWER:
+        return this.playerHandRenderer.getSelectedPowerValue();
+      case ResourceType.CONSTRUCTION:
+        return this.playerHandRenderer.getSelectedConstructionValue();
+      case ResourceType.INVENTION:
+        return this.playerHandRenderer.getSelectedInventionValue();
+      default:
+        throw new Error(`Unknown resource type: ${this.resourceType}`);
+    }
+  }
+  
+  /**
+   * Selects all cards in the player's hand that have resource value
+   */
+  private selectAllCardsWithResource(): void {
+    // Get all cards from the player hand renderer
+    // TODO this should use a method on the player hand renderer
+    const cards = this.playerHandRenderer['currentCards'];
+    const idsToSelect: string[] = [];
+    const idsToDeselect: string[] = [];
+    
+    // Determine which cards to select and deselect based on resource value
+    cards.forEach(card => {
+      let resourceValue = 0;
+      
+      switch (this.resourceType) {
+        case ResourceType.POWER:
+          resourceValue = card.getPowerValue();
+          break;
+        case ResourceType.CONSTRUCTION:
+          resourceValue = card.getConstructionValue();
+          break;
+        case ResourceType.INVENTION:
+          resourceValue = card.getInventionValue();
+          break;
+      }
+      
+      if (resourceValue >= 1) {
+        idsToSelect.push(card.unique_id);
+      } else {
+        idsToDeselect.push(card.unique_id);
+      }
+    });
+    
+    // Pass the IDs to the player hand renderer
+    this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);
+  }
+  
+  /**
+   * Play selected cards from the player's hand
+   */
+  private playSelectedCards(): void {
+    // 1. Get all selected card IDs
+    const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
+    
+    // 2. Get the selected resource value
+    const selectedResourceValue = this.getSelectedResourceValue();
+    
+    // 3. Emit an event with selected resource value to be handled by parent
+    this.scene.events.emit('resourcePanel-playCards', {
+      type: this.resourceType,
+      value: selectedResourceValue,
+      cardIds: selectedCardIds
+    });
+    
+    // 4. Discard all selected cards using PlayerHandRenderer's method
+    this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
+    
+    // 5. Deselect all cards
+    this.playerHandRenderer.clearCardSelection();
+    
+    // 6. Update acquired resource value (parent will handle this change)
+    this.acquiredResourceValue += selectedResourceValue;
+    this.updateAcquiredText();
+    
+    // 7. Update button states
+    this.updateButtonStates();
+  }
+  
+  /**
+   * Check if the player can afford the targeted item
+   */
+  private canAfford(): boolean {
+    if (!this.hasTarget) return false;
+    
+    // Get the total available resource (acquired + selected)
+    const selectedValue = this.getSelectedResourceValue();
+    const totalAvailable = this.acquiredResourceValue + selectedValue;
+    
+    // Check if the total available resources are enough to afford the target
+    return totalAvailable >= this.targetCost;
+  }
+  
+  /**
+   * Set the target item that will be purchased/constructed/etc.
+   * @param hasTarget Whether there is a valid target selected
+   * @param cost The cost of the target item
+   */
+  public setTarget(hasTarget: boolean, cost: number = 0): void {
+    this.hasTarget = hasTarget;
+    this.targetCost = hasTarget ? cost : 0;
+    this.updateButtonStates();
+  }
+  
+  /**
+   * Update the acquired text to show the current resource value
+   */
+  public updateAcquiredText(): void {
+    if (this.acquiredText) {
+      this.acquiredText.setText(`Acquired: ${this.acquiredResourceValue}`);
+    }
+  }
+  
+  /**
+   * Set a new acquired resource value and update the UI
+   * @param value The new acquired resource value
+   */
+  public setAcquiredResourceValue(value: number): void {
+    this.acquiredResourceValue = value;
+    this.updateAcquiredText();
+    this.updateButtonStates();
+  }
+  
+  /**
+   * Get the container that holds all panel elements
+   */
+  public getContainer(): Phaser.GameObjects.Container {
+    return this.displayContainer;
+  }
+  
+  /**
+   * Show the resource panel
+   */
+  public show(): void {
+    this.displayContainer.setVisible(true);
+    this.updateSelectionText();
+    this.updateAcquiredText();
+    this.updateButtonStates();
+  }
+  
+  /**
+   * Hide the resource panel
+   */
+  public hide(): void {
+    this.displayContainer.setVisible(false);
+  }
+  
+  /**
+   * Clean up resources when destroying this renderer
+   */
+  public destroy(): void {
+    // Remove event listeners
+    this.playerHandRenderer.off('selection-changed', this.onCardSelectionChanged, this);
+    
+    // Destroy all UI elements
+    this.resourcePanel.destroy();
+    this.selectionText.destroy();
+    this.acquiredText.destroy();
+    this.selectAllButton.destroy();
+    this.selectAllButtonText.destroy();
+    this.playCardsButton.destroy();
+    this.playCardsButtonText.destroy();
+    this.applyButton.destroy();
+    this.applyButtonText.destroy();
+    this.resourceIcon.destroy();
+    this.selectedResourceIcon.destroy();
+    this.displayContainer.destroy();
+  }
+  
+  /**
+   * Handle apply button click
+   */
+  private onApplyButtonClicked(): void {
+    if (this.canAfford()) {
+      this.playSelectedCards();
+      this.applyCallback();
+    }
+  }
+} 

@@ -85,6 +85,7 @@ export class BuildingMenuRenderer {
     this.scene.add.existing(this.menuContainer);
     
     // Setup Escape key to close menu
+    // TODO make it so that this works only when the menu is visible
     if (this.scene.input && this.scene.input.keyboard) {
       this.escapeKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
       this.escapeKey.on('down', this.handleEscapeKey, this);

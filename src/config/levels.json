@@ -12,14 +12,14 @@
         "invasion_distance": 100,
         "invasion_difficulty": 20,
         "building_slot_locations": [
-            { "x": 0, "y": 0, "slot_id": "tavern_slot"},
-            { "x": 200, "y": 0, "slot_id": "workshop_slot"},
-            { "x": 400, "y": 0, "slot_id": "architect_slot"},
-            { "x": 600, "y": 0, "slot_id": "village_slot"},
-            { "x": 0, "y": 200, "slot_id": "village_slot"},
-            { "x": 200, "y": 200, "slot_id": "village_slot"},
-            { "x": 400, "y": 200, "slot_id": "village_slot"},
-            { "x": 600, "y": 200, "slot_id": "village_slot"}
+            { "x": 150, "y": 0, "slot_id": "defence_slot"},
+            { "x": 300, "y": 0, "slot_id": "defence_slot"},
+            { "x": 450, "y": 0, "slot_id": "defence_slot"},
+            { "x": 0, "y": 200, "slot_id": "tavern_slot"},
+            { "x": 150, "y": 200, "slot_id": "village_slot"},
+            { "x": 300, "y": 200, "slot_id": "village_slot"},
+            { "x": 450, "y": 200, "slot_id": "village_slot"},
+            { "x": 600, "y": 200, "slot_id": "workshop_slot"}
         ],
         "building_slots": [
             {
@@ -39,6 +39,13 @@
             },
             {
                 "id": "village_slot",
+                "already_constructed": null,
+                "available_for_construction": [
+                    "storage"
+                ]
+            },
+            {
+                "id": "defence_slot",
                 "already_constructed": null,
                 "available_for_construction": [
                     "wooden_palisade",

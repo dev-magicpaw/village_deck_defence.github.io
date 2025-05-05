@@ -28,6 +28,12 @@
         "name": "Wooden Gates",
         "description": "Gives a bit of protection from invaders",
         "image": "building_wooden_gates"
+    },
+    {
+        "id": "storage",
+        "name": "Storage",
+        "description": "Allows to store some resources during the day",
+        "image": "building_storage"
     }
 
 ]

@@ -24,6 +24,7 @@ export class BuildingMenuRenderer {
   private buildingService: BuildingService;
   private menuContainer: Phaser.GameObjects.Container;
   private backgroundPanel!: Phaser.GameObjects.NineSlice;
+  private inputBlocker!: Phaser.GameObjects.Rectangle;
   private closeButton!: Phaser.GameObjects.Image;
   private buildingButtons: Phaser.GameObjects.Container[] = [];
   private escapeKey?: Phaser.Input.Keyboard.Key;
@@ -79,6 +80,7 @@ export class BuildingMenuRenderer {
     this.menuContainer = this.scene.add.container(0, 0);
     this.menuContainer.setVisible(false);
 
+    this.createInputBlocker(); // keep this first so other elements are on top for input system
     this.createBackgroundPanel();
     this.createResourcePanel();
     
@@ -97,6 +99,26 @@ export class BuildingMenuRenderer {
       this.onCardSelectionChanged,
       this
     );
+  }
+  
+  /**
+   * Creates an input blocker to intercept clicks when the menu is open
+   */
+  private createInputBlocker(): void {
+    // Create an input blocker that matches the size of the menu background
+    this.inputBlocker = this.scene.add.rectangle(
+      this.menuX, 
+      this.menuY, 
+      this.menuWidth, 
+      this.menuHeight, 
+      0x000000, 
+      0.01
+    );
+    this.inputBlocker.setOrigin(0, 0);
+    this.inputBlocker.setInteractive();
+    
+    // No need to check if click is outside since the blocker only covers the menu area
+    this.menuContainer.add(this.inputBlocker);
   }
   
   /**

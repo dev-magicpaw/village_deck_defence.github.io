@@ -4,6 +4,9 @@
         "name": "Architect",
         "description": "Allows to construct higher level buildings",
         "image": "src/assets/images/cards/card_human_villager.png",
+        "cost": {
+            "construction": 1
+        },
         "limit": 1
     },
     {
@@ -11,6 +14,9 @@
         "name": "Workshop",
         "description": "Allows to purchase stickers",
         "image": "building_workshop",
+        "cost": {
+            "construction": 0
+        },
         "limit": 1
     },
     {
@@ -18,6 +24,9 @@
         "name": "Tavern",
         "description": "Allows to go for small adventures",
         "image": "building_tavern",
+        "cost": {
+            "construction": 0
+        },
         "limit": 1
     },
     {
@@ -25,6 +34,9 @@
         "name": "Wooden Palisade",
         "description": "Gives some protection from invaders",
         "image": "building_wooden_wall",
+        "cost": {
+            "construction": 9
+        },
         "limit": null
     },
     {
@@ -32,6 +44,9 @@
         "name": "Wooden Gates",
         "description": "Gives a bit of protection from invaders",
         "image": "building_wooden_gates",
+        "cost": {
+            "construction": 12
+        },
         "limit": null
     },
     {
@@ -39,6 +54,9 @@
         "name": "Warehouse",
         "description": "Allows to store some resources during the day",
         "image": "building_warehouse",
+        "cost": {
+            "construction": 6
+        },
         "limit": 1
     },
     {
@@ -46,6 +64,9 @@
         "name": "Blacksmith",
         "description": "Adds a bit of invention each term. Allows to hire a blacksmith apprentice",
         "image": "building_blacksmith",
+        "cost": {
+            "construction": 7
+        },
         "limit": 1
     }
 ]

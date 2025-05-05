@@ -6,6 +6,7 @@ import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { ResourcePanelRenderer } from './ResourcePanelRenderer';
+import { SimpleCardRenderer } from './SimpleCardRenderer';
 
 /**
  * Extend the BuildingConfig interface to include cost
@@ -28,6 +29,7 @@ export class BuildingMenuRenderer {
   private inputBlocker!: Phaser.GameObjects.Rectangle;
   private closeButton!: Phaser.GameObjects.Image;
   private buildingButtons: Phaser.GameObjects.Container[] = [];
+  private buildingCards: SimpleCardRenderer[] = [];
   private escapeKey?: Phaser.Input.Keyboard.Key;
   private playerHandRenderer: PlayerHandRenderer;
   private resourceService: ResourceService;
@@ -88,7 +90,6 @@ export class BuildingMenuRenderer {
     this.scene.add.existing(this.menuContainer);
     
     // Setup Escape key to close menu
-    // TODO make it so that this works only when the menu is visible
     if (this.scene.input && this.scene.input.keyboard) {
       this.escapeKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
       this.escapeKey.on('down', this.handleEscapeKey, this);
@@ -169,77 +170,57 @@ export class BuildingMenuRenderer {
     
     this.resourcePanelRenderer.hide();
   }
-
-  /**
-   * Set the state of the construct button
-   * @param enabled Whether the button should be enabled
-   */
-  private setConstructButtonState(enabled: boolean): void {
-    if (this.selectedBuildingId) {
-      const buildingConfig = this.buildingService.getBuildingConfig(this.selectedBuildingId) as BuildingConfig;
-      const cost = buildingConfig.cost?.construction || 0;
-      this.resourcePanelRenderer.setTarget(enabled, cost);
-    } else {
-      this.resourcePanelRenderer.setTarget(false, 0);
-    }
-  }
   
   /**
    * Handler for card selection changes
    */
   private onCardSelectionChanged(): void {
-    // Update the construct button state based on selection
-    if (this.selectedBuildingId) {
-      this.updateConstructButtonState();
-    }
+    // Update the cost label colors for all building options
+    this.updateBuildingOptionCostColors();
   }
   
   /**
-   * Update the selection text with the current construction value
+   * Update the cost label colors for all building options based on affordability
    */
-  private updateSelectionText(): void {
-    // This is handled by the ResourcePanelRenderer
-  }
-  
-  /**
-   * Update the acquired resources text
-   */
-  private updateAcquiredText(): void {
+  // TODO improve visual
+  private updateBuildingOptionCostColors(): void {
+    // Get selected cards construction value
+    const selectedConstructionValue = this.playerHandRenderer.getSelectedConstructionValue();
     const acquiredConstruction = this.resourceService.getConstruction();
-    this.resourcePanelRenderer.setAcquiredResourceValue(acquiredConstruction);
-  }
-  
-  /**
-   * Update construct button state based on whether player can afford the building
-   */
-  private updateConstructButtonState(): void {
-    const canConstruct = this.canAffordBuilding();
+    const totalAvailable = selectedConstructionValue + acquiredConstruction;
     
-    if (this.selectedBuildingId) {
-      const buildingConfig = this.buildingService.getBuildingConfig(this.selectedBuildingId) as BuildingConfig;
+    // Update each building card
+    this.buildingCards.forEach((card, index) => {
+      // Get the building ID for this card
+      const buildingIds = this.buildingService.getBuildingSlotByUniqueId(this.currentSlotUniqueId)?.available_for_construction;
+      if (!buildingIds || index >= buildingIds.length) return;
+      
+      const buildingId = buildingIds[index];
+      const buildingConfig = this.buildingService.getBuildingConfig(buildingId) as BuildingConfig;
+      if (!buildingConfig) return;
+      
       const cost = buildingConfig.cost?.construction || 0;
-      this.resourcePanelRenderer.setTarget(canConstruct, cost);
-    } else {
-      this.resourcePanelRenderer.setTarget(false, 0);
-    }
+      const isAffordable = totalAvailable >= cost;
+      const isSelected = buildingId === this.selectedBuildingId;
+      
+      // Update cost text color
+      const container = card.getContainer();
+      container.getAll().forEach(child => {
+        if (child instanceof Phaser.GameObjects.Text && child.text.startsWith('Cost:')) {
+          // Set color based on selection and affordability
+          if (isSelected) {
+            child.setColor(isAffordable ? '#008800' : '#880000');
+          } else {
+            // For non-selected buildings, use a more subtle color indication
+            child.setColor(isAffordable ? '#005500' : '#550000');
+          }
+        }
+      });
+    });
+    
+
   }
-  
-  /**
-   * Check if the player can afford the currently selected building
-   */
-  private canAffordBuilding(): boolean {
-    if (!this.selectedBuildingId) return false;
-    
-    const buildingConfig = this.buildingService.getBuildingConfig(this.selectedBuildingId) as BuildingConfig;
-    if (!buildingConfig) return false;
-    
-    const requiredConstruction = buildingConfig.cost?.construction || 0;
-    const selectedConstruction = this.playerHandRenderer.getSelectedConstructionValue();
-    const acquiredConstruction = this.resourceService.getConstruction();
-    
-    return (selectedConstruction + acquiredConstruction) >= requiredConstruction;
-  }
-  
+
   /**
    * Handle Escape key press to close the menu
    */
@@ -271,8 +252,6 @@ export class BuildingMenuRenderer {
     // Create buttons for each available building
     this.createBuildingButtons(slot.available_for_construction);
     
-    // Update resource panel
-    this.updateAcquiredText();
     this.resourcePanelRenderer.show();
     
     // Show the menu
@@ -344,42 +323,21 @@ export class BuildingMenuRenderer {
     const buttonX = this.menuX + this.panelMarginX + index * (CARD_WIDTH + this.buttonSpacingX);  
     const buttonY = this.menuY + this.menuHeight / 3;
     
-    // Create a container for the button
-    const buttonContainer = this.scene.add.container(
-      buttonX,
-      buttonY
-    );
-    
-    // Create button background
-    const buttonBackground = this.scene.add['nineslice'](
-      0,
-      0,
+    // Create a simple card for the building option
+    const buildingCard = new SimpleCardRenderer(
+      this.scene, 
+      buttonX + CARD_WIDTH/2, 
+      buttonY,
       'panel_wood_paper',
-      undefined,
-      CARD_WIDTH,
-      CARD_HEIGHT,
-      10, 10, 10, 10
+      buildingConfig.image,
+      1,
+      true,
+      () => { this.onBuildingSelected(buildingId); }
     );
-    buttonBackground.setOrigin(0, 0.5);
-    
-    // Make button interactive
-    buttonBackground.setInteractive({ useHandCursor: true });
-    buttonBackground.on('pointerdown', () => { this.onBuildingSelected(buildingId); });
-    buttonBackground.on('pointerover', () => {buttonBackground.setTint(0xcccccc); });
-    buttonBackground.on('pointerout', () => { buttonBackground.clearTint(); });
-    
-    // Create image for building
-    const buildingImage = this.scene.add.image(
-      CARD_WIDTH/2,
-      0,
-      buildingConfig.image
-    );
-    buildingImage.setOrigin(0.5, 0.5);
-    buildingImage.setDisplaySize(CARD_WIDTH-15, CARD_HEIGHT-15);
     
     // Add cost text
     const costText = this.scene.add.text(
-      CARD_WIDTH/2,
+      0,
       CARD_HEIGHT/2 - 20,
       `Cost: ${buildingConfig.cost?.construction || 0}`,
       {
@@ -391,12 +349,13 @@ export class BuildingMenuRenderer {
     );
     costText.setOrigin(0.5, 0.5);
     
-    // Add elements to container
-    buttonContainer.add(buttonBackground);
-    buttonContainer.add(buildingImage);
-    buttonContainer.add(costText);
+    // Add cost text to the card container
+    buildingCard.getContainer().add(costText);
     
-    return buttonContainer;
+    // Add to tracking arrays
+    this.buildingCards.push(buildingCard);
+    
+    return buildingCard.getContainer();
   }
   
   /**
@@ -406,69 +365,23 @@ export class BuildingMenuRenderer {
   private onBuildingSelected(buildingId: string): void {
     console.log(`Building selected: ${buildingId} for slot ${this.currentSlotUniqueId}`);
     
+    // If the building is already selected, deselect it
+    if (this.selectedBuildingId === buildingId) {
+      this.selectedBuildingId = '';
+      this.resourcePanelRenderer.setTarget(false, 0);
+      return;
+    }
+    
     // Set the selected building
     this.selectedBuildingId = buildingId;
-    
-    // Update construct button state
-    this.updateConstructButtonState();
+    this.resourcePanelRenderer.setTarget(true, this.buildingService.getBuildingConfig(buildingId)?.cost?.construction || 0);
   }
   
   /**
    * Construct the selected building using selected cards
    */
-  private constructSelectedBuilding(): void {
-    if (!this.selectedBuildingId || !this.currentSlotUniqueId) {
-      return;
-    }
-    
-    // Get selected cards and their construction value
-    const selectedCardIds = this.playerHandRenderer.getSelectedCardIds();
-    const selectedConstructionValue = this.playerHandRenderer.getSelectedConstructionValue();
-    const acquiredConstruction = this.resourceService.getConstruction();
-    
-    // Get building config to check cost
-    const buildingConfig = this.buildingService.getBuildingConfig(this.selectedBuildingId) as BuildingConfig;
-    if (!buildingConfig) return;
-    
-    const requiredConstruction = buildingConfig.cost?.construction || 0;
-    
-    // Check if player can afford the building
-    if ((selectedConstructionValue + acquiredConstruction) < requiredConstruction) {
-      return;
-    }
-    
-    // First try to use acquired construction
-    let remainingCost = requiredConstruction;
-    let spentAcquired = Math.min(acquiredConstruction, remainingCost);
-    remainingCost -= spentAcquired;
-    
-    // Spend acquired construction resources
-    if (spentAcquired > 0) {
-      this.resourceService.consumeConstruction(spentAcquired);
-    }
-    
-    // If we still need more resources, discard the selected cards
-    if (remainingCost > 0) {
-      // Discard selected cards
-      this.playerHandRenderer.discardCardsByUniqueIds(selectedCardIds);
-    }
-    
-    // Construct the building
+  private constructSelectedBuilding(): void { 
     const constructed = this.buildingService.constructBuilding(this.selectedBuildingId, this.currentSlotUniqueId);
-    if (constructed) {
-      console.log(`Successfully constructed building ${this.selectedBuildingId} in slot ${this.currentSlotUniqueId}`);
-      
-      // Dispatch an event to notify other components
-      const event = new CustomEvent('building:constructed', {
-        detail: {
-          buildingId: this.selectedBuildingId,
-          slotUniqueId: this.currentSlotUniqueId
-        }
-      });
-      window.dispatchEvent(event);
-    } else {
-      console.error(`Failed to construct building ${this.selectedBuildingId} in slot ${this.currentSlotUniqueId}`);
-    }
     
     // Hide the menu
     this.hide();
@@ -478,20 +391,24 @@ export class BuildingMenuRenderer {
    * Clear all building buttons
    */
   private clearBuildingButtons(): void {
-    this.buildingButtons.forEach(container => {
-      container.destroy();
+    this.buildingCards.forEach(card => {
+      card.destroy();
     });
+    
+    this.buildingCards = [];
     this.buildingButtons = [];
   }
-  
-  /**
-   * Clean up resources
-   */
+
   public destroy(): void {
     // Remove keyboard listener
     if (this.escapeKey) {
       this.escapeKey.removeAllListeners();
     }
+    
+    // Destroy all cards
+    this.buildingCards.forEach(card => {
+      card.destroy();
+    });
     
     // Destroy the resource panel
     if (this.resourcePanelRenderer) {

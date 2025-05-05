@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BuildingConfig, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { Building as BuildingInterface } from '../types/game';
 import { BuildingRegistry } from './BuildingRegistry';
+import { ResourceService } from './ResourceService';
 
 /**
  * Events emitted by the BuildingService
@@ -22,18 +23,22 @@ export class BuildingService extends Phaser.Events.EventEmitter {
   private slotToBuildingMap: Record<string, string> = {};
   private isMenuOpen: boolean = false;
   private currentSlotId: string | null = null;
+  private resourceService: ResourceService;
 
   /**
    * Create a new BuildingService
    * @param buildingSlotsConfig Initial building slots from config (will get unique_ids assigned)
    * @param buildingSlotLocations Initial building slot locations from config (will be mapped to slots)
+   * @param resourceService Service for managing game resources
    */
   constructor(
     buildingSlotsConfig: BuildingSlot[],
-    buildingSlotLocations: BuildingSlotLocation[]
+    buildingSlotLocations: BuildingSlotLocation[],
+    resourceService: ResourceService
   ) {
     super();
     this.buildingRegistry = BuildingRegistry.getInstance();
+    this.resourceService = resourceService;
     
     this.initializeBuildingSlots(buildingSlotsConfig, buildingSlotLocations);
     this.initializeBuildings();
@@ -163,18 +168,23 @@ export class BuildingService extends Phaser.Events.EventEmitter {
   public constructBuilding(buildingId: string, slotUniqueId?: string): boolean {
     // Check if already constructed
     // TODO this should account for the limit of the building
-    if (this.isBuildingConstructed(buildingId)) {
-      return false;
-    }
+    if (this.isBuildingConstructed(buildingId)) { return false; }
     
-    // Create the building
     const building = this.buildingRegistry.createBuildingInterface(buildingId);
-    if (!building) {
+    if (!building) { throw new Error(`Failed to create building ${buildingId}`); }
+    
+    const requiredConstruction = building.cost?.construction || 0;
+    const availableConstruction = this.resourceService.getConstruction();
+
+    // Check if player can afford the building
+    if (availableConstruction < requiredConstruction) {
       return false;
     }
-    
+
     // Add to constructed buildings
     this.constructedBuildings.push(building);
+    
+    this.resourceService.consumeConstruction(requiredConstruction);
     
     // If a slot was specified, update the slot mapping
     if (slotUniqueId) {

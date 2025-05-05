@@ -264,7 +264,11 @@ export class GameScene extends Phaser.Scene {
     const { building_slots, building_slot_locations } = this.gameConfig;
     
     // Create BuildingService with slots and locations
-    const buildingService = new BuildingService(building_slots, building_slot_locations);
+    const buildingService = new BuildingService(
+      building_slots, 
+      building_slot_locations,
+      this.resourceService
+    );
 
     return buildingService;
   }

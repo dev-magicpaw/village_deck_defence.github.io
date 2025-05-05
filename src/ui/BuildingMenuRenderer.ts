@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { BuildingConfig as OriginalBuildingConfig } from '../entities/Building';
-import { Card } from '../entities/Card';
 import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
+import { ResourcePanelRenderer, ResourceType } from './ResourcePanelRenderer';
 
 /**
  * Extend the BuildingConfig interface to include cost
@@ -30,14 +30,8 @@ export class BuildingMenuRenderer {
   private playerHandRenderer: PlayerHandRenderer;
   private resourceService: ResourceService;
 
-  // Resource panel elements
-  private resourcePanel: Phaser.GameObjects.NineSlice | null = null;
-  private selectionText: Phaser.GameObjects.Text | null = null;
-  private acquiredText: Phaser.GameObjects.Text | null = null;
-  private selectAllButton: Phaser.GameObjects.NineSlice | null = null;
-  private selectAllButtonText: Phaser.GameObjects.Text | null = null;
-  private constructButton: Phaser.GameObjects.NineSlice | null = null;
-  private constructButtonText: Phaser.GameObjects.Text | null = null;
+  // Resource panel
+  private resourcePanelRenderer!: ResourcePanelRenderer;
 
   private panelMarginX: number = 30;
   private panelMarginY: number = 30;
@@ -88,6 +82,7 @@ export class BuildingMenuRenderer {
     this.menuContainer = this.scene.add.container(0, 0);
     this.menuContainer.setVisible(false);
     
+    // TODO move this into a separate method
     // Create the background panel
     this.backgroundPanel = this.scene.add['nineslice'](
       this.menuX,
@@ -116,7 +111,6 @@ export class BuildingMenuRenderer {
     this.menuContainer.add(this.backgroundPanel);
     this.menuContainer.add(this.closeButton);
     
-    // Create the resource panel that shows card selection info
     this.createResourcePanel();
     
     // Add the container to the scene
@@ -140,140 +134,20 @@ export class BuildingMenuRenderer {
    * Creates the resource panel for card selection
    */
   private createResourcePanel(): void {
-    const marginX = 20;
-    const marginY = 20;
+    // Initialize acquiredConstruction value
+    const acquiredConstruction = this.resourceService.getConstruction();
     
-    // Calculate panel dimensions and position (at the bottom of the main panel)
-    const cardWidth = CARD_WIDTH * 1.2;
-    const cardHeight = CARD_HEIGHT * 0.6;
-    const panelWidth = this.menuWidth - 2 * this.panelMarginX;
-    const panelHeight = cardHeight + 2 * marginY;
-    const panelX = this.menuX + this.panelMarginX;
-    const panelY = this.menuY + this.menuHeight - panelHeight - this.panelMarginY;
-    
-    // Create selection panel
-    this.resourcePanel = this.scene.add['nineslice'](
-      panelX,
-      panelY,
-      'panel_metal_sheet',
-      undefined,
-      panelWidth,
-      panelHeight,
-      10, 10, 10, 10
-    );
-    
-    this.resourcePanel.setOrigin(0, 0);
-    this.resourcePanel.setTint(0x666666); // Same dark grey tint as main panel
-    
-    // Add "Selected: X" text with the construction resource icon
-    const resourceTextX = panelWidth / 2 - marginX - 30; // centered horizontally. -marginX to give space for the image
-    this.selectionText = this.scene.add.text(
-      panelX + resourceTextX,
-      panelY + marginY + 5,
-      `Selected: 0`,
-      {
-        fontSize: '16px',
-        color: '#ffffff'
-      }
-    );
-    this.selectionText.setOrigin(1, 0);
-    
-    // Add construction resource icon next to "Selected: X"
-    const resourceIcon = this.scene.add.image(
-      panelX + resourceTextX + 5,
-      panelY + marginY + 12,
-      'resource_construction'
-    );
-    resourceIcon.setOrigin(0, 0.5);
-    resourceIcon.setScale(0.6);
-    
-    // Add "Acquired: X" text with construction resource icon
-    const acquiredConstruction = this.resourceService ? this.resourceService.getConstruction() : 0;
-    this.acquiredText = this.scene.add.text(
-      panelX + resourceTextX,
-      panelY + marginY + 35,
-      `Acquired: ${acquiredConstruction}`,
-      {
-        fontSize: '16px',
-        color: '#ffffff'
-      }
-    );
-    this.acquiredText.setOrigin(1, 0);
-    
-    // Add construction resource icon
-    const acquiredIcon = this.scene.add.image(
-      panelX + resourceTextX + 5,
-      panelY + marginY + 42,
-      'resource_construction'
-    );
-    acquiredIcon.setOrigin(0, 0.5);
-    acquiredIcon.setScale(0.6);
-    
-    // Add "Select All" button on the left side
-    this.selectAllButton = this.scene.add['nineslice'](
-      panelX + marginX,
-      panelY + panelHeight / 2,
-      'button_metal_slim_corners_orange',
-      undefined,
-      120,
-      40,
-      10, 10, 10, 10
-    );
-    this.selectAllButton.setOrigin(0, 0.5);
-    this.selectAllButton.setInteractive({ useHandCursor: true });
-    this.selectAllButton.on('pointerdown', () => { this.selectAllCardsWithConstruction(); });
-    
-    this.selectAllButtonText = this.scene.add.text(
-      panelX + marginX + 60,
-      panelY + panelHeight / 2,
-      'Select All',
-      {
-        fontSize: '14px',
-        color: '#ffffff',
-        fontStyle: 'bold'
-      }
-    );
-    this.selectAllButtonText.setOrigin(0.5, 0.5);
-    
-    // Add "Construct" button on the right side
-    this.constructButton = this.scene.add['nineslice'](
-      panelX + panelWidth - marginX - 120,
-      panelY + panelHeight / 2,
-      'button_metal_slim_corners_orange',
-      undefined,
-      120,
-      40,
-      10, 10, 10, 10
-    );
-    this.constructButton.setOrigin(0, 0.5);
-    this.constructButton.setInteractive({ useHandCursor: true });
-    this.constructButton.on('pointerdown', () => { this.constructSelectedBuilding(); });
-    
-    this.constructButtonText = this.scene.add.text(
-      panelX + panelWidth - marginX - 60,
-      panelY + panelHeight / 2,
+    // Create the resource panel renderer with the CONSTRUCTION resource type
+    this.resourcePanelRenderer = new ResourcePanelRenderer(
+      this.scene,
+      this.playerHandRenderer,
+      ResourceType.CONSTRUCTION,
+      acquiredConstruction,
       'Construct',
-      {
-        fontSize: '14px',
-        color: '#ffffff',
-        fontStyle: 'bold'
-      }
+      () => this.constructSelectedBuilding()
     );
-    this.constructButtonText.setOrigin(0.5, 0.5);
     
-    // Add elements to the container
-    this.menuContainer.add(this.resourcePanel);
-    this.menuContainer.add(this.selectionText);
-    this.menuContainer.add(this.acquiredText);
-    this.menuContainer.add(resourceIcon);
-    this.menuContainer.add(acquiredIcon);
-    this.menuContainer.add(this.selectAllButton);
-    this.menuContainer.add(this.selectAllButtonText);
-    this.menuContainer.add(this.constructButton);
-    this.menuContainer.add(this.constructButtonText);
-    
-    // Disable construct button initially
-    this.setConstructButtonState(false);
+    this.resourcePanelRenderer.hide();
   }
 
   /**
@@ -281,16 +155,12 @@ export class BuildingMenuRenderer {
    * @param enabled Whether the button should be enabled
    */
   private setConstructButtonState(enabled: boolean): void {
-    if (this.constructButton && this.constructButtonText) {
-      if (enabled) {
-        this.constructButton.clearTint();
-        this.constructButtonText.setColor('#ffffff');
-        this.constructButton.setInteractive({ useHandCursor: true });
-      } else {
-        this.constructButton.setTint(0x666666);
-        this.constructButtonText.setColor('#999999');
-        this.constructButton.disableInteractive();
-      }
+    if (this.selectedBuildingId) {
+      const buildingConfig = this.buildingService.getBuildingConfig(this.selectedBuildingId) as BuildingConfig;
+      const cost = buildingConfig.cost?.construction || 0;
+      this.resourcePanelRenderer.setTarget(enabled, cost);
+    } else {
+      this.resourcePanelRenderer.setTarget(false, 0);
     }
   }
   
@@ -298,8 +168,6 @@ export class BuildingMenuRenderer {
    * Handler for card selection changes
    */
   private onCardSelectionChanged(): void {
-    this.updateSelectionText();
-    
     // Update the construct button state based on selection
     if (this.selectedBuildingId) {
       this.updateConstructButtonState();
@@ -310,19 +178,15 @@ export class BuildingMenuRenderer {
    * Update the selection text with the current construction value
    */
   private updateSelectionText(): void {
-    if (this.selectionText) {
-      this.selectionText.setText(`Selected: ${this.playerHandRenderer.getSelectedConstructionValue()}`);
-    }
+    // This is handled by the ResourcePanelRenderer
   }
   
   /**
    * Update the acquired resources text
    */
   private updateAcquiredText(): void {
-    if (this.acquiredText) {
-      const acquiredConstruction = this.resourceService.getConstruction();
-      this.acquiredText.setText(`Acquired: ${acquiredConstruction}`);
-    }
+    const acquiredConstruction = this.resourceService.getConstruction();
+    this.resourcePanelRenderer.setAcquiredResourceValue(acquiredConstruction);
   }
   
   /**
@@ -330,7 +194,14 @@ export class BuildingMenuRenderer {
    */
   private updateConstructButtonState(): void {
     const canConstruct = this.canAffordBuilding();
-    this.setConstructButtonState(canConstruct);
+    
+    if (this.selectedBuildingId) {
+      const buildingConfig = this.buildingService.getBuildingConfig(this.selectedBuildingId) as BuildingConfig;
+      const cost = buildingConfig.cost?.construction || 0;
+      this.resourcePanelRenderer.setTarget(canConstruct, cost);
+    } else {
+      this.resourcePanelRenderer.setTarget(false, 0);
+    }
   }
   
   /**
@@ -347,26 +218,6 @@ export class BuildingMenuRenderer {
     const acquiredConstruction = this.resourceService.getConstruction();
     
     return (selectedConstruction + acquiredConstruction) >= requiredConstruction;
-  }
-  
-  /**
-   * Selects all cards in the player's hand that have at least 1 construction value
-   */
-  private selectAllCardsWithConstruction(): void {
-    const cards = this.playerHandRenderer.getCardsInHand();
-    const idsToSelect: string[] = [];
-    const idsToDeselect: string[] = [];
-    
-    cards.forEach((card: Card) => {
-      if (card.getConstructionValue() > 0) {
-        idsToSelect.push(card.unique_id);
-      } else {
-        idsToDeselect.push(card.unique_id);
-      }
-    });
-    
-    // Select and deselect cards based on their construction value
-    this.playerHandRenderer.selectAndDeselectCardsByIds(idsToSelect, idsToDeselect);
   }
   
   /**
@@ -400,9 +251,9 @@ export class BuildingMenuRenderer {
     // Create buttons for each available building
     this.createBuildingButtons(slot.available_for_construction);
     
-    // Update resource panel texts
-    this.updateSelectionText();
+    // Update resource panel
     this.updateAcquiredText();
+    this.resourcePanelRenderer.show();
     
     // Show the menu
     this.menuContainer.setVisible(true);
@@ -410,8 +261,8 @@ export class BuildingMenuRenderer {
     // Bring to top to ensure it's above other elements
     this.menuContainer.setDepth(1000);
     
-    // Disable the construct button initially
-    this.setConstructButtonState(false);
+    // Update target construction cost to none initially
+    this.resourcePanelRenderer.setTarget(false, 0);
     
     // Notify the building service that the menu is open
     this.buildingService.openMenu(slotUniqueId);
@@ -422,6 +273,7 @@ export class BuildingMenuRenderer {
    */
   public hide(): void {
     this.menuContainer.setVisible(false);
+    this.resourcePanelRenderer.hide();
     this.currentSlotUniqueId = '';
     this.selectedBuildingId = '';
     
@@ -621,12 +473,10 @@ export class BuildingMenuRenderer {
       this.escapeKey.removeAllListeners();
     }
     
-    // Remove card selection listener
-    this.playerHandRenderer.off(
-      PlayerHandRendererEvents.SELECTION_CHANGED,
-      this.onCardSelectionChanged,
-      this
-    );
+    // Destroy the resource panel
+    if (this.resourcePanelRenderer) {
+      this.resourcePanelRenderer.destroy();
+    }
     
     this.menuContainer.destroy();
   }

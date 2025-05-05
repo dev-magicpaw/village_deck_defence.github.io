@@ -20,7 +20,7 @@ export class StickerShopRenderer {
   private shopPanel: Phaser.GameObjects.NineSlice | null = null;
   private stickerRenderers: StickerInShopRenderer[] = [];
   private selectedSticker: StickerConfig | null = null;
-  private resourceService?: ResourceService;
+  private resourceService?: ResourceService; // TODO make not optional
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
   private cardOverlayRenderer: CardOverlayRenderer | null = null;

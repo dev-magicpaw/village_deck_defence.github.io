@@ -40,6 +40,12 @@
         "description": "Allows to store some resources during the day",
         "image": "building_warehouse",
         "limit": 1
+    },
+    {
+        "id": "blacksmith",
+        "name": "Blacksmith",
+        "description": "Adds a bit of invention each term. Allows to hire a blacksmith apprentice",
+        "image": "building_blacksmith",
+        "limit": 1
     }
-
 ]

@@ -135,7 +135,11 @@ export class GameUI {
     // Create the building menu renderer
     this.buildingMenuRenderer = new BuildingMenuRenderer(
       this.scene,
-      this.buildingService
+      this.buildingService,
+      panelX,
+      panelY,
+      panelWidth,
+      panelHeight
     );
     
     // Initialize buildings display if building service is available

@@ -55,7 +55,6 @@ export class BootScene extends Phaser.Scene {
     this.load.image('round_wood_paper', 'assets/images/ui-pack-adventure/PNG/Default/round_brown.png');
     this.load.image('round_metal_cross', 'assets/images/ui-pack-adventure/PNG/Default/checkbox_grey_cross.png');
     this.load.image('round_wood_cross', 'assets/images/ui-pack-adventure/PNG/Default/checkbox_brown_cross.png');
-    this.load.image('close_button', 'assets/images/ui-pack-adventure/PNG/Default/button_close.png');
     this.load.image('button_wood', 'assets/images/ui-pack-adventure/PNG/Default/button_brown.png');
     
     // Load resource images

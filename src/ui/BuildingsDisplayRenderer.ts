@@ -126,10 +126,6 @@ export class BuildingsDisplayRenderer {
     const slots = this.buildingService.getBuildingSlots();
     const slotLocations = this.buildingService.getBuildingSlotLocations();
     
-    console.log('Building slots:', slots);
-    console.log('Building slot locations:', slotLocations);
-    console.log('Constructed buildings:', this.constructedBuildings);
-    
     // Render each building slot
     slotLocations.forEach(location => {
       // Find the slot for this location using unique_id
@@ -260,12 +256,10 @@ export class BuildingsDisplayRenderer {
    * @param building The building in the slot, or null if empty
    */
   private onBuildingSlotClick(slot: BuildingSlot, building: Building | null): void {
-    console.log(`Slot clicked: ${slot.unique_id}`);
     
     // If we have a building, check if it's a special building
     if (building) {
       if (building.id === this.stickerShopBuildingId) {
-        console.log('Opening sticker shop');
         // Hide the buildings display and show the sticker shop
         this.displayContainer.setVisible(false);
         this.stickerShopRenderer.show();
@@ -273,7 +267,6 @@ export class BuildingsDisplayRenderer {
       }
       
       if (building.id === this.tavernBuildingId) {
-        console.log('Opening tavern');
         // Hide the buildings display and show the tavern
         this.displayContainer.setVisible(false);
         this.tavernRenderer.show();

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BuildingService } from '../services/BuildingService';
+import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 
 /**
  * Component for rendering the building construction menu
@@ -10,81 +11,77 @@ export class BuildingMenuRenderer {
   private buildingService: BuildingService;
   private menuContainer: Phaser.GameObjects.Container;
   private backgroundPanel: Phaser.GameObjects.NineSlice;
-  private titleText: Phaser.GameObjects.Text;
   private closeButton: Phaser.GameObjects.Image;
   private buildingButtons: Phaser.GameObjects.Container[] = [];
-  
+
+  private panelMarginX: number = 30;
+  private panelMarginY: number = 30;
+  private buttonSpacingX: number = 10;
   // Menu dimensions and position
-  private menuWidth: number = 400;
-  private menuHeight: number = 500;
+  private menuWidth: number;
+  private menuHeight: number;
   private menuX: number;
   private menuY: number;
-  private isVisible: boolean = false;
   private currentSlotUniqueId: string = '';
   
   /**
    * Create a new building menu renderer
    * @param scene The Phaser scene to render in
    * @param buildingService The building service to interact with
+   * @param panelX X position of the panel
+   * @param panelY Y position of the panel
+   * @param panelWidth Width of the panel (defaults to 400)
+   * @param panelHeight Height of the panel (defaults to 500)
    */
   constructor(
     scene: Phaser.Scene,
-    buildingService: BuildingService
+    buildingService: BuildingService,
+    panelX: number,
+    panelY: number,
+    panelWidth: number,
+    panelHeight: number
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
     
-    // Center the menu in the screen
-    this.menuX = this.scene.cameras.main.width / 2;
-    this.menuY = this.scene.cameras.main.height / 2;
+    // Set menu dimensions
+    this.menuWidth = panelWidth;
+    this.menuHeight = panelHeight;
+    
+    // Set menu position
+    this.menuX = panelX;
+    this.menuY = panelY;
     
     // Create the menu container
-    this.menuContainer = this.scene.add.container(this.menuX, this.menuY);
+    this.menuContainer = this.scene.add.container(0, 0);
     this.menuContainer.setVisible(false);
     
     // Create the background panel
     this.backgroundPanel = this.scene.add['nineslice'](
-      0,
-      0,
-      'panel_wood_corners_metal',
+      this.menuX,
+      this.menuY,
+      'panel_metal_corners_metal_nice',
       undefined,
       this.menuWidth,
       this.menuHeight,
-      20,
-      20,
-      20,
-      20
+      20, 20, 20, 20
     );
-    this.backgroundPanel.setOrigin(0.5, 0.5);
-    
-    // Create title text
-    this.titleText = this.scene.add.text(
-      0,
-      -this.menuHeight / 2 + 40,
-      'Building Menu',
-      {
-        fontSize: '24px',
-        color: '#ffffff',
-        align: 'center'
-      }
-    );
-    this.titleText.setOrigin(0.5, 0.5);
-    
+    this.backgroundPanel.setOrigin(0, 0);
+    this.backgroundPanel.setTint(0x666666);
+
     // Create close button
     this.closeButton = this.scene.add.image(
-      this.menuWidth / 2 - 30,
-      -this.menuHeight / 2 + 30,
-      'close_button'
+      this.menuX + this.menuWidth - 30,
+      this.menuY + 30,
+      'round_metal_cross'
     );
-    this.closeButton.setOrigin(0.5, 0.5);
     this.closeButton.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        this.hide();
+        this.hide(); // TODO this should call closeMenu method in buildingService
       });
     
     // Add elements to container
     this.menuContainer.add(this.backgroundPanel);
-    this.menuContainer.add(this.titleText);
     this.menuContainer.add(this.closeButton);
     
     // Add the container to the scene
@@ -98,24 +95,12 @@ export class BuildingMenuRenderer {
   public show(slotUniqueId: string): void {
     this.currentSlotUniqueId = slotUniqueId;
     
-    // Get the building slot data
+    // // Get the building slot data
     const slot = this.buildingService.getBuildingSlotByUniqueId(slotUniqueId);
     if (!slot) {
-      // Try fallback to legacy ID for backward compatibility
-      const slotByLegacyId = this.buildingService.getBuildingSlotById(slotUniqueId);
-      if (slotByLegacyId) {
-        console.warn(`Using legacy slot ID ${slotUniqueId} instead of unique_id`);
-        this.show(slotByLegacyId.unique_id);
-        return;
-      }
-      
-      console.error(`Building slot with unique ID ${slotUniqueId} not found`);
-      return;
+      throw new Error(`Building slot with unique ID ${slotUniqueId} not found`);
     }
-    
-    // Update title with slot ID (using a shorter version of the unique_id for display)
-    this.titleText.setText(`Building Options - Slot ${slotUniqueId.substring(0, 8)}...`);
-    
+
     // Clear any existing building buttons
     this.clearBuildingButtons();
     
@@ -124,7 +109,6 @@ export class BuildingMenuRenderer {
     
     // Show the menu
     this.menuContainer.setVisible(true);
-    this.isVisible = true;
     
     // Bring to top to ensure it's above other elements
     this.menuContainer.setDepth(1000);
@@ -135,15 +119,7 @@ export class BuildingMenuRenderer {
    */
   public hide(): void {
     this.menuContainer.setVisible(false);
-    this.isVisible = false;
     this.currentSlotUniqueId = '';
-  }
-  
-  /**
-   * Check if the menu is currently visible
-   */
-  public isMenuVisible(): boolean {
-    return this.isVisible;
   }
   
   /**
@@ -152,103 +128,15 @@ export class BuildingMenuRenderer {
    */
   private createBuildingButtons(availableBuildingIds: string[]): void {
     if (!availableBuildingIds || availableBuildingIds.length === 0) {
-      // No buildings available, show a message
-      const noOptionsText = this.scene.add.text(
-        0,
-        0,
-        'No buildings available for construction',
-        {
-          fontSize: '18px',
-          color: '#ffffff',
-          align: 'center',
-          wordWrap: { width: this.menuWidth - 60 }
-        }
-      );
-      noOptionsText.setOrigin(0.5, 0.5);
-      
-      this.menuContainer.add(noOptionsText);
-      this.buildingButtons.push(this.scene.add.container(0, 0).add(noOptionsText));
-      return;
+      throw new Error('No buildings available for construction');
     }
-    
-    // Calculate button height and spacing
-    const buttonHeight = 80;
-    const buttonSpacing = 10;
-    const buttonWidth = this.menuWidth - 60;
     
     // Create a button for each available building
     availableBuildingIds.forEach((buildingId, index) => {
-      // Get building config
-      const buildingConfig = this.buildingService.getBuildingConfig(buildingId);
-      if (!buildingConfig) return;
-      
-      // Create a container for the button
-      const buttonContainer = this.scene.add.container(
-        0,
-        -this.menuHeight / 2 + 100 + index * (buttonHeight + buttonSpacing)
+      const buttonContainer = this.renderBuildingOption(
+        buildingId,
+        index
       );
-      
-      // Create button background
-      const buttonBackground = this.scene.add['nineslice'](
-        0,
-        0,
-        'button_wood',
-        undefined,
-        buttonWidth,
-        buttonHeight,
-        10,
-        10,
-        10,
-        10
-      );
-      buttonBackground.setOrigin(0.5, 0.5);
-      
-      // Make button interactive
-      buttonBackground.setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
-          this.onBuildingSelected(buildingId);
-        });
-      
-      // Add hover effects
-      buttonBackground.on('pointerover', () => {
-        buttonBackground.setTint(0xcccccc);
-      });
-      
-      buttonBackground.on('pointerout', () => {
-        buttonBackground.clearTint();
-      });
-      
-      // Create text for building name
-      const nameText = this.scene.add.text(
-        -buttonWidth / 2 + 15,
-        -15,
-        buildingConfig.name,
-        {
-          fontSize: '18px',
-          color: '#ffffff',
-          align: 'left'
-        }
-      );
-      nameText.setOrigin(0, 0.5);
-      
-      // Create text for building description
-      const descText = this.scene.add.text(
-        -buttonWidth / 2 + 15,
-        15,
-        buildingConfig.description,
-        {
-          fontSize: '14px',
-          color: '#cccccc',
-          align: 'left',
-          wordWrap: { width: buttonWidth - 30 }
-        }
-      );
-      descText.setOrigin(0, 0.5);
-      
-      // Add elements to container
-      buttonContainer.add(buttonBackground);
-      buttonContainer.add(nameText);
-      buttonContainer.add(descText);
       
       // Add button container to menu container
       this.menuContainer.add(buttonContainer);
@@ -256,6 +144,68 @@ export class BuildingMenuRenderer {
       // Save reference to button container
       this.buildingButtons.push(buttonContainer);
     });
+  }
+  
+  /**
+   * Render a single building option button
+   * @param buildingId ID of the building to render
+   * @param index Index of the button in the list
+   * @param buttonWidth Width of the button
+   * @param buttonHeight Height of the button
+   * @param buttonSpacing Spacing between buttons
+   * @returns Container with the rendered building option
+   */
+  private renderBuildingOption(
+    buildingId: string,
+    index: number
+  ): Phaser.GameObjects.Container {
+    // Get building config
+    const buildingConfig = this.buildingService.getBuildingConfig(buildingId);
+    if (!buildingConfig) {
+      throw new Error(`Building config with ID ${buildingId} not found`);
+    }
+
+    const buttonX = this.menuX + this.panelMarginX + index * (CARD_WIDTH + this.buttonSpacingX);  
+    const buttonY = this.menuY + this.menuHeight / 2 + this.panelMarginY;
+    
+    // Create a container for the button
+    const buttonContainer = this.scene.add.container(
+      buttonX,
+      buttonY
+    );
+    
+    // Create button background
+    const buttonBackground = this.scene.add['nineslice'](
+      0,
+      0,
+      'panel_wood_paper',
+      undefined,
+      CARD_WIDTH,
+      CARD_HEIGHT,
+      10, 10, 10, 10
+    );
+    buttonBackground.setOrigin(0, 0.5);
+    
+    // Make button interactive
+    buttonBackground.setInteractive({ useHandCursor: true });
+    buttonBackground.on('pointerdown', () => { this.onBuildingSelected(buildingId); });
+    buttonBackground.on('pointerover', () => {buttonBackground.setTint(0xcccccc); });
+    buttonBackground.on('pointerout', () => { buttonBackground.clearTint(); });
+    
+    // Create image for building
+    const buildingImage = this.scene.add.image(
+      CARD_WIDTH/2,
+      0,
+      buildingConfig.image
+    );
+    buildingImage.setOrigin(0.5, 0.5);
+    buildingImage.setDisplaySize(CARD_WIDTH-15, CARD_HEIGHT-15);
+    
+    // Add elements to container
+    buttonContainer.add(buttonBackground);
+    buttonContainer.add(buildingImage);
+    
+    return buttonContainer;
   }
   
   /**
@@ -296,16 +246,6 @@ export class BuildingMenuRenderer {
       container.destroy();
     });
     this.buildingButtons = [];
-  }
-  
-  /**
-   * Handle window resize
-   */
-  public resize(): void {
-    // Update menu position to center
-    this.menuX = this.scene.cameras.main.width / 2;
-    this.menuY = this.scene.cameras.main.height / 2;
-    this.menuContainer.setPosition(this.menuX, this.menuY);
   }
   
   /**

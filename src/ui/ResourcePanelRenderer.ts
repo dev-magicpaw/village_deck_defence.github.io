@@ -31,6 +31,7 @@ export class ResourcePanelRenderer {
   private hasTarget: boolean = false;
   private targetCost: number = 0;
   private resourceService: ResourceService;
+  private isSubscribedToResourceEvents: boolean = false;
 
   /**
    * Create a new ResourcePanelRenderer
@@ -68,6 +69,9 @@ export class ResourcePanelRenderer {
       this.onCardSelectionChanged,
       this
     );
+
+    // Subscribe to resource service events
+    this.subscribeToResourceEvents();
   }
   
   /**
@@ -544,10 +548,39 @@ export class ResourcePanelRenderer {
   }
   
   /**
+   * Subscribe to resource changed events from the resource service
+   */
+  private subscribeToResourceEvents(): void {
+    if (!this.isSubscribedToResourceEvents) {
+      this.resourceService.on('resource-changed', this.onResourceChanged, this);
+      this.isSubscribedToResourceEvents = true;
+    }
+  }
+
+  /**
+   * Unsubscribe from resource changed events
+   */
+  private unsubscribeFromResourceEvents(): void {
+    if (this.isSubscribedToResourceEvents) {
+      this.resourceService.off('resource-changed', this.onResourceChanged, this);
+      this.isSubscribedToResourceEvents = false;
+    }
+  }
+
+  /**
+   * Handler for resource change events
+   */
+  private onResourceChanged(): void {
+    this.updateAcquiredText();
+    this.updateButtonStates();
+  }
+  
+  /**
    * Show the resource panel
    */
   public show(): void {
     this.displayContainer.setVisible(true);
+    this.subscribeToResourceEvents();
     this.updateSelectionText();
     this.updateAcquiredText();
     this.updateButtonStates();
@@ -558,6 +591,7 @@ export class ResourcePanelRenderer {
    */
   public hide(): void {
     this.displayContainer.setVisible(false);
+    this.unsubscribeFromResourceEvents();
   }
   
   /**
@@ -566,6 +600,7 @@ export class ResourcePanelRenderer {
   public destroy(): void {
     // Remove event listeners
     this.playerHandRenderer.off('selection-changed', this.onCardSelectionChanged, this);
+    this.unsubscribeFromResourceEvents();
     
     // Destroy all UI elements
     this.resourcePanel.destroy();

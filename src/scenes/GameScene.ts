@@ -72,15 +72,15 @@ export class GameScene extends Phaser.Scene {
     // Load configs
     this.loadConfigurations();
     
-    this.initializeInvasionService();
-    this.initializeResourceService();
-    this.initializePlayerDeck();
-    this.initializeBuildings();
-    this.initializeTavernService();
+    this.invasionService = this.createInvasionService();
+    this.resourceService = this.createResourceService();
+    this.playerDeck = this.createPlayerDeck();
+    this.buildingService = this.createBuildingsService();
+    this.tavernService = this.createTavernService();
     this.stickerShopService = new StickerShopService();
 
     // Initialize the player hand UI
-    this.initializePlayerHandUI();
+    this.playerHandRenderer = this.createPlayerHandUI();
     
     // Initialize the UI manager with player hand renderer
     this.gameUI = new GameUI(
@@ -156,27 +156,31 @@ export class GameScene extends Phaser.Scene {
   /**
    * Initialize the invasion service
    */
-  private initializeInvasionService(): void {
-    this.invasionService = new InvasionService(
+  private createInvasionService(): InvasionService {
+    const invasionService = new InvasionService(
       this.gameConfig.invasion_distance,
       this.gameConfig.invasion_speed_per_turn,
       this.gameConfig.invasion_difficulty
     );
+
+    return invasionService;
   }
   
   /**
    * Initialize the resource service
    */
-  private initializeResourceService(): void {
-    this.resourceService = new ResourceService();
+  private createResourceService(): ResourceService {
+    const resourceService = new ResourceService();
+
+    return resourceService;
   }
   
   /**
    * Initialize the player's deck based on level config
    */
-  private initializePlayerDeck(): void {
+  private createPlayerDeck(): DeckService<Card> {
     // Create empty deck service
-    this.playerDeck = new DeckService<Card>();
+    const playerDeck = new DeckService<Card>();
     
     const startingCards = this.gameConfig.starting_cards
     startingCards.forEach(cardEntry => {
@@ -186,25 +190,27 @@ export class GameScene extends Phaser.Scene {
       for (let i = 0; i < count; i++) {
         const card = this.cardRegistry.createCardInstance(cardId);
         if (card) {
-          this.playerDeck.addToDeck(card, 'bottom');
+          playerDeck.addToDeck(card, 'bottom');
         }
       }
     });
-    
+
     // Shuffle the deck
-    this.playerDeck.shuffle();
+    playerDeck.shuffle();
     
     // Create the player hand
-    this.playerHand = new PlayerHand(this.playerDeck, this.gameConfig.player_hand_size);
+    this.playerHand = new PlayerHand(playerDeck, this.gameConfig.player_hand_size);
     
     // Draw initial cards
     this.playerHand.drawUpToLimit();
+
+    return playerDeck;
   }
   
   /**
    * Initialize the player hand UI
    */
-  private initializePlayerHandUI(): void {
+  private createPlayerHandUI(): PlayerHandRenderer {
     // Get hand panel dimensions 
     const { width, height } = this.cameras.main;
     const panelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
@@ -216,7 +222,7 @@ export class GameScene extends Phaser.Scene {
     };
     
     // Create the hand renderer
-    this.playerHandRenderer = new PlayerHandRenderer(
+    const renderer = new PlayerHandRenderer(
       this,
       this.playerHand,
       dimensions.x,
@@ -231,30 +237,36 @@ export class GameScene extends Phaser.Scene {
     );
     
     // Initialize and render the hand
-    this.playerHandRenderer.init();
+    renderer.init();
+
+    return renderer;
   }
   
   /**
    * Initialize the tavern service
    */
-  private initializeTavernService(): void {
-    this.tavernService = new TavernService(
+  private createTavernService(): TavernService {
+    const tavernService = new TavernService(
       this.recruitCardRegistry, 
       this.cardRegistry, 
       this.resourceService, 
       this.playerDeck
     );
+
+    return tavernService;
   }
   
   /**
    * Initialize buildings
    */
-  private initializeBuildings(): void {
+  private createBuildingsService(): BuildingService {
     // Use the required building slots and locations from config
     const { building_slots, building_slot_locations } = this.gameConfig;
     
     // Create BuildingService with slots and locations
-    this.buildingService = new BuildingService(building_slots, building_slot_locations);
+    const buildingService = new BuildingService(building_slots, building_slot_locations);
+
+    return buildingService;
   }
   
   /**

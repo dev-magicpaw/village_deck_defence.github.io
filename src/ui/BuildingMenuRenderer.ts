@@ -157,17 +157,13 @@ export class BuildingMenuRenderer {
    * Creates the resource panel for card selection
    */
   private createResourcePanel(): void {
-    // Initialize acquiredConstruction value
-    const acquiredConstruction = this.resourceService.getConstruction();
-    
-    // Create the resource panel renderer with the CONSTRUCTION resource type
     this.resourcePanelRenderer = new ResourcePanelRenderer(
       this.scene,
       this.playerHandRenderer,
       ResourceType.CONSTRUCTION,
-      acquiredConstruction,
       'Construct',
-      () => this.constructSelectedBuilding()
+      () => this.constructSelectedBuilding(),
+      this.resourceService
     );
     
     this.resourcePanelRenderer.hide();

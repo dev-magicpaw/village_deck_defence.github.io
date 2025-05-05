@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ResourceService } from '../services/ResourceService';
 import { GameUI } from '../ui/GameUI';
 import { CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
@@ -35,33 +36,33 @@ export class ResourcePanelRenderer {
   private resourceType: ResourceType;
   private applyButtonLabel: string;
   private applyCallback: () => void;
-  private acquiredResourceValue: number = 0;
   private hasTarget: boolean = false;
   private targetCost: number = 0;
+  private resourceService: ResourceService;
 
   /**
    * Create a new ResourcePanelRenderer
    * @param scene The Phaser scene to render in
    * @param playerHandRenderer The player hand renderer for card selection
    * @param resourceType The type of resource to track (power/construction/invention)
-   * @param acquiredResourceValue The current acquired resource value
    * @param applyButtonLabel Label for the apply button (e.g., "Purchase", "Construct")
    * @param applyCallback Callback function when apply button is clicked
+   * @param resourceService Resource service for managing resources
    */
   constructor(
     scene: Phaser.Scene,
     playerHandRenderer: PlayerHandRenderer,
     resourceType: ResourceType,
-    acquiredResourceValue: number,
     applyButtonLabel: string,
-    applyCallback: () => void
+    applyCallback: () => void,
+    resourceService: ResourceService
   ) {
     this.scene = scene;
     this.playerHandRenderer = playerHandRenderer;
     this.resourceType = resourceType;
-    this.acquiredResourceValue = acquiredResourceValue;
     this.applyButtonLabel = applyButtonLabel;
     this.applyCallback = applyCallback;
+    this.resourceService = resourceService;
     
     // Create container to hold all panel elements
     this.displayContainer = this.scene.add.container(0, 0);
@@ -137,7 +138,7 @@ export class ResourcePanelRenderer {
     this.acquiredText = this.scene.add.text(
       resourceTextX,
       acquiredY,
-      `Acquired: ${this.acquiredResourceValue}`,
+      `Acquired: ${this.getAcquiredResourceValue()}`,
       {
         fontSize: '18px',
         color: '#ffffff',
@@ -472,11 +473,24 @@ export class ResourcePanelRenderer {
     // 5. Deselect all cards
     this.playerHandRenderer.clearCardSelection();
     
-    // 6. Update acquired resource value (parent will handle this change)
-    this.acquiredResourceValue += selectedResourceValue;
+    // 6. Add resources to the resource service
+    // TODO move this to a method
+    switch (this.resourceType) {
+      case ResourceType.POWER:
+        this.resourceService.addPower(selectedResourceValue);
+        break;
+      case ResourceType.CONSTRUCTION:
+        this.resourceService.addConstruction(selectedResourceValue);
+        break;
+      case ResourceType.INVENTION:
+        this.resourceService.addInvention(selectedResourceValue);
+        break;
+    }
+    
+    // 7. Update the acquired text display
     this.updateAcquiredText();
     
-    // 7. Update button states
+    // 8. Update button states
     this.updateButtonStates();
   }
   
@@ -486,11 +500,10 @@ export class ResourcePanelRenderer {
   private canAfford(): boolean {
     if (!this.hasTarget) return false;
     
-    // Get the total available resource (acquired + selected)
     const selectedValue = this.getSelectedResourceValue();
-    const totalAvailable = this.acquiredResourceValue + selectedValue;
+    const acquiredValue = this.getAcquiredResourceValue();
+    const totalAvailable = acquiredValue + selectedValue;
     
-    // Check if the total available resources are enough to afford the target
     return totalAvailable >= this.targetCost;
   }
   
@@ -510,18 +523,25 @@ export class ResourcePanelRenderer {
    */
   public updateAcquiredText(): void {
     if (this.acquiredText) {
-      this.acquiredText.setText(`Acquired: ${this.acquiredResourceValue}`);
+      const acquiredValue = this.getAcquiredResourceValue();
+      this.acquiredText.setText(`Acquired: ${acquiredValue}`);
     }
   }
   
   /**
-   * Set a new acquired resource value and update the UI
-   * @param value The new acquired resource value
+   * Get the acquired resource value from the resource service
    */
-  public setAcquiredResourceValue(value: number): void {
-    this.acquiredResourceValue = value;
-    this.updateAcquiredText();
-    this.updateButtonStates();
+  private getAcquiredResourceValue(): number {
+    switch (this.resourceType) {
+      case ResourceType.POWER:
+        return this.resourceService.getPower();
+      case ResourceType.CONSTRUCTION:
+        return this.resourceService.getConstruction();
+      case ResourceType.INVENTION:
+        return this.resourceService.getInvention();
+      default:
+        throw new Error(`Unknown resource type: ${this.resourceType}`);
+    }
   }
   
   /**
@@ -574,9 +594,39 @@ export class ResourcePanelRenderer {
    * Handle apply button click
    */
   private onApplyButtonClicked(): void {
-    if (this.canAfford()) {
-      this.playSelectedCards();
-      this.applyCallback();
+    this.playSelectedCards();
+    this.applyCallback();
+  }
+  
+  /**
+   * Set a new acquired resource value and update the UI
+   * This is now only for backward compatibility and shouldn't be used.
+   * Resources should be managed through ResourceService.
+   * @deprecated Use ResourceService directly instead
+   * @param value The new acquired resource value
+   */
+  public setAcquiredResourceValue(value: number): void {
+    // This method is maintained for backward compatibility
+    // Set the value in the resource service instead
+    switch (this.resourceType) {
+      case ResourceType.POWER:
+        // Reset existing power and add new value
+        this.resourceService.consumePower(this.resourceService.getPower());
+        this.resourceService.addPower(value);
+        break;
+      case ResourceType.CONSTRUCTION:
+        // Reset existing construction and add new value
+        this.resourceService.consumeConstruction(this.resourceService.getConstruction());
+        this.resourceService.addConstruction(value);
+        break;
+      case ResourceType.INVENTION:
+        // Reset existing invention and add new value
+        this.resourceService.consumeInvention(this.resourceService.getInvention());
+        this.resourceService.addInvention(value);
+        break;
     }
+    
+    this.updateAcquiredText();
+    this.updateButtonStates();
   }
 } 

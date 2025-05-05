@@ -162,6 +162,7 @@ export class BuildingService extends Phaser.Events.EventEmitter {
    */
   public constructBuilding(buildingId: string, slotUniqueId?: string): boolean {
     // Check if already constructed
+    // TODO this should account for the limit of the building
     if (this.isBuildingConstructed(buildingId)) {
       return false;
     }

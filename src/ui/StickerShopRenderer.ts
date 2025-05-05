@@ -108,16 +108,14 @@ export class StickerShopRenderer {
    * Initialize the resource panel renderer
    */
   private initResourcePanelRenderer(): void {
-    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
-    
     // Create the resource panel renderer
     this.resourcePanelRenderer = new ResourcePanelRenderer(
       this.scene,
       this.playerHandRenderer,
       ResourceType.INVENTION,
-      acquiredInvention,
       'Purchase',
-      () => this.purchaseSticker()
+      () => this.purchaseSticker(),
+      this.resourceService as ResourceService
     );
   }
   

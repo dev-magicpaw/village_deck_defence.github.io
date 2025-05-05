@@ -5,6 +5,7 @@ import { AdventureLevel, TavernService } from '../services/TavernService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
 import { ResourcePanelRenderer, ResourceType } from './ResourcePanelRenderer';
+import { SimpleCardRenderer } from './SimpleCardRenderer';
 
 /**
  * Component that renders the tavern interface and adventure selection
@@ -13,7 +14,7 @@ export class TavernRenderer {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private tavernService: TavernService;
-  private resourceService: ResourceService | null = null;
+  private resourceService: ResourceService | null = null; // TODO make not optional
   private deckService: DeckService<any> | null = null; // TODO remove not used
   private playerHandRenderer: PlayerHandRenderer;
   private visible: boolean = false;
@@ -31,7 +32,7 @@ export class TavernRenderer {
   
   // Currently selected adventure level
   private selectedLevel: AdventureLevel | null = null;
-  private levelCards: Map<AdventureLevel, Phaser.GameObjects.Container> = new Map();
+  private levelCards: Map<AdventureLevel, SimpleCardRenderer> = new Map();
   
   // Resource panel
   private resourcePanelRenderer: ResourcePanelRenderer | null = null;
@@ -148,20 +149,15 @@ export class TavernRenderer {
    * Create the resource panel that shows power and provides action buttons
    */
   private createResourcePanel(): void {
-    // Initialize acquiredPower value
-    const acquiredPower = this.resourceService ? this.resourceService.getPower() : 0;
-    
-    // Create the resource panel renderer with the POWER resource type
     this.resourcePanelRenderer = new ResourcePanelRenderer(
       this.scene,
       this.playerHandRenderer,
       ResourceType.POWER,
-      acquiredPower,
       'Proceed',
-      this.proceedWithAdventure.bind(this)
+      () => this.proceedWithAdventure(),
+      this.resourceService as ResourceService
     );
     
-    this.scene.events.on('resourcePanel-playCards', (data: any) => { this.handleResourcePanelPlayCards(data); });
     this.container.add(this.resourcePanelRenderer.getContainer());
   }
   
@@ -179,24 +175,11 @@ export class TavernRenderer {
   }
   
   /**
-   * Handle resource panel's play cards event
-   */
-  // TODO this is probably not needed.
-  private handleResourcePanelPlayCards(data: { type: ResourceType, value: number, cardIds: string[] }): void {
-    if (data.type === ResourceType.POWER && this.resourceService) {
-      this.resourceService.addPower(data.value);
-    }
-  }
-  
-  /**
    * Update the resource display with current values
    */
   // TODO this is probably not needed.
   private updateResourceDisplay(): void {
     if (!this.resourceService || !this.resourcePanelRenderer) return;
-    
-    const acquiredPower = this.resourceService.getPower();
-    this.resourcePanelRenderer.setAcquiredResourceValue(acquiredPower);
     
     // Update proceed button state based on level selection and resources
     this.updateProceedButtonState();
@@ -206,6 +189,7 @@ export class TavernRenderer {
    * Handle Proceed button click
    */
   private proceedWithAdventure(): void {
+    console.log('proceedWithAdventure');
     if (!this.selectedLevel) return;
 
     const option = this.tavernService.getAdventureOption(this.selectedLevel);
@@ -283,8 +267,9 @@ export class TavernRenderer {
       this.escKey = null;
     }
     
-    // Remove event listeners
-    this.scene.events.off('resourcePanel-playCards', this.handleResourcePanelPlayCards, this);
+    // Destroy all level cards
+    this.levelCards.forEach(card => card.destroy());
+    this.levelCards.clear();
     
     // Destroy the resource panel
     if (this.resourcePanelRenderer) {
@@ -293,6 +278,44 @@ export class TavernRenderer {
     }
     
     this.container.destroy();
+  }
+  
+  /**
+   * Handle card selection events
+   */
+  private handleCardSelected(data: { card: SimpleCardRenderer, selected: boolean }): void {
+    // Find the level associated with this card
+    let selectedLevelKey: AdventureLevel | null = null;
+    
+    for (const [level, card] of this.levelCards.entries()) {
+      if (card === data.card) {
+        selectedLevelKey = level;
+        break;
+      }
+    }
+    
+    if (!selectedLevelKey) return;
+    
+    // If this level is already selected and was just deselected, clear selection
+    if (this.selectedLevel === selectedLevelKey && !data.selected) {
+      this.selectedLevel = null;
+    } 
+    // If a new card was selected, deselect previous card if any
+    else if (data.selected) {
+      // Deselect previously selected card if different
+      if (this.selectedLevel !== null && this.selectedLevel !== selectedLevelKey) {
+        const prevCard = this.levelCards.get(this.selectedLevel);
+        if (prevCard) {
+          prevCard.setSelected(false);
+        }
+      }
+      
+      // Set new selection
+      this.selectedLevel = selectedLevelKey;
+    }
+    
+    // Update proceed button state, by setting the target
+    this.updateProceedButtonState();
   }
   
   /**
@@ -306,17 +329,32 @@ export class TavernRenderer {
     // Get available adventure levels
     const levels = this.tavernService.getAvailableAdventureLevels();
     
-    // Render each level card
     levels.forEach((level, index) => {
       const row = Math.floor(index / this.levelsPerRow);
       const col = index % this.levelsPerRow;
       
-      const cardX = (col + 0.5) * (this.levelCardWidth + this.levelCardSpacing) + 40;
-      const cardY = (row + 0.5) * (this.levelCardHeight + this.levelCardSpacing) + 80;
+      const cardX = this.panelX + (col + 0.5) * (this.levelCardWidth + this.levelCardSpacing) + 40;
+      const cardY = this.panelY + (row + 0.5) * (this.levelCardHeight + this.levelCardSpacing) + 80;
       
-      const card = this.createLevelCard(level, cardX, cardY);
+      // Create card using SimpleCardRenderer
+      const card = new SimpleCardRenderer(
+        this.scene,
+        cardX,
+        cardY,
+        'panel_wood_corners_metal',
+        'recruit_card',
+        1,
+        true,
+        () => this.onLevelCardClicked(level)
+      );
+      
+      // If this is the previously selected level, select it
+      if (this.selectedLevel === level) {
+        card.setSelected(true);
+      }
+      
       this.levelCards.set(level, card);
-      this.container.add(card);
+      this.container.add(card.getContainer());
     });
   }
 
@@ -328,8 +366,7 @@ export class TavernRenderer {
     if (this.selectedLevel) {
       const card = this.levelCards.get(this.selectedLevel);
       if (card) {
-        const highlight = card.getData('highlight') as Phaser.GameObjects.Image;
-        highlight.setVisible(false);
+        card.setSelected(false);
       }
     }
     
@@ -340,91 +377,8 @@ export class TavernRenderer {
     this.resourcePanelRenderer?.setTarget(false);
   }
   
-  /**
-   * Create a visual representation of an adventure level card
-   */
-  private createLevelCard(
-    level: AdventureLevel,
-    x: number,
-    y: number
-  ): Phaser.GameObjects.Container {
-    const container = this.scene.add.container(x, y);
-    
-    // Card background using nineslice
-    const background = this.scene.add['nineslice'](
-      0, 0,
-      'panel_wood_corners_metal',
-      undefined,
-      this.levelCardWidth, 
-      this.levelCardHeight,
-      10, 10, 10, 10
-    );
-    background.setOrigin(0.5, 0.5);
-    
-    // Set background interactive
-    background.setInteractive({ useHandCursor: true });
-    background.on('pointerdown', () => {
-      this.onLevelCardClicked(level);
-    });
-    
-    // Determine level image and name based on adventure level
-    const imageName = 'recruit_card';
-    
-    // Level image
-    const image = this.scene.add.image(0, -30, imageName);
-    image.setDisplaySize(this.levelCardWidth - 20, 100);
- 
-    
-    // Selection highlight (initially invisible)
-    const highlight = this.scene.add.image(0, 0, 'panel_metal_glow');
-    highlight.setDisplaySize(this.levelCardWidth + 10, this.levelCardHeight + 10);
-    highlight.setVisible(false);
-    highlight.setTint(0x00ff00);
-    highlight.setAlpha(0.3);
-    
-    // Add all elements to the container
-    container.add([highlight, background, image]);
-    
-    // Store highlight for later reference
-    container.setData('highlight', highlight);
-    
-    // If this is the currently selected level, show the highlight
-    if (this.selectedLevel === level) {
-      highlight.setVisible(true);
-    }
-    
-    return container;
-  }
-  
-  /**
-   * Handle level card click
-   */
-  private onLevelCardClicked(level: AdventureLevel): void {
-    // If this level is already selected, deselect it
-    if (this.selectedLevel === level) {
-      this.deselectLevel();
-    } else {
-      // Deselect previous level if any
-      if (this.selectedLevel !== null) {
-        const previousCard = this.levelCards.get(this.selectedLevel);
-        if (previousCard) {
-          const highlight = previousCard.getData('highlight') as Phaser.GameObjects.Image;
-          highlight.setVisible(false);
-        }
-      }
-      
-      // Select new level
-      this.selectedLevel = level;
-      
-      // Show highlight on the new card
-      const card = this.levelCards.get(level);
-      if (card) {
-        const highlight = card.getData('highlight') as Phaser.GameObjects.Image;
-        highlight.setVisible(true);
-      }
-    }
-    
-    // Update proceed button state
+  private onLevelCardClicked(level: AdventureLevel): void {        
+    this.selectedLevel = level;    
     this.updateProceedButtonState();
   }
 } 

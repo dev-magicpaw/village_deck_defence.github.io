@@ -69,12 +69,7 @@ export class TavernRenderer {
     
     // Set a high depth to ensure it renders on top of other UI elements
     this.container.setDepth(1000);
-  }
-  
-  /**
-   * Initialize the tavern renderer
-   */
-  public init(): void {
+
     // Register keyboard controls
     if (this.scene.input && this.scene.input.keyboard) {
       this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -99,13 +94,15 @@ export class TavernRenderer {
     const background = this.scene.add['nineslice'](
       this.panelX,
       this.panelY,
-      'panel_wood_paper',
+      'panel_metal_corners_metal_nice',
       undefined,
       this.panelWidth,
       this.panelHeight,
       20, 20, 20, 20
     );
     background.setOrigin(0,0);
+    background.setTint(0x666666); // Dark grey tint
+
     
     // Add title
     const title = this.scene.add.text(
@@ -115,7 +112,7 @@ export class TavernRenderer {
       {
         fontFamily: 'Arial',
         fontSize: '28px',
-        color: '#000000',
+        color: '#ffffff',
         align: 'center'
       }
     );
@@ -252,18 +249,7 @@ export class TavernRenderer {
     // TODO this is probably not needed.
     this.resourcePanelRenderer?.hide();
   }
-  
-  /**
-   * Toggle tavern visibility
-   */
-  public toggle(): void {
-    if (this.visible) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-  
+
   /**
    * Handle ESC key press
    */

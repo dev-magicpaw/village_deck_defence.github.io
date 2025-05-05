@@ -135,7 +135,6 @@ export class GameUI {
       this.resourceService,
       this.deckService
     );
-    this.tavernRenderer.init();
     
     // Create the building menu renderer
     this.buildingMenuRenderer = new BuildingMenuRenderer(

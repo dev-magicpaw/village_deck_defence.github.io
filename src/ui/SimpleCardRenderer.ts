@@ -9,7 +9,7 @@ export class SimpleCardRenderer {
   private container: Phaser.GameObjects.Container;
   private background: Phaser.GameObjects.NineSlice;
   private foreground: Phaser.GameObjects.Image | null = null;
-  private highlight: Phaser.GameObjects.Image;
+  private highlight: Phaser.GameObjects.Graphics;
   private isSelected: boolean = false;
   
   // Card properties
@@ -18,6 +18,8 @@ export class SimpleCardRenderer {
   private scaleFactor: number;
   private isSelectable: boolean;
   private callback: Function | null;
+  private cardWidth: number;
+  private cardHeight: number;
   
   /**
    * Create a new SimpleCardRenderer
@@ -43,50 +45,85 @@ export class SimpleCardRenderer {
     this.container = this.scene.add.container(x, y);
     
     // Calculate card dimensions
-    const width = CARD_WIDTH * this.scaleFactor;
-    const height = CARD_HEIGHT * this.scaleFactor;
+    this.cardWidth = CARD_WIDTH * this.scaleFactor;
+    this.cardHeight = CARD_HEIGHT * this.scaleFactor;
     
-    // Create selection highlight (initially invisible)
-    this.highlight = this.scene.add.image(0, 0, 'panel_metal_glow');
-    this.highlight.setDisplaySize(width + 10, height + 10);
-    this.highlight.setVisible(false);
-    this.highlight.setTint(0x00ff00);
-    this.highlight.setAlpha(0.3);
+    // Create highlight
+    this.highlight = this.createHighlight();
     this.container.add(this.highlight);
-
     
-    // Card background using nineslice
-    this.background = this.scene.add['nineslice'](
-      0, 0,
-      this.backgroundImageName,
-      undefined,
-      width, 
-      height,
-      10, 10, 10, 10
-    );
-    this.background.setOrigin(0.5, 0.5);
-    
-    // Add interactivity if needed
-    if (this.isSelectable || this.callback) {
-      this.background.setInteractive({ useHandCursor: true });
-      
-      // Add hover effect for selectable cards
-      if (this.isSelectable) {
-        this.background.on('pointerover', this.onPointerOver, this);
-        this.background.on('pointerout', this.onPointerOut, this);
-      }
-      
-      // Handle click events
-      this.background.on('pointerdown', this.onPointerDown, this);
-    }
+    // Create background
+    this.background = this.createBackground();
     this.container.add(this.background);
     
     // Add foreground image if provided
     if (this.foregroundImageName) {
-      this.foreground = this.scene.add.image(0, -30, this.foregroundImageName);
-      this.foreground.setDisplaySize(width - 20, 100);
+      this.foreground = this.scene.add.image(0, 0, this.foregroundImageName);
+      this.foreground.setDisplaySize(this.cardWidth - 20, this.cardHeight - 20);
       this.container.add(this.foreground);
     }    
+  }
+  
+  /**
+   * Create the card background using nineslice
+   */
+  private createBackground(): Phaser.GameObjects.NineSlice {
+    const background = this.scene.add['nineslice'](
+      0, 0,
+      this.backgroundImageName,
+      undefined,
+      this.cardWidth, 
+      this.cardHeight,
+      20, 20, 20, 20
+    );
+    background.setOrigin(0.5, 0.5);
+
+    // Add interactivity if needed
+    if (this.isSelectable || this.callback) {
+      background.setInteractive({ useHandCursor: true });
+      
+      // Add hover effect for selectable cards
+      if (this.isSelectable) {
+        background.on('pointerover', this.onPointerOver, this);
+        background.on('pointerout', this.onPointerOut, this);
+      }
+      
+      // Handle click events
+      background.on('pointerdown', this.onPointerDown, this);
+    }
+
+    return background;
+  }
+  
+  /**
+   * Create the highlight effect for card selection using graphics
+   */
+  private createHighlight(): Phaser.GameObjects.Graphics {
+    // Create selection glow (initially invisible)
+    const selectionGlow = this.scene.add.graphics();
+    selectionGlow.setVisible(false);
+    
+    // Draw blue glow effect
+    selectionGlow.fillStyle(0x00aaff, 0.3); // Light blue with transparency
+    selectionGlow.fillRoundedRect(
+      -this.cardWidth/2 - 10, 
+      -this.cardHeight/2 - 10, 
+      this.cardWidth + 20, 
+      this.cardHeight + 20, 
+      16
+    );
+    
+    // Add a stroke for additional glow effect
+    selectionGlow.lineStyle(3, 0x00aaff, 0.7);
+    selectionGlow.strokeRoundedRect(
+      -this.cardWidth/2 - 10, 
+      -this.cardHeight/2 - 10, 
+      this.cardWidth + 20, 
+      this.cardHeight + 20, 
+      16
+    );
+
+    return selectionGlow;
   }
   
   /**

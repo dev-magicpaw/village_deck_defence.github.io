@@ -2,38 +2,44 @@
     {
         "id": "architect",
         "name": "Architect",
-        "description": "Allows to construct other buildings in the village",
-        "image": "src/assets/images/cards/card_human_villager.png"
+        "description": "Allows to construct higher level buildings",
+        "image": "src/assets/images/cards/card_human_villager.png",
+        "limit": 1
     },
     {
         "id": "workshop",
         "name": "Workshop",
         "description": "Allows to purchase stickers",
-        "image": "building_workshop"
+        "image": "building_workshop",
+        "limit": 1
     },
     {
         "id": "tavern",
         "name": "Tavern",
         "description": "Allows to go for small adventures",
-        "image": "building_tavern"
+        "image": "building_tavern",
+        "limit": 1
     },
     {
         "id": "wooden_palisade",
         "name": "Wooden Palisade",
         "description": "Gives some protection from invaders",
-        "image": "building_wooden_wall"
+        "image": "building_wooden_wall",
+        "limit": null
     },
     {
         "id": "wooden_gates",
         "name": "Wooden Gates",
         "description": "Gives a bit of protection from invaders",
-        "image": "building_wooden_gates"
+        "image": "building_wooden_gates",
+        "limit": null
     },
     {
         "id": "warehouse",
         "name": "Warehouse",
         "description": "Allows to store some resources during the day",
-        "image": "building_warehouse"
+        "image": "building_warehouse",
+        "limit": 1
     }
 
 ]

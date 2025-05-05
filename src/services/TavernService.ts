@@ -72,6 +72,7 @@ export class TavernService extends Phaser.Events.EventEmitter {
   /**
    * Get the singleton instance of the TavernService
    */
+  // TODO don't use singleton pattern.
   public static getInstance(): TavernService {
     if (!TavernService.instance) {
       TavernService.instance = new TavernService();

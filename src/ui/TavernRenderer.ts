@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { ResourceType } from '../entities/Types';
-import { DeckService } from '../services/DeckService';
 import { ResourceService } from '../services/ResourceService';
 import { AdventureLevel, TavernService } from '../services/TavernService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
@@ -16,7 +15,6 @@ export class TavernRenderer {
   private container: Phaser.GameObjects.Container;
   private tavernService: TavernService;
   private resourceService: ResourceService;
-  private deckService: DeckService<any> | null = null; // TODO remove not used
   private playerHandRenderer: PlayerHandRenderer;
   private visible: boolean = false;
   
@@ -36,7 +34,7 @@ export class TavernRenderer {
   private levelCards: Map<AdventureLevel, SimpleCardRenderer> = new Map();
   
   // Resource panel
-  private resourcePanelRenderer: ResourcePanelRenderer | null = null;
+  private resourcePanelRenderer!: ResourcePanelRenderer;
   
   // Keyboard controls
   private escKey: Phaser.Input.Keyboard.Key | null = null;
@@ -52,8 +50,7 @@ export class TavernRenderer {
     height: number,
     playerHandRenderer: PlayerHandRenderer,
     tavernService: TavernService,
-    resourceService: ResourceService,
-    deckService?: DeckService<any>
+    resourceService: ResourceService
   ) {
     this.scene = scene;
     this.panelX = panelX;
@@ -62,7 +59,6 @@ export class TavernRenderer {
     this.panelHeight = height;
     this.playerHandRenderer = playerHandRenderer;
     this.resourceService = resourceService;
-    this.deckService = deckService || null;
     this.tavernService = tavernService;
     
     // Create container for all UI elements
@@ -161,30 +157,7 @@ export class TavernRenderer {
     
     this.container.add(this.resourcePanelRenderer.getContainer());
   }
-  
-  /**
-   * Update the proceed button state based on current selection and resources
-   */
-  private updateProceedButtonState(): void {
-    if (!this.selectedLevel || !this.resourcePanelRenderer) {
-      this.resourcePanelRenderer?.setTarget(false);
-      return;
-    }
-    
-    // Set target for the resource panel
-    this.resourcePanelRenderer.setTarget(true);
-  }
-  
-  /**
-   * Update the resource display with current values
-   */
-  private updateResourceDisplay(): void {
-    if (!this.resourcePanelRenderer) return;
-    
-    // Update proceed button state based on level selection and resources
-    this.updateProceedButtonState();
-  }
-  
+ 
   /**
    * Handle Proceed button click
    */
@@ -212,11 +185,9 @@ export class TavernRenderer {
     
     // Refresh the display
     this.renderAdventureLevelCards();
-    this.updateResourceDisplay();
     
     // Show the resource panel
-    // TODO this is probably not needed.
-    this.resourcePanelRenderer?.show();
+    this.resourcePanelRenderer.show();
   }
   
   /**
@@ -224,14 +195,14 @@ export class TavernRenderer {
    */
   public hide(): void {
     this.visible = false;
+    this.selectedLevel = null;
     this.container.setVisible(false);
     
     // Update tavern open state in service
     this.tavernService.setTavernOpen(false);
     
     // Hide the resource panel
-    // TODO this is probably not needed.
-    this.resourcePanelRenderer?.hide();
+    this.resourcePanelRenderer.hide();
   }
 
   /**
@@ -241,19 +212,6 @@ export class TavernRenderer {
     if (this.visible) {
       this.hide();
     }
-  }
-
-  /**
-   * Update the tavern renderer (called every frame)
-   */
-  public update(): void {
-    // Only update if visible
-    if (!this.visible) {
-      return;
-    }
-    
-    // Update resource display
-    this.updateResourceDisplay();
   }
 
   /**
@@ -272,50 +230,9 @@ export class TavernRenderer {
     this.levelCards.clear();
     
     // Destroy the resource panel
-    if (this.resourcePanelRenderer) {
-      this.resourcePanelRenderer.destroy();
-      this.resourcePanelRenderer = null; // TODO this is probably not needed.
-    }
+    this.resourcePanelRenderer.destroy();
     
     this.container.destroy();
-  }
-  
-  /**
-   * Handle card selection events
-   */
-  private handleCardSelected(data: { card: SimpleCardRenderer, selected: boolean }): void {
-    // Find the level associated with this card
-    let selectedLevelKey: AdventureLevel | null = null;
-    
-    for (const [level, card] of this.levelCards.entries()) {
-      if (card === data.card) {
-        selectedLevelKey = level;
-        break;
-      }
-    }
-    
-    if (!selectedLevelKey) return;
-    
-    // If this level is already selected and was just deselected, clear selection
-    if (this.selectedLevel === selectedLevelKey && !data.selected) {
-      this.selectedLevel = null;
-    } 
-    // If a new card was selected, deselect previous card if any
-    else if (data.selected) {
-      // Deselect previously selected card if different
-      if (this.selectedLevel !== null && this.selectedLevel !== selectedLevelKey) {
-        const prevCard = this.levelCards.get(this.selectedLevel);
-        if (prevCard) {
-          prevCard.setSelected(false);
-        }
-      }
-      
-      // Set new selection
-      this.selectedLevel = selectedLevelKey;
-    }
-    
-    // Update proceed button state, by setting the target
-    this.updateProceedButtonState();
   }
   
   /**
@@ -374,11 +291,11 @@ export class TavernRenderer {
     this.selectedLevel = null;
     
     // Update the resource panel target
-    this.resourcePanelRenderer?.setTarget(false);
+    this.resourcePanelRenderer.setTarget(false);
   }
   
   private onLevelCardClicked(level: AdventureLevel): void {        
     this.selectedLevel = level;    
-    this.updateProceedButtonState();
+    this.resourcePanelRenderer.setTarget(this.selectedLevel !== null);
   }
 } 

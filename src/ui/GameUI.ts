@@ -132,8 +132,7 @@ export class GameUI {
       panelHeight,
       this.playerHandRenderer,
       this.tavernService,
-      this.resourceService,
-      this.deckService
+      this.resourceService
     );
     
     // Create the building menu renderer

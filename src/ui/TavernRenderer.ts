@@ -15,7 +15,7 @@ export class TavernRenderer {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private tavernService: TavernService;
-  private resourceService: ResourceService | null = null; // TODO make not optional
+  private resourceService: ResourceService;
   private deckService: DeckService<any> | null = null; // TODO remove not used
   private playerHandRenderer: PlayerHandRenderer;
   private visible: boolean = false;
@@ -52,7 +52,7 @@ export class TavernRenderer {
     height: number,
     playerHandRenderer: PlayerHandRenderer,
     tavernService: TavernService,
-    resourceService?: ResourceService,
+    resourceService: ResourceService,
     deckService?: DeckService<any>
   ) {
     this.scene = scene;
@@ -61,7 +61,7 @@ export class TavernRenderer {
     this.panelWidth = width;
     this.panelHeight = height;
     this.playerHandRenderer = playerHandRenderer;
-    this.resourceService = resourceService || null;
+    this.resourceService = resourceService;
     this.deckService = deckService || null;
     this.tavernService = tavernService;
     
@@ -156,7 +156,7 @@ export class TavernRenderer {
       ResourceType.Power,
       'Proceed',
       () => this.proceedWithAdventure(),
-      this.resourceService as ResourceService
+      this.resourceService
     );
     
     this.container.add(this.resourcePanelRenderer.getContainer());
@@ -178,9 +178,8 @@ export class TavernRenderer {
   /**
    * Update the resource display with current values
    */
-  // TODO this is probably not needed.
   private updateResourceDisplay(): void {
-    if (!this.resourceService || !this.resourcePanelRenderer) return;
+    if (!this.resourcePanelRenderer) return;
     
     // Update proceed button state based on level selection and resources
     this.updateProceedButtonState();

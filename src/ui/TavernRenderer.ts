@@ -14,7 +14,7 @@ export class TavernRenderer {
   private container: Phaser.GameObjects.Container;
   private tavernService: TavernService;
   private resourceService: ResourceService | null = null;
-  private deckService: DeckService<any> | null = null;
+  private deckService: DeckService<any> | null = null; // TODO remove not used
   private playerHandRenderer: PlayerHandRenderer;
   private visible: boolean = false;
   

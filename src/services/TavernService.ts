@@ -53,32 +53,29 @@ export enum TavernServiceEvents {
 export class TavernService extends Phaser.Events.EventEmitter {
   private recruitCardRegistry: RecruitCardRegistry;
   private cardRegistry: CardRegistry;
-  private resourceService: ResourceService | null = null; // TODO: make not optional
+  private resourceService: ResourceService;
   private adventureOptions: Map<AdventureLevel, AdventureOption[]> = new Map();
   private isOpen: boolean = false;
-  private deckService: DeckService<Card> | null = null;
+  private deckService: DeckService<Card>;
 
   public constructor(
-    recruitCardRegistry?: RecruitCardRegistry,
-    cardRegistry?: CardRegistry, // TODO: make not optional
-    resourceService?: ResourceService, // TODO: make not optional
-    deckService?: DeckService<Card> // TODO: make not optional
+    recruitCardRegistry: RecruitCardRegistry,
+    cardRegistry: CardRegistry,
+    resourceService: ResourceService,
+    deckService: DeckService<Card>
   ) {
     super();
-    this.recruitCardRegistry = recruitCardRegistry || RecruitCardRegistry.getInstance();
-    this.cardRegistry = cardRegistry || CardRegistry.getInstance();
-    this.resourceService = resourceService || null;
-    this.deckService = deckService || null;
+    this.recruitCardRegistry = recruitCardRegistry;
+    this.cardRegistry = cardRegistry;
+    this.resourceService = resourceService;
+    this.deckService = deckService;
     this.initAdventureOptions();
   }
 
   /**
    * Initialize the tavern service
    */
-  public init(resourceService?: ResourceService): void {
-    if (resourceService) {
-      this.resourceService = resourceService;
-    }
+  public init(): void {
     this.initAdventureOptions();
   }
 
@@ -139,21 +136,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
   }
 
   /**
-   * Set the resource service
-   */
-  public setResourceService(resourceService: ResourceService): void {
-    this.resourceService = resourceService;
-  }
-
-  /**
-   * Set the deck service
-   * @param deckService The deck service to use for adding cards
-   */
-  public setDeckService(deckService: DeckService<Card>): void {
-    this.deckService = deckService;
-  }
-
-  /**
    * Get all available adventure levels
    */
   public getAvailableAdventureLevels(): AdventureLevel[] {
@@ -184,9 +166,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
    * @returns True if the player can afford the adventure
    */
   public canAffordAdventure(option: AdventureOption): boolean {
-    if (!this.resourceService) {
-      return false;
-    }
     return this.resourceService.getPower() >= option.cost;
   }
 
@@ -196,10 +175,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
    * @returns True if resources were consumed successfully, false otherwise
    */
   public attemptAdventure(option: AdventureOption): boolean {
-    if (!this.resourceService) {
-      throw new Error('Resource service not initialized');
-    }
-
     // Deduct cost - it's always deducted, even if the adventure fails
     const power = this.resourceService.getPower();
     if (option.cost > power) {
@@ -226,7 +201,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
     effects.forEach(effect => {
       if (effect.type === 'Card' && effect.cardType) {
         // Add cards to the player's deck based on the effect
-        // TODO: this should add to the discard instead of the deck
         this.addCardsToDiscard(effect.cardType, effect.count || 1);
       }
     });
@@ -238,10 +212,6 @@ export class TavernService extends Phaser.Events.EventEmitter {
    * @param count Number of cards to add
    */
   private addCardsToDiscard(cardId: string, count: number): void {
-    if (!this.deckService) {
-      throw new Error('DeckService not initialized. Cannot add cards to discard pile.');
-    }
-    
     for (let i = 0; i < count; i++) {
       const card = this.cardRegistry.createCardInstance(cardId);
       if (card) {

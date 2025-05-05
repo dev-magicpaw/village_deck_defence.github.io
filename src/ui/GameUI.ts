@@ -149,12 +149,6 @@ export class GameUI {
         this.buildingService,
         panelX,
         panelY,
-        panelWidth,
-        panelHeight,
-        this.resourceService,
-        this.stickerShopService,
-        this.playerHandRenderer,
-        this.deckService,
         this.stickerShopRenderer,
         this.tavernRenderer,
         this.buildingMenuRenderer

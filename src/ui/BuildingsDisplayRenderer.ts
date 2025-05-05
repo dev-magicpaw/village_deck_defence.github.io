@@ -1,13 +1,8 @@
 import Phaser from 'phaser';
 import { Building, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
-import { DeckService } from '../services/DeckService';
-import { ResourceService } from '../services/ResourceService';
-import { StickerShopService } from '../services/StickerShopService';
-import { TavernService } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { CARD_WIDTH, CARD_WIDTH_TO_HEIGHT_RATIO } from './CardRenderer';
-import { PlayerHandRenderer } from './PlayerHandRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
 
@@ -25,11 +20,6 @@ export class BuildingsDisplayRenderer {
   private buildingMenuRenderer: BuildingMenuRenderer;
   private stickerShopBuildingId: string = '';
   private tavernBuildingId: string = '';
-  private resourceService: ResourceService;
-  private stickerShopService: StickerShopService;
-  private tavernService: TavernService;
-  private playerHandRenderer: PlayerHandRenderer;
-  private deckService: DeckService;
   
   // Card visual properties
   private cardWidth: number = CARD_WIDTH * CARD_WIDTH_TO_HEIGHT_RATIO;
@@ -40,8 +30,6 @@ export class BuildingsDisplayRenderer {
   // Panel dimensions and position
   private panelX: number;
   private panelY: number;
-  private panelWidth: number;
-  private panelHeight: number;
   
   /**
    * Create a new buildings display renderer
@@ -64,12 +52,6 @@ export class BuildingsDisplayRenderer {
     buildingService: BuildingService,
     panelX: number,
     panelY: number,
-    panelWidth: number,
-    panelHeight: number,
-    resourceService: ResourceService,
-    stickerShopService: StickerShopService,
-    playerHandRenderer: PlayerHandRenderer,
-    deckService: DeckService,
     stickerShopRenderer: StickerShopRenderer,
     tavernRenderer: TavernRenderer,
     buildingMenuRenderer: BuildingMenuRenderer
@@ -78,13 +60,6 @@ export class BuildingsDisplayRenderer {
     this.buildingService = buildingService;
     this.panelX = panelX;
     this.panelY = panelY;
-    this.panelWidth = panelWidth;
-    this.panelHeight = panelHeight;
-    this.resourceService = resourceService;
-    this.stickerShopService = stickerShopService;
-    this.tavernService = TavernService.getInstance();
-    this.playerHandRenderer = playerHandRenderer;
-    this.deckService = deckService;
     this.stickerShopRenderer = stickerShopRenderer;
     this.tavernRenderer = tavernRenderer;
     this.buildingMenuRenderer = buildingMenuRenderer;

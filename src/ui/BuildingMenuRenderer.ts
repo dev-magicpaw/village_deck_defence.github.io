@@ -13,6 +13,7 @@ export class BuildingMenuRenderer {
   private backgroundPanel: Phaser.GameObjects.NineSlice;
   private closeButton: Phaser.GameObjects.Image;
   private buildingButtons: Phaser.GameObjects.Container[] = [];
+  private escapeKey?: Phaser.Input.Keyboard.Key;
 
   private panelMarginX: number = 30;
   private panelMarginY: number = 30;
@@ -86,6 +87,21 @@ export class BuildingMenuRenderer {
     
     // Add the container to the scene
     this.scene.add.existing(this.menuContainer);
+    
+    // Setup Escape key to close menu
+    if (this.scene.input && this.scene.input.keyboard) {
+      this.escapeKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+      this.escapeKey.on('down', this.handleEscapeKey, this);
+    }
+  }
+  
+  /**
+   * Handle Escape key press to close the menu
+   */
+  private handleEscapeKey(): void {
+    if (this.menuContainer.visible) {
+      this.hide();
+    }
   }
   
   /**
@@ -252,6 +268,10 @@ export class BuildingMenuRenderer {
    * Clean up resources
    */
   public destroy(): void {
+    // Remove keyboard listener
+    if (this.escapeKey) {
+      this.escapeKey.removeAllListeners();
+    }
     this.menuContainer.destroy();
   }
 } 

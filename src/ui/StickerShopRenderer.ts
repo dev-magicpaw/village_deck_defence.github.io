@@ -214,9 +214,7 @@ export class StickerShopRenderer {
     );
     closeButton.setScale(1.2);
     closeButton.setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.stickerShopService.setShopState(false);
-      });
+      .on('pointerdown', this.handleCloseButtonClick, this);
     
     // Add hover effects for close button
     closeButton.on('pointerover', () => {
@@ -240,6 +238,13 @@ export class StickerShopRenderer {
     
     // Render all stickers
     this.renderStickers();
+  }
+  
+  /**
+   * Handle close button click
+   */
+  private handleCloseButtonClick(): void {
+    this.stickerShopService.setShopState(false);
   }
   
   /**
@@ -679,9 +684,8 @@ export class StickerShopRenderer {
       if (this.scene.input.keyboard) {
         this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         if (this.escKey) {
-          this.escKey.on('down', () => {
-            this.stickerShopService.setShopState(false);
-          });
+          // Use a named method instead of an inline arrow function for better cleanup
+          this.escKey.on('down', this.handleEscapeKey, this);
         }
       }
       
@@ -701,6 +705,13 @@ export class StickerShopRenderer {
   }
   
   /**
+   * Handle Escape key press to close the shop
+   */
+  private handleEscapeKey(): void {
+    this.stickerShopService.setShopState(false);
+  }
+  
+  /**
    * Internal method to hide the shop UI
    */
   private _hide(): void {
@@ -710,7 +721,7 @@ export class StickerShopRenderer {
       
       // Remove Esc key listener
       if (this.escKey) {
-        this.escKey.off('down');
+        this.escKey.removeListener('down', this.handleEscapeKey, this);
         this.escKey = null;
       }
       
@@ -758,7 +769,7 @@ export class StickerShopRenderer {
     
     // Remove Esc key listener if active
     if (this.escKey) {
-      this.escKey.off('down');
+      this.escKey.removeListener('down', this.handleEscapeKey, this);
       this.escKey = null;
     }
     
@@ -769,6 +780,10 @@ export class StickerShopRenderer {
     if (this.cardOverlayRenderer) {
       this.cardOverlayRenderer.destroy();
     }
+    
+    // Make sure to remove all event listeners before destroying objects
+    // All other UI elements will have their event listeners automatically removed
+    // when they are destroyed by Phaser
     
     // Destroy all UI elements
     if (this.shopPanel) {

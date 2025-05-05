@@ -30,10 +30,10 @@
         "image": "building_wooden_gates"
     },
     {
-        "id": "storage",
-        "name": "Storage",
+        "id": "warehouse",
+        "name": "Warehouse",
         "description": "Allows to store some resources during the day",
-        "image": "building_storage"
+        "image": "building_warehouse"
     }
 
 ]

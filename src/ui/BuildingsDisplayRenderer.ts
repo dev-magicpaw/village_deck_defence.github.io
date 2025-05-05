@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Building, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
+import { TavernService, TavernServiceEvents } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { CARD_WIDTH, CARD_WIDTH_TO_HEIGHT_RATIO } from './CardRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
@@ -17,6 +18,7 @@ export class BuildingsDisplayRenderer {
   private buildingSlots: Array<{slot: BuildingSlot, container: Phaser.GameObjects.Container}> = [];
   private stickerShopRenderer: StickerShopRenderer;
   private tavernRenderer: TavernRenderer;
+  private tavernService: TavernService;
   private buildingMenuRenderer: BuildingMenuRenderer;
   private stickerShopBuildingId: string = '';
   private tavernBuildingId: string = '';
@@ -63,9 +65,24 @@ export class BuildingsDisplayRenderer {
     this.stickerShopRenderer = stickerShopRenderer;
     this.tavernRenderer = tavernRenderer;
     this.buildingMenuRenderer = buildingMenuRenderer;
+    this.tavernService = TavernService.getInstance();
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
+    
+    // Subscribe to tavern state changes to detect when it closes
+    this.tavernService.on(TavernServiceEvents.TAVERN_STATE_CHANGED, this.onTavernStateChanged, this);
+  }
+
+  /**
+   * Handle tavern state changes
+   * @param isOpen Whether the tavern is open
+   */
+  private onTavernStateChanged(isOpen: boolean): void {
+    // If tavern is closed, make buildings display visible again
+    if (!isOpen) {
+      this.displayContainer.setVisible(true);
+    }
   }
 
   /**
@@ -203,21 +220,16 @@ export class BuildingsDisplayRenderer {
     cardBackground.on('pointerout', () => { container.setScale(1); });
     
     container.add(cardBackground);
-    
-    // Create title text with building name
-    const titleText = this.scene.add.text(
+
+    // Create the building image
+    const buildingImage = this.scene.add.image(
       0,
       0,
-      building.name,
-      {
-        fontSize: '18px',
-        color: '#000000',
-        align: 'center',
-        wordWrap: { width: this.cardWidth - 20 }
-      }
+      building.image
     );
-    titleText.setOrigin(0.5, 0.5);
-    container.add(titleText);
+    buildingImage.setDisplaySize(this.cardWidth - 15, this.cardHeight - 15);
+    buildingImage.setOrigin(0.5, 0.5);
+    container.add(buildingImage);
     
     // Add the container to the display container
     this.displayContainer.add(container);
@@ -285,6 +297,9 @@ export class BuildingsDisplayRenderer {
    */
   public destroy(): void {
     this.displayContainer.destroy();
+    
+    // Remove event listeners
+    this.tavernService.off(TavernServiceEvents.TAVERN_STATE_CHANGED, this.onTavernStateChanged, this);
     
     this.stickerShopRenderer.destroy();
     

@@ -23,8 +23,8 @@ export class BuildingMenuRenderer {
   private scene: Phaser.Scene;
   private buildingService: BuildingService;
   private menuContainer: Phaser.GameObjects.Container;
-  private backgroundPanel: Phaser.GameObjects.NineSlice;
-  private closeButton: Phaser.GameObjects.Image;
+  private backgroundPanel!: Phaser.GameObjects.NineSlice;
+  private closeButton!: Phaser.GameObjects.Image;
   private buildingButtons: Phaser.GameObjects.Container[] = [];
   private escapeKey?: Phaser.Input.Keyboard.Key;
   private playerHandRenderer: PlayerHandRenderer;
@@ -70,20 +70,38 @@ export class BuildingMenuRenderer {
     this.playerHandRenderer = playerHandRenderer;
     this.resourceService = resourceService;
     
-    // Set menu dimensions
     this.menuWidth = panelWidth;
     this.menuHeight = panelHeight;
-    
-    // Set menu position
     this.menuX = panelX;
     this.menuY = panelY;
     
     // Create the menu container
     this.menuContainer = this.scene.add.container(0, 0);
     this.menuContainer.setVisible(false);
+
+    this.createBackgroundPanel();
+    this.createResourcePanel();
     
-    // TODO move this into a separate method
-    // Create the background panel
+    this.scene.add.existing(this.menuContainer);
+    
+    // Setup Escape key to close menu
+    if (this.scene.input && this.scene.input.keyboard) {
+      this.escapeKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+      this.escapeKey.on('down', this.handleEscapeKey, this);
+    }
+    
+    // Subscribe to player hand card selection changes
+    this.playerHandRenderer.on(
+      PlayerHandRendererEvents.SELECTION_CHANGED,
+      this.onCardSelectionChanged,
+      this
+    );
+  }
+  
+  /**
+   * Creates the background panel
+   */
+  private createBackgroundPanel(): void {
     this.backgroundPanel = this.scene.add['nineslice'](
       this.menuX,
       this.menuY,
@@ -110,24 +128,6 @@ export class BuildingMenuRenderer {
     // Add elements to container
     this.menuContainer.add(this.backgroundPanel);
     this.menuContainer.add(this.closeButton);
-    
-    this.createResourcePanel();
-    
-    // Add the container to the scene
-    this.scene.add.existing(this.menuContainer);
-    
-    // Setup Escape key to close menu
-    if (this.scene.input && this.scene.input.keyboard) {
-      this.escapeKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-      this.escapeKey.on('down', this.handleEscapeKey, this);
-    }
-    
-    // Subscribe to player hand card selection changes
-    this.playerHandRenderer.on(
-      PlayerHandRendererEvents.SELECTION_CHANGED,
-      this.onCardSelectionChanged,
-      this
-    );
   }
   
   /**

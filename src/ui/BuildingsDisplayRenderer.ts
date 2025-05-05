@@ -59,6 +59,7 @@ export class BuildingsDisplayRenderer {
     stickerShopRenderer: StickerShopRenderer,
     tavernRenderer: TavernRenderer,
     buildingMenuRenderer: BuildingMenuRenderer,
+    tavernService: TavernService,
     stickerShopService?: StickerShopService
   ) {
     this.scene = scene;
@@ -68,7 +69,7 @@ export class BuildingsDisplayRenderer {
     this.stickerShopRenderer = stickerShopRenderer;
     this.tavernRenderer = tavernRenderer;
     this.buildingMenuRenderer = buildingMenuRenderer;
-    this.tavernService = TavernService.getInstance();
+    this.tavernService = tavernService;
     this.stickerShopService = stickerShopService || new StickerShopService();
     
     // Create a container to hold all building cards

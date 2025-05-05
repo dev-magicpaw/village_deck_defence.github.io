@@ -59,6 +59,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
    * @param resourceService Resource service for resetting resources
    * @param stickerShopService Sticker shop service for shop state
    * @param buildingService Building service for building menu state
+   * @param tavernService Tavern service for tavern state
    */
   constructor(
     scene: Phaser.Scene, 
@@ -70,7 +71,8 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     invasionService: InvasionService,
     resourceService: ResourceService,
     stickerShopService: StickerShopService,
-    buildingService: BuildingService
+    buildingService: BuildingService,
+    tavernService: TavernService
   ) {
     super();
     this.scene = scene;
@@ -82,7 +84,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.invasionService = invasionService;
     this.resourceService = resourceService;
     this.stickerShopService = stickerShopService;
-    this.tavernService = TavernService.getInstance();
+    this.tavernService = tavernService;
     this.buildingService = buildingService;
     
     // Get initial cards from hand

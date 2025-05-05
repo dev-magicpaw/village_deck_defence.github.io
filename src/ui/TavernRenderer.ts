@@ -49,6 +49,7 @@ export class TavernRenderer {
     width: number,
     height: number,
     playerHandRenderer: PlayerHandRenderer,
+    tavernService: TavernService,
     resourceService?: ResourceService,
     deckService?: DeckService<any>
   ) {
@@ -60,7 +61,7 @@ export class TavernRenderer {
     this.playerHandRenderer = playerHandRenderer;
     this.resourceService = resourceService || null;
     this.deckService = deckService || null;
-    this.tavernService = TavernService.getInstance();
+    this.tavernService = tavernService;
     
     // Create container for all UI elements
     this.container = this.scene.add.container();
@@ -74,11 +75,6 @@ export class TavernRenderer {
    * Initialize the tavern renderer
    */
   public init(): void {
-    // Pass resource service to tavern service if available
-    if (this.resourceService) {
-      this.tavernService.setResourceService(this.resourceService);
-    }
-    
     // Register keyboard controls
     if (this.scene.input && this.scene.input.keyboard) {
       this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -389,7 +385,6 @@ export class TavernRenderer {
     const imageName = 'recruit_card';
     
     // Level image
-    // TODO: make it the size of the card
     const image = this.scene.add.image(0, -30, imageName);
     image.setDisplaySize(this.levelCardWidth - 20, 100);
  

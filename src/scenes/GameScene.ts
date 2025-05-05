@@ -90,7 +90,8 @@ export class GameScene extends Phaser.Scene {
       this.stickerShopService,
       this.playerHandRenderer,
       this.playerDeck,
-      this.invasionService
+      this.invasionService,
+      this.tavernService
     );
     
     // Create UI panels 
@@ -225,7 +226,8 @@ export class GameScene extends Phaser.Scene {
       this.invasionService,
       this.resourceService,
       this.stickerShopService,
-      this.buildingService
+      this.buildingService,
+      this.tavernService
     );
     
     // Initialize and render the hand
@@ -236,9 +238,12 @@ export class GameScene extends Phaser.Scene {
    * Initialize the tavern service
    */
   private initializeTavernService(): void {
-    this.tavernService = TavernService.getInstance();
-    this.tavernService.init(this.resourceService);
-    this.tavernService.setDeckService(this.playerDeck);
+    this.tavernService = new TavernService(
+      this.recruitCardRegistry, 
+      this.cardRegistry, 
+      this.resourceService, 
+      this.playerDeck
+    );
   }
   
   /**

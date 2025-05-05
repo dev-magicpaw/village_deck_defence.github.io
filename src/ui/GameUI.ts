@@ -4,6 +4,7 @@ import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
+import { TavernService } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
 import { InvasionRenderer } from './InvasionRenderer';
@@ -24,6 +25,7 @@ export class GameUI {
   private playerHandRenderer: PlayerHandRenderer;
   private deckService: DeckService;
   private invasionService: InvasionService;
+  private tavernService: TavernService;
   private invasionRenderer!: InvasionRenderer;
   private stickerShopRenderer!: StickerShopRenderer;
   private tavernRenderer!: TavernRenderer;
@@ -36,7 +38,8 @@ export class GameUI {
     stickerShopService: StickerShopService,
     playerHandRenderer: PlayerHandRenderer,
     deckService: DeckService,
-    invasionService: InvasionService
+    invasionService: InvasionService,
+    tavernService: TavernService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -45,6 +48,7 @@ export class GameUI {
     this.playerHandRenderer = playerHandRenderer;
     this.deckService = deckService;
     this.invasionService = invasionService;
+    this.tavernService = tavernService;
   }
   
   /**
@@ -127,6 +131,7 @@ export class GameUI {
       panelWidth,
       panelHeight,
       this.playerHandRenderer,
+      this.tavernService,
       this.resourceService,
       this.deckService
     );
@@ -154,6 +159,7 @@ export class GameUI {
         this.stickerShopRenderer,
         this.tavernRenderer,
         this.buildingMenuRenderer,
+        this.tavernService,
         this.stickerShopService
       );
       

@@ -51,7 +51,6 @@ export enum TavernServiceEvents {
  * Service for managing the tavern building and its functionalities
  */
 export class TavernService extends Phaser.Events.EventEmitter {
-  private static instance: TavernService;
   private recruitCardRegistry: RecruitCardRegistry;
   private cardRegistry: CardRegistry;
   private resourceService: ResourceService | null = null; // TODO: make not optional
@@ -59,25 +58,18 @@ export class TavernService extends Phaser.Events.EventEmitter {
   private isOpen: boolean = false;
   private deckService: DeckService<Card> | null = null;
 
-  /**
-   * Private constructor to enforce singleton pattern
-   */
-  private constructor() {
+  public constructor(
+    recruitCardRegistry?: RecruitCardRegistry,
+    cardRegistry?: CardRegistry, // TODO: make not optional
+    resourceService?: ResourceService, // TODO: make not optional
+    deckService?: DeckService<Card> // TODO: make not optional
+  ) {
     super();
-    this.recruitCardRegistry = RecruitCardRegistry.getInstance();
-    this.cardRegistry = CardRegistry.getInstance();
+    this.recruitCardRegistry = recruitCardRegistry || RecruitCardRegistry.getInstance();
+    this.cardRegistry = cardRegistry || CardRegistry.getInstance();
+    this.resourceService = resourceService || null;
+    this.deckService = deckService || null;
     this.initAdventureOptions();
-  }
-
-  /**
-   * Get the singleton instance of the TavernService
-   */
-  // TODO don't use singleton pattern.
-  public static getInstance(): TavernService {
-    if (!TavernService.instance) {
-      TavernService.instance = new TavernService();
-    }
-    return TavernService.instance;
   }
 
   /**

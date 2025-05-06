@@ -8,7 +8,6 @@ import { BuildingService } from '../services/BuildingService';
 import { CardRegistry } from '../services/CardRegistry';
 import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
-import { RecruitCardRegistry } from '../services/RecruitCardRegistry';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService } from '../services/TavernService';
@@ -44,7 +43,6 @@ export class GameScene extends Phaser.Scene {
   private buildingService!: BuildingService;
   private tavernService!: TavernService;
   private stickerShopService!: StickerShopService;
-  private recruitCardRegistry!: RecruitCardRegistry;
   private levelId: string = 'level_1'; // Default level ID
 
   constructor() {
@@ -64,7 +62,6 @@ export class GameScene extends Phaser.Scene {
     this.load.json('gameConfig', 'config/game.json');
     this.load.json('cardsConfig', 'config/cards.json');
     this.load.json('buildingsConfig', 'config/buildings.json');
-    this.load.json('recruitCardsConfig', 'config/recruit_cards.json');
     this.load.json('levelsConfig', 'config/levels.json');
   }
 
@@ -125,10 +122,6 @@ export class GameScene extends Phaser.Scene {
     // Initialize the building registry
     this.buildingRegistry = BuildingRegistry.getInstance();
     this.buildingRegistry.loadBuildings(this.cache.json.get('buildingsConfig'));
-    
-    // Initialize the recruit card registry
-    this.recruitCardRegistry = RecruitCardRegistry.getInstance();
-    this.recruitCardRegistry.loadRecruitCards(this.cache.json.get('recruitCardsConfig'));
   }
 
   /**
@@ -247,7 +240,6 @@ export class GameScene extends Phaser.Scene {
    */
   private createTavernService(): TavernService {
     const tavernService = new TavernService(
-      this.recruitCardRegistry, 
       this.cardRegistry, 
       this.resourceService, 
       this.playerDeck

@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { BuildingRegistry } from '../services/BuildingRegistry';
-import { RecruitCardRegistry } from '../services/RecruitCardRegistry';
 import { StickerRegistry } from '../services/StickerRegistry';
 
 export class BootScene extends Phaser.Scene {
@@ -95,7 +94,6 @@ export class BootScene extends Phaser.Scene {
     this.load.json('cardsConfig', 'config/cards.json'); 
     this.load.json('gameConfig', 'config/game.json');
     this.load.json('buildingsConfig', 'config/buildings.json');
-    this.load.json('recruitCardsConfig', 'config/recruit_cards.json');
     this.load.json('levelsConfig', 'config/levels.json');
   }
 
@@ -103,7 +101,6 @@ export class BootScene extends Phaser.Scene {
     // Initialize registries with loaded data
     this.initializeStickerRegistry();
     this.initializeBuildingRegistry();
-    this.initializeRecruitCardRegistry();
     
     // Get level ID from levels config
     const currentLevelId = this.getCurrentLevelId();
@@ -148,19 +145,6 @@ export class BootScene extends Phaser.Scene {
       registry.loadBuildings(buildingData);
     } else {
       console.error('Failed to load buildings.json');
-    }
-  }
-
-  /**
-   * Load recruit card configs into the global registry
-   */
-  private initializeRecruitCardRegistry(): void {
-    const recruitCardData = this.cache.json.get('recruitCardsConfig');
-    if (recruitCardData) {
-      const registry = RecruitCardRegistry.getInstance();
-      registry.loadRecruitCards(recruitCardData);
-    } else {
-      console.error('Failed to load recruit_cards.json');
     }
   }
 } 

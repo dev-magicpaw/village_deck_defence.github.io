@@ -40,6 +40,14 @@ export class CardRegistry {
   }
   
   /**
+   * Get all available card configurations
+   * @returns Array of all card configurations
+   */
+  public getAllCardConfigs(): CardConfig[] {
+    return Array.from(this._cardConfigs.values());
+  }
+  
+  /**
    * Create a new Card instance from a card ID
    * @param cardId The card ID
    * @returns A new Card instance or null if card ID not found

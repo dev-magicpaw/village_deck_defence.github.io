@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Building, BuildingEffect, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
-import { RecruitCardRegistry } from '../services/RecruitCardRegistry';
+import { CardRegistry } from '../services/CardRegistry';
 import { RecruitService } from '../services/RecruitService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
@@ -296,11 +296,11 @@ export class BuildingsDisplayRenderer {
         return;
       }
       
-      if (building.id === this.tavernBuildingId) {
-        this.displayContainer.setVisible(false);
-        this.tavernRenderer.show();
-        return;
-      }
+      // if (building.id === this.tavernBuildingId) {
+      //   this.displayContainer.setVisible(false);
+      //   this.tavernRenderer.show();
+      //   return;
+      // }
 
       if (this.canRecruitHere(building)) {
         this.displayContainer.setVisible(false);
@@ -362,17 +362,20 @@ export class BuildingsDisplayRenderer {
    * @returns Array of RecruitOption objects
    */
   private createRecruitOptions(recruitIds: string[]): Array<RecruitOption> {
-    const recruitCardRegistry = RecruitCardRegistry.getInstance();
+    const cardRegistry = CardRegistry.getInstance();
     
     return recruitIds.map(id => {
-      const config = recruitCardRegistry.getRecruitCardConfig(id);
-      if (!config) { throw new Error(`Recruit card config not found for ID: ${id}`); }
+      const config = cardRegistry.getCardConfig(id);
+      if (!config) { throw new Error(`Card config not found for ID: ${id}`); }
+      
+      // Use any type since CardConfig doesn't normally have cost
+      const cardConfig = config as any;
       
       return {
-        id: config.id,
-        name: config.name,
-        image: config.image,
-        cost: config.cost
+        id: cardConfig.id,
+        name: cardConfig.name,
+        image: cardConfig.image,
+        cost: cardConfig.cost || 0
       };
     });
   }

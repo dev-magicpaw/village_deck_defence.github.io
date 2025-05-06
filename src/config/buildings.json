@@ -31,11 +31,11 @@
         "effects": [
             {
                 "type": "make_recruitable",
-                "recruits": ["villager"]
+                "recruits": ["card_human_villager"]
             },
             {
                 "type": "recruit_here",
-                "recruits": ["villager", "blacksmith_apprentice", "lumberjack"]
+                "recruits": ["card_human_villager", "card_human_blacksmith_apprentice", "card_human_lumberjack"]
             }
         ]
 
@@ -82,7 +82,7 @@
         "effects": [
             {
                 "type": "make_recruitable",
-                "recruits": ["blacksmith_apprentice"]
+                "recruits": ["card_human_blacksmith_apprentice"]
             }
         ]
     }

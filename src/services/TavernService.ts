@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { Card } from '../entities/Card';
 import { CardRegistry } from './CardRegistry';
 import { DeckService } from './DeckService';
-import { RecruitCardRegistry } from './RecruitCardRegistry';
 import { ResourceService } from './ResourceService';
 
 /**
@@ -51,7 +50,6 @@ export enum TavernServiceEvents {
  * Service for managing the tavern building and its functionalities
  */
 export class TavernService extends Phaser.Events.EventEmitter {
-  private recruitCardRegistry: RecruitCardRegistry;
   private cardRegistry: CardRegistry;
   private resourceService: ResourceService;
   private adventureOptions: Map<AdventureLevel, AdventureOption[]> = new Map();
@@ -59,13 +57,11 @@ export class TavernService extends Phaser.Events.EventEmitter {
   private deckService: DeckService<Card>;
 
   public constructor(
-    recruitCardRegistry: RecruitCardRegistry,
     cardRegistry: CardRegistry,
     resourceService: ResourceService,
     deckService: DeckService<Card>
   ) {
     super();
-    this.recruitCardRegistry = recruitCardRegistry;
     this.cardRegistry = cardRegistry;
     this.resourceService = resourceService;
     this.deckService = deckService;
@@ -109,21 +105,22 @@ export class TavernService extends Phaser.Events.EventEmitter {
     // Initialize recruitment level options
     const recruitmentOptions: AdventureOption[] = [];
     
-    const configs = this.recruitCardRegistry.getAllRecruitCardConfigs();
-    configs.forEach(config => {
-      // TODO recruitCardRegistry should already return AdventureOption
-      const recruitCard = this.recruitCardRegistry.createRecruitCard(config.id);
-      if (recruitCard) {
-        recruitmentOptions.push({
-          id: recruitCard.id,
-          level: AdventureLevel.RECRUITMENT,
-          name: recruitCard.name,
-          description: recruitCard.description || '',
-          cost: recruitCard.cost,
-          applySuccessEffects: () => recruitCard.applySuccessEffects(),
-          applyFailureEffects: () => recruitCard.applyFailureEffects()
-        });
-      }
+    // Find recruit cards in the card registry
+    const allCards = this.cardRegistry.getAllCardConfigs();
+    const recruitCards = allCards.filter(card => card.id === 'recruit_card');
+    
+    // TODO note, this should use adventure cards, not player cards. For now adventure cards don't exist. To be done later.
+    recruitCards.forEach(config => {
+      const cardConfig = config as any; // Use any to handle additional properties in recruit card
+      recruitmentOptions.push({
+        id: cardConfig.id,
+        level: AdventureLevel.RECRUITMENT,
+        name: cardConfig.name,
+        description: cardConfig.description || '',
+        cost: cardConfig.cost || 0,
+        applySuccessEffects: () => cardConfig.success_effects || [],
+        applyFailureEffects: () => cardConfig.failure_effects || []
+      });
     });
     
     this.adventureOptions.set(AdventureLevel.RECRUITMENT, recruitmentOptions);

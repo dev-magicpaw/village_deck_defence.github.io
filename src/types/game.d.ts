@@ -1,3 +1,5 @@
+import { BuildingEffect } from '../entities/Building';
+
 export interface Building {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface Building {
     construction: number;
   };
   limit?: number | null;
+  effects: BuildingEffect[];
 }
 
 export interface Adventure {

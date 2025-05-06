@@ -9,7 +9,8 @@ import { ResourceService } from './ResourceService';
  * Events emitted by the BuildingService
  */
 export enum BuildingServiceEvents {
-  MENU_STATE_CHANGED = 'menu-state-changed'
+  MENU_STATE_CHANGED = 'menu-state-changed',
+  BUILDING_CONSTRUCTED = 'building-constructed'
 }
 
 /**
@@ -224,6 +225,9 @@ export class BuildingService extends Phaser.Events.EventEmitter {
         this.slotToBuildingMap[slotUniqueId] = buildingId;
       }
     }
+    
+    // Emit building constructed event with building ID and slot ID
+    this.emit(BuildingServiceEvents.BUILDING_CONSTRUCTED, buildingId, slotUniqueId || null);
     
     return true;
   }

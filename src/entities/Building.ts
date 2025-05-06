@@ -1,3 +1,12 @@
+/**
+ * Interface for building effects
+ */
+export interface BuildingEffect {
+  type: string;
+  recruits?: string[];
+  [key: string]: any;
+}
+
 export interface BuildingConfig {
   id: string;
   name: string;
@@ -7,6 +16,7 @@ export interface BuildingConfig {
     construction: number;
   };
   limit?: number | null;
+  effects: BuildingEffect[]; // Always defined, empty array if no effects
 }
 
 /**
@@ -41,6 +51,7 @@ export class Building {
     construction: number;
   };
   public readonly limit?: number | null;
+  public readonly effects: BuildingEffect[];
 
   /**
    * Create a new Building instance
@@ -53,6 +64,7 @@ export class Building {
     this.image = config.image;
     this.cost = config.cost;
     this.limit = config.limit;
+    this.effects = config.effects;
   }
 
   /**
@@ -75,6 +87,7 @@ export function convertBuildingJsonToConfig(buildingJson: any): BuildingConfig {
     cost: buildingJson.cost ? {
       construction: buildingJson.cost.construction || 0
     } : undefined,
-    limit: buildingJson.limit
+    limit: buildingJson.limit,
+    effects: buildingJson.effects ? [...buildingJson.effects] : []
   };
 } 

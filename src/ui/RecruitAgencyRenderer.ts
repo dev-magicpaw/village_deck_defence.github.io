@@ -115,7 +115,6 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.createTitle();
     this.createResourcePanel();
     this.createCloseButton();
-    this.createEscapeKeyHandler();    
     this.renderRecruitOptions();
   }
   
@@ -160,7 +159,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * Create the panel title
    */
   private createTitle(): void {
-    const titleText = this.scene.add.text(
+    this.title = this.scene.add.text(
       this.panelX + this.panelWidth / 2,
       this.panelY + 30,
       this.panelTitle,
@@ -170,10 +169,10 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
         fontStyle: 'bold'
       }
     );
-    titleText.setOrigin(0.5, 0.5);
+    this.title.setOrigin(0.5, 0.5);
     
     // Add to container
-    this.container.add(titleText);
+    this.container.add(this.title);
   }
   
   /**
@@ -210,17 +209,6 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Add to container
     this.container.add(this.closeButton);
-  }
-  
-  /**
-   * Create the escape key handler
-   */
-  private createEscapeKeyHandler(): void {
-      // Setup Escape key to close menu
-    if (this.scene.input && this.scene.input.keyboard) {
-        this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-        this.escKey.on('down', this.handleEscapeKey, this);
-      }
   }
 
   private handleEscapeKey(): void {
@@ -364,6 +352,15 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.visible = true;
     this.container.setVisible(true);
     
+    // Setup Esc key to close the shop
+    if (this.scene.input.keyboard) {
+        this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        if (this.escKey) {
+        // Use a named method instead of an inline arrow function for better cleanup
+        this.escKey.on('down', this.handleEscapeKey, this);
+        }
+    }
+
     // Emit state change event
     this.emit(RecruitAgencyRendererEvents.STATE_CHANGED, true);
     
@@ -377,6 +374,12 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   public hide(): void {
     this.visible = false;
     this.container.setVisible(false);
+
+    // Remove Esc key listener
+    if (this.escKey) {
+        this.escKey.removeListener('down', this.handleEscapeKey, this);
+        this.escKey = null;
+    }
     
     // Emit state change event
     this.emit(RecruitAgencyRendererEvents.STATE_CHANGED, false);

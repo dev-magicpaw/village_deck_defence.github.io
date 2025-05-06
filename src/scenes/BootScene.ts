@@ -79,6 +79,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('building_wooden_wall', 'assets/images/buildings/building_wooden_wall.jpg');
     this.load.image('building_warehouse', 'assets/images/buildings/building_warehouse.png');
     this.load.image('building_blacksmith_house', 'assets/images/buildings/building_blacksmith_house.png');
+    this.load.image('building_sawmill', 'assets/images/buildings/building_sawmill.png');
     
     // Load individual sticker images
     this.load.image('sticker_power_1', 'assets/images/stickers/Sword1.png');

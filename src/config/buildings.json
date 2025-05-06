@@ -27,7 +27,14 @@
         "cost": {
             "construction": 0
         },
-        "limit": 1
+        "limit": 1,
+        "effects": [
+            {
+                "type": "make_recruitable",
+                "recruits": ["villager"]
+            }
+        ]
+
     },
     {
         "id": "wooden_palisade",

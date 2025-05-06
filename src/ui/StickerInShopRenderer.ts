@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
+import { ResourceType } from '../entities/Types';
+import { CostRenderer } from './CostRenderer';
 
 /**
  * Renders an individual sticker in the sticker shop
@@ -13,7 +15,7 @@ export class StickerInShopRenderer {
   private background!: Phaser.GameObjects.Image;
   private isSelected: boolean = false;
   private unaffordable: boolean = false;
-  private costText!: Phaser.GameObjects.Text; // Reference to cost text object
+  private costRenderer!: CostRenderer;
   
   /**
    * Create a new sticker renderer
@@ -39,11 +41,8 @@ export class StickerInShopRenderer {
     this.size = size;
     this.onClickCallback = onClickCallback;
     this.unaffordable = unaffordable;
-    
-    // Create a container for the sticker and its elements
+      
     this.container = this.scene.add.container(x, y);
-    
-    // Create the sticker visual with all its elements
     this.createStickerVisual();
   }
   
@@ -51,7 +50,6 @@ export class StickerInShopRenderer {
    * Create the visual elements of the sticker
    */
   private createStickerVisual(): void {
-    // Create the background using round_metal image
     this.background = this.scene.add.image(0, 0, 'round_metal');
     this.background.setDisplaySize(this.size, this.size);
     
@@ -59,54 +57,27 @@ export class StickerInShopRenderer {
     this.container.add(this.background);
     this.container.add(stickerImage);
     
-    // Add cost display with both text and invention resource icon
-    const costContainer = this.scene.add.container(0, this.size/2 + 10);
+    this.costRenderer = new CostRenderer(
+      this.scene, 
+      this.stickerConfig.cost, 
+      0, 
+      this.size/2 + 10, 
+      ResourceType.Invention
+    );
     
-    // Cost background
-    const costBackground = this.scene.add.rectangle(0, 0, 60, 22, 0x000000, 0.7);
-    costBackground.setOrigin(0.5, 0);
+    // Set affordability based on initial state
+    this.costRenderer.setAffordable(!this.unaffordable);
     
-    // Cost text (just the number)
-    this.costText = this.scene.add.text(0, 2, `${this.stickerConfig.cost}`, {
-      fontSize: '18px',
-      color: this.unaffordable ? '#ff0000' : '#ffffff',
-      fontStyle: 'bold'
-    });
-    this.costText.setOrigin(1, 0);
+    this.container.add(this.costRenderer.getContainer());
     
-    // Invention resource icon
-    const resourceIcon = this.scene.add.image(5, 10, 'resource_invention');
-    resourceIcon.setOrigin(0, 0.5);
-    resourceIcon.setScale(0.5); // Scale down the icon to fit nicely
-    
-    // Add elements to the cost container
-    costContainer.add(costBackground);
-    costContainer.add(this.costText);
-    costContainer.add(resourceIcon);
-    
-    // Add cost container to the main container
-    this.container.add(costContainer);
-    
-    // Make sticker interactive
     this.background.setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         if (this.onClickCallback) {
           this.onClickCallback(this.stickerConfig);
         }
       });
-    
-    // Hover effects
-    this.background.on('pointerover', () => {
-      if (!this.isSelected) {
-        this.container.setScale(1.1);
-      }
-    });
-    
-    this.background.on('pointerout', () => {
-      if (!this.isSelected) {
-        this.container.setScale(1);
-      }
-    });
+    this.background.on('pointerover', () => { this.container.setScale(1.1); });
+    this.background.on('pointerout', () => { this.container.setScale(1); });
   }
   
   /**
@@ -117,13 +88,9 @@ export class StickerInShopRenderer {
     this.isSelected = selected;
     
     if (selected) {
-      // Apply selection visual effect
-      this.background.setTint(0x00ffff); // Cyan tint to indicate selection
-      this.container.setScale(1.15); // Slightly larger scale
+      this.background.setTint(0x00ffff); // Cyan tint
     } else {
-      // Remove selection visual effect
       this.background.clearTint();
-      this.container.setScale(1); // Normal scale
     }
   }
   
@@ -146,17 +113,13 @@ export class StickerInShopRenderer {
    * @param unaffordable Whether the sticker is unaffordable
    */
   public setUnaffordable(unaffordable: boolean): void {
-    if (this.unaffordable === unaffordable) return; // No change needed
+    if (this.unaffordable === unaffordable) return;
     
     this.unaffordable = unaffordable;
     
-    // Use direct reference to update the cost text color
-    this.costText.setColor(unaffordable ? '#ff0000' : '#ffffff');
+    this.costRenderer.setAffordable(!unaffordable);
   }
   
-  /**
-   * Destroy the sticker renderer and its elements
-   */
   public destroy(): void {
     this.container.destroy();
   }

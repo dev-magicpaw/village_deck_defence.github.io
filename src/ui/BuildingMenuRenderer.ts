@@ -311,6 +311,8 @@ export class BuildingMenuRenderer {
     const buttonX = this.menuX + this.panelMarginX + index * (CARD_WIDTH + this.buttonSpacingX);  
     const buttonY = this.menuY + this.menuHeight / 3;
     
+    const buildingLimitNotReached = !this.buildingService.reachedConstructedBuildingLimit(buildingId);
+
     // Create a simple card for the building option
     const buildingCard = new SimpleCardRenderer(
       this.scene, 
@@ -319,29 +321,31 @@ export class BuildingMenuRenderer {
       'panel_wood_paper',
       buildingConfig.image,
       1,
-      true,
-      () => { this.onBuildingSelected(buildingId); }
+      buildingLimitNotReached,
+      () => { if (buildingLimitNotReached) { this.onBuildingSelected(buildingId); } }
     );
     
     // Use CostRenderer for the cost display
-    const cost = buildingConfig.cost?.construction || 0;
-    const costRenderer = new CostRenderer(
-      this.scene,
-      cost,
-      0,
-      CARD_HEIGHT/2 + 20,
-      ResourceType.Construction
-    );
-    // Initialize with default affordability (will be updated in updateBuildingOptionCostColors)
-    const initiallyAffordable = this.resourcePanelRenderer.totalAvailable() >= cost;
-    costRenderer.setAffordable(initiallyAffordable);
-    
-    // Add to the card container
-    buildingCard.getContainer().add(costRenderer.getContainer());
+    let costRenderer: CostRenderer | null = null;
+    if (buildingLimitNotReached) {
+      const cost = buildingConfig.cost?.construction || 0;
+      costRenderer = new CostRenderer(
+        this.scene,
+        cost,
+        0,
+        CARD_HEIGHT/2 + 20,
+        ResourceType.Construction
+      );
+      // Initialize with default affordability (will be updated in updateBuildingOptionCostColors)
+      const initiallyAffordable = this.resourcePanelRenderer.totalAvailable() >= cost;
+      costRenderer.setAffordable(initiallyAffordable);
+      // Add to the card container
+      buildingCard.getContainer().add(costRenderer.getContainer());
+      this.buildingCostRenderers.push(costRenderer);
+    }
     
     // Add to tracking arrays
     this.buildingCards.push(buildingCard);
-    this.buildingCostRenderers.push(costRenderer);
     
     return buildingCard.getContainer();
   }

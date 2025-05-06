@@ -186,7 +186,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       'Recruit',
       () => this.onRecruitButtonClicked(),
       this.resourceService
-    );    
+    );
+
+    this.resourcePanelRenderer.hide();
   }
   
   /**
@@ -308,7 +310,6 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * @param option The selected recruit option
    */
   private onRecruitSelected(option: RecruitOption): void {
-    // TODO add deselection part like in building menu?
     // Store the selected option
     this.selectedOption = option;
     
@@ -324,6 +325,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   public show(): void {
     this.visible = true;
     this.container.setVisible(true);
+    
+    // Show the resource panel
+    this.resourcePanelRenderer.show();
     
     // Setup Esc key to close the shop
     if (this.scene.input.keyboard) {

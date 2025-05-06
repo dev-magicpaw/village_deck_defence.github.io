@@ -366,6 +366,7 @@ private handleEscapeKey(): void {
    */
   private onBuildingSelected(buildingId: string): void {    
     // If the building is already selected, deselect it
+    // TODO this is not needed. SimpleCardRenderer already handles this
     if (this.selectedBuildingId === buildingId) {
       this.selectedBuildingId = '';
       this.resourcePanelRenderer.setTarget(false, 0);

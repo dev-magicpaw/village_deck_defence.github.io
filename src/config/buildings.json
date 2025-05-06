@@ -32,6 +32,10 @@
             {
                 "type": "make_recruitable",
                 "recruits": ["villager"]
+            },
+            {
+                "type": "recrute_here",
+                "recruits": ["villager", "blacksmith_apprentice", "lumberjack"]
             }
         ]
 
@@ -74,6 +78,12 @@
         "cost": {
             "construction": 7
         },
-        "limit": 1
+        "limit": 1,
+        "effects": [
+            {
+                "type": "make_recruitable",
+                "recruits": ["blacksmith_apprentice"]
+            }
+        ]
     }
 ]

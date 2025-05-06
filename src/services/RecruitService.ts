@@ -4,6 +4,7 @@ import { Card } from '../entities/Card';
 import { BuildingService, BuildingServiceEvents } from './BuildingService';
 import { CardRegistry } from './CardRegistry';
 import { DeckService } from './DeckService';
+import { ResourceService } from './ResourceService';
 
 /**
  * Events emitted by the RecruitService
@@ -21,22 +22,26 @@ export class RecruitService extends Phaser.Events.EventEmitter {
   private cardRegistry: CardRegistry;
   private playerDeck: DeckService<Card>;
   private menuOpen: boolean = false;
+  private resourceService: ResourceService;
 
   /**
    * Create a new RecruitService
    * @param buildingService Service for managing buildings
    * @param cardRegistry Registry for creating card instances
    * @param playerDeck Player's deck service
+   * @param resourceService Service for managing resources
    */
   constructor(
     buildingService: BuildingService, 
     cardRegistry: CardRegistry,
-    playerDeck: DeckService<Card>
+    playerDeck: DeckService<Card>,
+    resourceService: ResourceService
   ) {
     super();
     this.buildingService = buildingService;
     this.cardRegistry = cardRegistry;
     this.playerDeck = playerDeck;
+    this.resourceService = resourceService;
     
     // Initialize available recruits from already constructed buildings
     this.initializeAvailableRecruits();
@@ -87,6 +92,13 @@ export class RecruitService extends Phaser.Events.EventEmitter {
     // Create a new card instance with the given ID
     const card = this.cardRegistry.createCardInstance(cardId);
     if (!card) { throw new Error(`Card with ID ${cardId} not found`); }
+    
+    const powerCost = card.cost?.power || 0;
+    const availablePower = this.resourceService.getPower();
+    if (availablePower < powerCost) { throw new Error(`Not enough power to recruit card ${cardId}`); }
+    
+    this.resourceService.consumePower(powerCost);
+    
     this.playerDeck.discard(card);
     return card;
   }

@@ -277,7 +277,8 @@ export class GameScene extends Phaser.Scene {
     const recruitService = new RecruitService(
       this.buildingService,
       this.cardRegistry,
-      this.playerDeck
+      this.playerDeck,
+      this.resourceService
     );
 
     return recruitService;

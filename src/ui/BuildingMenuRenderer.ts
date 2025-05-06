@@ -4,6 +4,7 @@ import { ResourceType } from '../entities/Types';
 import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
+import { CostRenderer } from './CostRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 import { SimpleCardRenderer } from './SimpleCardRenderer';
@@ -30,6 +31,7 @@ export class BuildingMenuRenderer {
   private closeButton!: Phaser.GameObjects.Image;
   private buildingButtons: Phaser.GameObjects.Container[] = [];
   private buildingCards: SimpleCardRenderer[] = [];
+  private buildingCostRenderers: CostRenderer[] = [];
   private escapeKey?: Phaser.Input.Keyboard.Key;
   private playerHandRenderer: PlayerHandRenderer;
   private resourceService: ResourceService;
@@ -182,7 +184,6 @@ export class BuildingMenuRenderer {
   /**
    * Update the cost label colors for all building options based on affordability
    */
-  // TODO improve visual
   private updateBuildingOptionCostColors(): void {
     const totalAvailable = this.resourcePanelRenderer.totalAvailable();
     
@@ -198,24 +199,12 @@ export class BuildingMenuRenderer {
       
       const cost = buildingConfig.cost?.construction || 0;
       const isAffordable = totalAvailable >= cost;
-      const isSelected = buildingId === this.selectedBuildingId;
       
-      // Update cost text color
-      const container = card.getContainer();
-      container.getAll().forEach(child => {
-        if (child instanceof Phaser.GameObjects.Text && child.text.startsWith('Cost:')) {
-          // Set color based on selection and affordability
-          if (isSelected) {
-            child.setColor(isAffordable ? '#008800' : '#880000');
-          } else {
-            // For non-selected buildings, use a more subtle color indication
-            child.setColor(isAffordable ? '#005500' : '#550000');
-          }
-        }
-      });
+      // Update cost renderer affordability directly
+      if (index < this.buildingCostRenderers.length) {
+        this.buildingCostRenderers[index].setAffordable(isAffordable);
+      }
     });
-    
-
   }
 
   /**
@@ -332,25 +321,22 @@ export class BuildingMenuRenderer {
       () => { this.onBuildingSelected(buildingId); }
     );
     
-    // Add cost text
-    const costText = this.scene.add.text(
+    // Use CostRenderer for the cost display
+    const cost = buildingConfig.cost?.construction || 0;
+    const costRenderer = new CostRenderer(
+      this.scene,
+      cost,
       0,
       CARD_HEIGHT/2 + 20,
-      `Cost: ${buildingConfig.cost?.construction || 0}`,
-      {
-        fontSize: '14px',
-        color: '#000000',
-        backgroundColor: '#ffffff80',
-        padding: { x: 4, y: 2 }
-      }
+      ResourceType.Construction
     );
-    costText.setOrigin(0.5, 0.5);
     
-    // Add cost text to the card container
-    buildingCard.getContainer().add(costText);
+    // Add to the card container
+    buildingCard.getContainer().add(costRenderer.getContainer());
     
     // Add to tracking arrays
     this.buildingCards.push(buildingCard);
+    this.buildingCostRenderers.push(costRenderer);
     
     return buildingCard.getContainer();
   }
@@ -388,12 +374,18 @@ export class BuildingMenuRenderer {
    * Clear all building buttons
    */
   private clearBuildingButtons(): void {
+    // Destroy cost renderers
+    this.buildingCostRenderers.forEach(costRenderer => {
+      costRenderer.destroy();
+    });
+    
     this.buildingCards.forEach(card => {
       card.destroy();
     });
     
     this.buildingCards = [];
     this.buildingButtons = [];
+    this.buildingCostRenderers = [];
   }
 
   public destroy(): void {
@@ -402,9 +394,13 @@ export class BuildingMenuRenderer {
       this.escapeKey.removeAllListeners();
     }
     
-    // Destroy all cards
+    // Destroy all cards and cost renderers
     this.buildingCards.forEach(card => {
       card.destroy();
+    });
+    
+    this.buildingCostRenderers.forEach(costRenderer => {
+      costRenderer.destroy();
     });
     
     // Destroy the resource panel

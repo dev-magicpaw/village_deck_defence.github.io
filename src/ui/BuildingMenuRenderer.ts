@@ -5,6 +5,7 @@ import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
+import { CountLimitRenderer } from './CountLimitRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 import { SimpleCardRenderer } from './SimpleCardRenderer';
@@ -34,6 +35,7 @@ export class BuildingMenuRenderer {
   private buildingButtons: Phaser.GameObjects.Container[] = [];
   private buildingCards: SimpleCardRenderer[] = [];
   private buildingCostRenderers: CostRenderer[] = [];
+  private buildingCountRenderers: CountLimitRenderer[] = [];
   private escapeKey?: Phaser.Input.Keyboard.Key;
   private playerHandRenderer: PlayerHandRenderer;
   private resourceService: ResourceService;
@@ -302,16 +304,12 @@ export class BuildingMenuRenderer {
     buildingId: string,
     index: number
   ): Phaser.GameObjects.Container {
-    // Get building config
-    const buildingConfig = this.buildingService.getBuildingConfig(buildingId) as BuildingConfig;
-    if (!buildingConfig) {
-      throw new Error(`Building config with ID ${buildingId} not found`);
-    }
-
     const buttonX = this.menuX + this.panelMarginX + index * (CARD_WIDTH + this.buttonSpacingX);  
     const buttonY = this.menuY + this.menuHeight / 3;
-    
+
+    const buildingConfig = this.buildingService.getBuildingConfig(buildingId) as BuildingConfig;
     const buildingLimitNotReached = !this.buildingService.reachedConstructedBuildingLimit(buildingId);
+    const onBuildingSelected = buildingLimitNotReached ? () => { this.onBuildingSelected(buildingId); } : undefined;
 
     // Create a simple card for the building option
     const buildingCard = new SimpleCardRenderer(
@@ -322,8 +320,20 @@ export class BuildingMenuRenderer {
       buildingConfig.image,
       1,
       buildingLimitNotReached,
-      () => { if (buildingLimitNotReached) { this.onBuildingSelected(buildingId); } }
+      onBuildingSelected
     );
+
+    // Add count limit renderer above the cost renderer
+    const currentBuildingCount = this.buildingService.getConstructedBuildingCount(buildingId);
+    const countLimitRenderer = new CountLimitRenderer(
+      this.scene,
+      0,
+      CARD_HEIGHT/2 + 20,
+      currentBuildingCount,
+      buildingConfig.limit || undefined
+    );
+    buildingCard.getContainer().add(countLimitRenderer.getContainer());
+    this.buildingCountRenderers.push(countLimitRenderer);
     
     // Use CostRenderer for the cost display
     let costRenderer: CostRenderer | null = null;
@@ -333,7 +343,7 @@ export class BuildingMenuRenderer {
         this.scene,
         cost,
         0,
-        CARD_HEIGHT/2 + 20,
+        CARD_HEIGHT/2 + 50,
         ResourceType.Construction
       );
       // Initialize with default affordability (will be updated in updateBuildingOptionCostColors)
@@ -388,6 +398,11 @@ export class BuildingMenuRenderer {
       costRenderer.destroy();
     });
     
+    // Destroy count limit renderers
+    this.buildingCountRenderers.forEach(countRenderer => {
+      countRenderer.destroy();
+    });
+    
     this.buildingCards.forEach(card => {
       card.destroy();
     });
@@ -395,6 +410,7 @@ export class BuildingMenuRenderer {
     this.buildingCards = [];
     this.buildingButtons = [];
     this.buildingCostRenderers = [];
+    this.buildingCountRenderers = [];
   }
 
   public destroy(): void {
@@ -410,6 +426,11 @@ export class BuildingMenuRenderer {
     
     this.buildingCostRenderers.forEach(costRenderer => {
       costRenderer.destroy();
+    });
+    
+    // Destroy count limit renderers
+    this.buildingCountRenderers.forEach(countRenderer => {
+      countRenderer.destroy();
     });
     
     // Destroy the resource panel

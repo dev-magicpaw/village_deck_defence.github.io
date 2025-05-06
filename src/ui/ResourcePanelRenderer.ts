@@ -352,36 +352,44 @@ export class ResourcePanelRenderer {
   }
   
   /**
-   * Set the state of the apply button (enabled/disabled)
+   * Set the apply button state to enabled or disabled
+   * @param enabled Whether the button should be enabled
    */
   private setApplyButtonState(enabled: boolean): void {
+    // Safety checks to ensure all objects still exist
+    if (!this.applyButton || !this.applyButton.scene || !this.applyButton.scene.sys) {
+      return;
+    }
+    
     if (enabled) {
-        // Enable the button
-        this.applyButton.clearTint();
-        this.applyButton.setInteractive({ useHandCursor: true });
-        this.applyButtonText.setColor('#ffffff');
+      this.applyButton.setTint(0xffffff);
+      this.applyButtonText.setTint(0xffffff);
+      this.applyButton.setInteractive({ useHandCursor: true });
     } else {
-        // Disable the button
-        this.applyButton.setTint(0x555555);
-        this.applyButton.disableInteractive();
-        this.applyButtonText.setColor('#888888');
+      this.applyButton.setTint(0x999999);
+      this.applyButtonText.setTint(0x999999);
+      this.applyButton.disableInteractive();
     }
   }
   
   /**
-   * Set the state of the play cards button (enabled/disabled)
+   * Set the play cards button state to enabled or disabled
+   * @param enabled Whether the button should be enabled
    */
   private setPlayCardsButtonState(enabled: boolean): void {
+    // Safety checks to ensure all objects still exist
+    if (!this.playCardsButton || !this.playCardsButton.scene || !this.playCardsButton.scene.sys) {
+      return;
+    }
+    
     if (enabled) {
-        // Enable the button
-        this.playCardsButton.clearTint();
-        this.playCardsButton.setInteractive({ useHandCursor: true });
-        this.playCardsButtonText.setColor('#ffffff');
+      this.playCardsButton.setTint(0xffffff);
+      this.playCardsButtonText.setTint(0xffffff);
+      this.playCardsButton.setInteractive({ useHandCursor: true });
     } else {
-        // Disable the button
-        this.playCardsButton.setTint(0x555555);
-        this.playCardsButton.disableInteractive();
-        this.playCardsButtonText.setColor('#888888');
+      this.playCardsButton.setTint(0x999999);
+      this.playCardsButtonText.setTint(0x999999);
+      this.playCardsButton.disableInteractive();
     }
   }
   
@@ -604,23 +612,37 @@ export class ResourcePanelRenderer {
    * Clean up resources when destroying this renderer
    */
   public destroy(): void {
-    // Remove event listeners
+    // Remove event listeners first
     this.playerHandRenderer.off('selection-changed', this.onCardSelectionChanged, this);
     this.unsubscribeFromResourceEvents();
     
+    // Safety check - make sure we have valid references before destroying
+    const safeDestroy = (obj: any) => {
+      if (obj && obj.scene && obj.scene.sys) {
+        obj.destroy();
+      }
+    };
+    
     // Destroy all UI elements
-    this.resourcePanel.destroy();
-    this.selectionText.destroy();
-    this.acquiredText.destroy();
-    this.selectAllButton.destroy();
-    this.selectAllButtonText.destroy();
-    this.playCardsButton.destroy();
-    this.playCardsButtonText.destroy();
-    this.applyButton.destroy();
-    this.applyButtonText.destroy();
-    this.resourceIcon.destroy();
-    this.selectedResourceIcon.destroy();
-    this.displayContainer.destroy();
+    safeDestroy(this.resourcePanel);
+    safeDestroy(this.selectionText);
+    safeDestroy(this.acquiredText);
+    safeDestroy(this.selectAllButton);
+    safeDestroy(this.selectAllButtonText);
+    safeDestroy(this.playCardsButton);
+    safeDestroy(this.playCardsButtonText);
+    safeDestroy(this.applyButton);
+    safeDestroy(this.applyButtonText);
+    safeDestroy(this.resourceIcon);
+    safeDestroy(this.selectedResourceIcon);
+    
+    // Make sure container is destroyed last and only if valid
+    if (this.displayContainer && this.displayContainer.scene && this.displayContainer.scene.sys) {
+      this.displayContainer.destroy();
+    }
+    
+    // Clear references
+    this.scene = null as any; // Force clear the reference
   }
   
   /**

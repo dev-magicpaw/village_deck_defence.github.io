@@ -9,7 +9,7 @@ import { TavernService, TavernServiceEvents } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { CARD_WIDTH, CARD_WIDTH_TO_HEIGHT_RATIO } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
-import { RecruitAgencyRenderer, RecruitOption } from './RecruitAgencyRenderer';
+import { RecruitAgencyRenderer, RecruitAgencyRendererEvents, RecruitOption } from './RecruitAgencyRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
 
@@ -124,6 +124,17 @@ export class BuildingsDisplayRenderer {
    */
   private onStickerShopStateChanged(isOpen: boolean): void {
     // If sticker shop is closed, make buildings display visible again
+    if (!isOpen) {
+      this.displayContainer.setVisible(true);
+    }
+  }
+
+  /**
+   * Handle recruit agency state changes
+   * @param isOpen Whether the recruit agency is open
+   */
+  private onRecruitAgencyStateChanged(isOpen: boolean): void {
+    // If recruit agency is closed, make buildings display visible again
     if (!isOpen) {
       this.displayContainer.setVisible(true);
     }
@@ -385,12 +396,22 @@ export class BuildingsDisplayRenderer {
    * @param recruitOptions Array of recruit options to display
    */
   private showRecruitAgency(recruitOptions: Array<{id: string, image: string, cost: number, name: string}>): void {    
-    // Use the factory method to get a RecruitAgencyRenderer
+    // Clean up previous renderer if it exists
     if (this.recruitAgencyRenderer) {
+      this.recruitAgencyRenderer.off(RecruitAgencyRendererEvents.STATE_CHANGED, this.onRecruitAgencyStateChanged, this);
       this.recruitAgencyRenderer.destroy();
+      this.recruitAgencyRenderer = null;
     }
     
+    // Create new renderer
     this.recruitAgencyRenderer = this.getRecruitAgencyRenderer(recruitOptions);
+    
+    // Subscribe to state change events
+    this.recruitAgencyRenderer.on(
+      RecruitAgencyRendererEvents.STATE_CHANGED, 
+      this.onRecruitAgencyStateChanged,
+      this
+    );
     
     // Show the recruit agency
     this.recruitAgencyRenderer.show();
@@ -422,21 +443,33 @@ export class BuildingsDisplayRenderer {
    * Clean up resources
    */
   public destroy(): void {
-    this.displayContainer.destroy();
-    
-    // Remove event listeners
+    // Remove event listeners first
     this.tavernService.off(TavernServiceEvents.TAVERN_STATE_CHANGED, this.onTavernStateChanged, this);
     this.stickerShopService.off(StickerShopService.Events.SHOP_STATE_CHANGED, this.onStickerShopStateChanged, this);
     
-    this.stickerShopRenderer.destroy();
-    
-    this.tavernRenderer.destroy();
-    
-    this.buildingMenuRenderer.destroy();
-    
     // Clean up recruit agency renderer if it exists
     if (this.recruitAgencyRenderer) {
+      this.recruitAgencyRenderer.off(RecruitAgencyRendererEvents.STATE_CHANGED, this.onRecruitAgencyStateChanged, this);
       this.recruitAgencyRenderer.destroy();
+      this.recruitAgencyRenderer = null;
+    }
+    
+    // Destroy components
+    if (this.stickerShopRenderer) {
+      this.stickerShopRenderer.destroy();
+    }
+    
+    if (this.tavernRenderer) {
+      this.tavernRenderer.destroy();
+    }
+    
+    if (this.buildingMenuRenderer) {
+      this.buildingMenuRenderer.destroy();
+    }
+    
+    // Destroy display container last
+    if (this.displayContainer) {
+      this.displayContainer.destroy();
     }
   }
 } 

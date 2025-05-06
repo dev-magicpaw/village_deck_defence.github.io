@@ -71,10 +71,10 @@
         "limit": 1
     },
     {
-        "id": "blacksmith",
-        "name": "Blacksmith",
+        "id": "blacksmith_house",
+        "name": "Blacksmith House",
         "description": "Adds a bit of invention each term. Allows to hire a blacksmith apprentice",
-        "image": "building_blacksmith",
+        "image": "building_blacksmith_house",
         "cost": {
             "construction": 7
         },

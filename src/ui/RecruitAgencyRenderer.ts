@@ -8,6 +8,13 @@ import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 import { SimpleCardRenderer } from './SimpleCardRenderer';
 
 /**
+ * Events emitted by the RecruitAgencyRenderer
+ */
+export enum RecruitAgencyRendererEvents {
+  STATE_CHANGED = 'recruit_agency_state_changed'
+}
+
+/**
  * Interface for recruit options that will be displayed in the UI
  */
 export interface RecruitOption {
@@ -20,7 +27,7 @@ export interface RecruitOption {
 /**
  * Component for rendering recruitment UI for buildings that allow recruitment
  */
-export class RecruitAgencyRenderer {
+export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private resourceService: ResourceService;
@@ -77,6 +84,7 @@ export class RecruitAgencyRenderer {
     panelWidth: number,
     panelHeight: number
   ) {
+    super();
     this.scene = scene;
     this.resourceService = resourceService;
     this.playerHandRenderer = playerHandRenderer;
@@ -351,6 +359,9 @@ export class RecruitAgencyRenderer {
     this.visible = true;
     this.container.setVisible(true);
     
+    // Emit state change event
+    this.emit(RecruitAgencyRendererEvents.STATE_CHANGED, true);
+    
     // Update cost renderers based on current resources
     this.updateCostRenderers();
   }
@@ -361,6 +372,9 @@ export class RecruitAgencyRenderer {
   public hide(): void {
     this.visible = false;
     this.container.setVisible(false);
+    
+    // Emit state change event
+    this.emit(RecruitAgencyRendererEvents.STATE_CHANGED, false);
     
     // Clear any selected target
     this.resourcePanelRenderer.setTarget(false);
@@ -391,13 +405,30 @@ export class RecruitAgencyRenderer {
   public destroy(): void {
     // Clean up cards
     this.recruitCards.forEach(card => card.destroy());
+    this.recruitCards = [];
+    this.recruitCostRenderers = [];
+    
+    // Clean up resource panel
+    if (this.resourcePanelRenderer) {
+      this.resourcePanelRenderer.destroy();
+    }
     
     // Clean up key bindings
     if (this.escKey) {
       this.escKey.removeAllListeners();
+      this.escKey = null;
     }
     
-    // Clean up container
-    this.container.destroy();
+    // Remove all listeners from this emitter
+    this.removeAllListeners();
+    
+    // Clean up container and ensure all child objects are properly destroyed
+    if (this.container && this.container.scene) {
+      // Make sure the container is no longer visible before destroying
+      this.container.setVisible(false);
+      this.container.destroy();
+    }
+    
+    this.visible = false;
   }
 } 

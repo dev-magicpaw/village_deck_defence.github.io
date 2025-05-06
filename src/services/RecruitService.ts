@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { BuildingEffect } from '../entities/Building';
 import { Card } from '../entities/Card';
 import { BuildingService, BuildingServiceEvents } from './BuildingService';
@@ -5,13 +6,21 @@ import { CardRegistry } from './CardRegistry';
 import { DeckService } from './DeckService';
 
 /**
+ * Events emitted by the RecruitService
+ */
+export enum RecruitServiceEvents {
+  AGENCY_STATE_CHANGED = 'recruit_agency_state_changed'
+}
+
+/**
  * Service for managing recruit mechanics in the game
  */
-export class RecruitService {
+export class RecruitService extends Phaser.Events.EventEmitter {
   private buildingService: BuildingService;
   private availableRecruits: string[] = [];
   private cardRegistry: CardRegistry;
   private playerDeck: DeckService<Card>;
+  private menuOpen: boolean = false;
 
   /**
    * Create a new RecruitService
@@ -24,6 +33,7 @@ export class RecruitService {
     cardRegistry: CardRegistry,
     playerDeck: DeckService<Card>
   ) {
+    super();
     this.buildingService = buildingService;
     this.cardRegistry = cardRegistry;
     this.playerDeck = playerDeck;
@@ -79,6 +89,30 @@ export class RecruitService {
     if (!card) { throw new Error(`Card with ID ${cardId} not found`); }
     this.playerDeck.discard(card);
     return card;
+  }
+
+  /**
+   * Notify that the recruit menu has been opened
+   */
+  public openMenu(): void {
+    this.menuOpen = true;
+    this.emit(RecruitServiceEvents.AGENCY_STATE_CHANGED, true);
+  }
+
+  /**
+   * Notify that the recruit menu has been closed
+   */
+  public closeMenu(): void {
+    this.menuOpen = false;
+    this.emit(RecruitServiceEvents.AGENCY_STATE_CHANGED, false);
+  }
+
+  /**
+   * Check if the recruit menu is currently open
+   * @returns true if the menu is open, false otherwise
+   */
+  public isMenuOpen(): boolean {
+    return this.menuOpen;
   }
 
   /**

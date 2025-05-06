@@ -344,6 +344,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
 
     // Emit state change event
     this.emit(RecruitAgencyRendererEvents.STATE_CHANGED, true);
+    
+    // Notify the recruit service that the menu is open
+    this.recruitService.openMenu();
 
     // Update target construction cost to none initially
     this.resourcePanelRenderer.setTarget(false, 0);
@@ -367,6 +370,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Emit state change event
     this.emit(RecruitAgencyRendererEvents.STATE_CHANGED, false);
+    
+    // Notify the recruit service that the menu is closed
+    this.recruitService.closeMenu();
     
     // Clear any selected target
     this.resourcePanelRenderer.setTarget(false);

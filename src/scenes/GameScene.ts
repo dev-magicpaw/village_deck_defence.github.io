@@ -230,7 +230,8 @@ export class GameScene extends Phaser.Scene {
       this.resourceService,
       this.stickerShopService,
       this.buildingService,
-      this.tavernService
+      this.tavernService,
+      this.recruitService
     );
     
     // Initialize and render the hand

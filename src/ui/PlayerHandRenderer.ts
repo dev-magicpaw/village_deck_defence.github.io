@@ -3,6 +3,7 @@ import { Card, CardEvents } from '../entities/Card';
 import { PlayerHand } from '../entities/PlayerHand';
 import { BuildingService, BuildingServiceEvents } from '../services/BuildingService';
 import { InvasionService } from '../services/InvasionService';
+import { RecruitService, RecruitServiceEvents } from '../services/RecruitService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService, TavernServiceEvents } from '../services/TavernService';
@@ -32,6 +33,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private stickerShopService: StickerShopService;
   private tavernService: TavernService;
   private buildingService: BuildingService;
+  private recruitService: RecruitService;
   private panelWidth: number;
   private panelHeight: number;
   private panelX: number;
@@ -46,6 +48,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private isShopOpen: boolean = false; // Track if sticker shop is open
   private isTavernOpen: boolean = false; // Track if tavern is open
   private isBuildingMenuOpen: boolean = false; // Track if building menu is open
+  private isRecruitAgencyOpen: boolean = false; // Track if recruit agency is open
   
   /**
    * Create a new player hand renderer
@@ -60,6 +63,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
    * @param stickerShopService Sticker shop service for shop state
    * @param buildingService Building service for building menu state
    * @param tavernService Tavern service for tavern state
+   * @param recruitService Recruit service for recruit agency state
    */
   constructor(
     scene: Phaser.Scene, 
@@ -72,7 +76,8 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     resourceService: ResourceService,
     stickerShopService: StickerShopService,
     buildingService: BuildingService,
-    tavernService: TavernService
+    tavernService: TavernService,
+    recruitService: RecruitService
   ) {
     super();
     this.scene = scene;
@@ -86,6 +91,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.stickerShopService = stickerShopService;
     this.tavernService = tavernService;
     this.buildingService = buildingService;
+    this.recruitService = recruitService;
     
     // Get initial cards from hand
     this.currentCards = playerHand.getCards();
@@ -119,6 +125,13 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.buildingService.on(
       BuildingServiceEvents.MENU_STATE_CHANGED,
       this.onBuildingMenuStateChanged,
+      this
+    );
+    
+    // Subscribe to recruit agency state changes
+    this.recruitService.on(
+      RecruitServiceEvents.AGENCY_STATE_CHANGED,
+      this.onRecruitAgencyStateChanged,
       this
     );
   }
@@ -434,7 +447,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       throw new Error(`Invalid card index: ${index}`);
     }
 
-    if (this.isShopOpen || this.isTavernOpen || this.isBuildingMenuOpen) {
+    if (this.isShopOpen || this.isTavernOpen || this.isBuildingMenuOpen || this.isRecruitAgencyOpen) {
       const card = this.currentCards[index];
       const uniqueId = card.unique_id;
       
@@ -590,7 +603,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.endDayButton.disableInteractive();
     
     // Only make buttons interactive if they're visible AND all menus are closed
-    if (!this.isShopOpen && !this.isTavernOpen && !this.isBuildingMenuOpen) {
+    if (!this.isShopOpen && !this.isTavernOpen && !this.isBuildingMenuOpen && !this.isRecruitAgencyOpen) {
       if (!isDeckEmpty) {
         this.discardButton.setInteractive({ useHandCursor: true });
       } else {
@@ -679,6 +692,13 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       this
     );
     
+    // Unsubscribe from recruit agency events
+    this.recruitService.off(
+      RecruitServiceEvents.AGENCY_STATE_CHANGED,
+      this.onRecruitAgencyStateChanged,
+      this
+    );
+    
     // Unsubscribe from all card events
     this.currentCards.forEach(card => {
       card.off(CardEvents.STICKER_APPLIED, this.onCardStickerApplied, this);
@@ -707,6 +727,20 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       this.clearCardSelection();
     }
     
+    this.updateButtonVisibility();
+  }
+
+  /**
+   * Handler for recruit agency state changes
+   * @param isOpen Whether the recruit agency is open
+   */
+  private onRecruitAgencyStateChanged(isOpen: boolean): void {
+    this.isRecruitAgencyOpen = isOpen;
+    
+    // If recruit agency is closing, deselect all cards
+    if (!isOpen) {
+      this.clearCardSelection();
+    }
     this.updateButtonVisibility();
   }
 } 

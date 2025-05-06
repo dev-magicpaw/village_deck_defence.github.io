@@ -96,11 +96,7 @@ export class BuildingMenuRenderer {
     this.scene.add.existing(this.menuContainer);
     
     // Subscribe to player hand card selection changes
-    this.playerHandRenderer.on(
-      PlayerHandRendererEvents.SELECTION_CHANGED,
-      this.onCardSelectionChanged,
-      this
-    );
+    this.playerHandRenderer.on(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this);
   }
   
   /**

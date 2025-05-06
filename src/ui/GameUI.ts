@@ -37,7 +37,7 @@ export class GameUI {
   private stickerShopRenderer!: StickerShopRenderer;
   private tavernRenderer!: TavernRenderer;
   private buildingMenuRenderer!: BuildingMenuRenderer;
-  private recruitService!: RecruitService;
+  private recruitService: RecruitService;
   
   constructor(
     scene: Phaser.Scene, 
@@ -47,7 +47,8 @@ export class GameUI {
     playerHandRenderer: PlayerHandRenderer,
     deckService: DeckService,
     invasionService: InvasionService,
-    tavernService: TavernService
+    tavernService: TavernService,
+    recruitService: RecruitService
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -57,6 +58,7 @@ export class GameUI {
     this.deckService = deckService;
     this.invasionService = invasionService;
     this.tavernService = tavernService;
+    this.recruitService = recruitService;
 
     const { width, height } = this.scene.cameras.main;
     const topPanelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
@@ -73,9 +75,6 @@ export class GameUI {
    * Create all UI panels
    */
   public createUI(): void {
-    // Create RecruitService
-    this.recruitService = new RecruitService(this.buildingService);
-    
     this.createInvasionProgressPanel();
     this.createDisplaySpacePanel();
     this.createEntityInfoPanel();
@@ -108,6 +107,7 @@ export class GameUI {
       return new RecruitAgencyRenderer(
         this.scene,
         this.resourceService,
+        this.recruitService,
         this.playerHandRenderer,
         recruitOptions,
         this.middlePanelX,

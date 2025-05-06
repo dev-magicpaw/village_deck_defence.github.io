@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ResourceType } from '../entities/Types';
+import { RecruitService } from '../services/RecruitService';
 import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
@@ -31,8 +32,10 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private resourceService: ResourceService;
+  private recruitService: RecruitService;
   private playerHandRenderer: PlayerHandRenderer;
   private visible: boolean = false;
+  private selectedOption: RecruitOption | null = null;
   
   // Panel dimensions and position
   private panelX: number;
@@ -68,6 +71,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * Create a new RecruitAgencyRenderer
    * @param scene The Phaser scene to render in
    * @param resourceService Service for managing resources
+   * @param recruitService Service for recruiting cards
    * @param playerHandRenderer Component for handling player hand cards
    * @param recruitOptions List of available recruit options (pre-filtered)
    * @param panelX X position of the panel
@@ -79,6 +83,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   constructor(
     scene: Phaser.Scene,
     resourceService: ResourceService,
+    recruitService: RecruitService,
     playerHandRenderer: PlayerHandRenderer,
     recruitOptions: RecruitOption[],
     panelX: number,
@@ -90,6 +95,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     super();
     this.scene = scene;
     this.resourceService = resourceService;
+    this.recruitService = recruitService;
     this.playerHandRenderer = playerHandRenderer;
     this.recruitOptions = recruitOptions;
     
@@ -316,9 +322,25 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * Handle recruit button clicked
    */
   private onRecruitButtonClicked(): void {
-    // This would use the selected recruit option and Power resource
-    // to recruit a unit
-    console.log('Recruit button clicked');
+    if (!this.selectedOption) return;
+    
+    // Deduct the cost from player's resources
+    const cost = this.selectedOption.cost;
+    if (this.resourceService.getPower() >= cost) {
+      // Deduct the cost
+      this.resourceService.consumePower(cost);
+      
+      // Recruit the card
+      const card = this.recruitService.recruit(this.selectedOption.id);
+      if (card) {
+        console.log(`Successfully recruited ${card.name}`);
+      }
+      
+      // Reset selection and update UI
+      this.selectedOption = null;
+      this.resourcePanelRenderer.setTarget(false);
+      this.updateCostRenderers();
+    }
   }
   
   /**
@@ -326,6 +348,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * @param option The selected recruit option
    */
   private selectRecruitOption(option: RecruitOption): void {
+    // Store the selected option
+    this.selectedOption = option;
+    
     // Set target in resource panel
     this.resourcePanelRenderer.setTarget(true, option.cost);
     
@@ -411,6 +436,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       this.container.destroy();
     }
     
+    this.selectedOption = null;
     this.visible = false;
   }
 } 

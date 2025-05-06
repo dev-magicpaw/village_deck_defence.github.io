@@ -76,13 +76,29 @@
         "description": "Adds a bit of invention each term. Allows to hire a blacksmith apprentice",
         "image": "building_blacksmith_house",
         "cost": {
-            "construction": 7
+            "construction": 6
         },
         "limit": 1,
         "effects": [
             {
                 "type": "make_recruitable",
                 "recruits": ["card_human_blacksmith_apprentice"]
+            }
+        ]
+    },
+    {
+        "id": "sawmill",
+        "name": "Sawmill",
+        "description": "Adds some construction each term. Allows to hire a lumberjack",
+        "image": "building_sawmill",
+        "cost": {
+            "construction": 6
+        },
+        "limit": 1,
+        "effects": [
+            {   
+                "type": "make_recruitable",
+                "recruits": ["card_human_lumberjack"]
             }
         ]
     }

@@ -8,6 +8,7 @@ import { BuildingService } from '../services/BuildingService';
 import { CardRegistry } from '../services/CardRegistry';
 import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
+import { RecruitService } from '../services/RecruitService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService } from '../services/TavernService';
@@ -43,6 +44,7 @@ export class GameScene extends Phaser.Scene {
   private buildingService!: BuildingService;
   private tavernService!: TavernService;
   private stickerShopService!: StickerShopService;
+  private recruitService!: RecruitService;
   private levelId: string = 'level_1'; // Default level ID
 
   constructor() {
@@ -75,6 +77,7 @@ export class GameScene extends Phaser.Scene {
     this.buildingService = this.createBuildingsService();
     this.tavernService = this.createTavernService();
     this.stickerShopService = new StickerShopService();
+    this.recruitService = this.createRecruitService();
 
     // Initialize the player hand UI
     this.playerHandRenderer = this.createPlayerHandUI();
@@ -88,7 +91,8 @@ export class GameScene extends Phaser.Scene {
       this.playerHandRenderer,
       this.playerDeck,
       this.invasionService,
-      this.tavernService
+      this.tavernService,
+      this.recruitService
     );
     
     // Create UI panels 
@@ -263,6 +267,19 @@ export class GameScene extends Phaser.Scene {
     );
 
     return buildingService;
+  }
+  
+  /**
+   * Initialize the recruit service
+   */
+  private createRecruitService(): RecruitService {
+    const recruitService = new RecruitService(
+      this.buildingService,
+      this.cardRegistry,
+      this.playerDeck
+    );
+
+    return recruitService;
   }
   
   /**

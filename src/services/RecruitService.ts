@@ -1,5 +1,8 @@
 import { BuildingEffect } from '../entities/Building';
+import { Card } from '../entities/Card';
 import { BuildingService, BuildingServiceEvents } from './BuildingService';
+import { CardRegistry } from './CardRegistry';
+import { DeckService } from './DeckService';
 
 /**
  * Service for managing recruit mechanics in the game
@@ -7,13 +10,23 @@ import { BuildingService, BuildingServiceEvents } from './BuildingService';
 export class RecruitService {
   private buildingService: BuildingService;
   private availableRecruits: string[] = [];
+  private cardRegistry: CardRegistry;
+  private playerDeck: DeckService<Card>;
 
   /**
    * Create a new RecruitService
    * @param buildingService Service for managing buildings
+   * @param cardRegistry Registry for creating card instances
+   * @param playerDeck Player's deck service
    */
-  constructor(buildingService: BuildingService) {
+  constructor(
+    buildingService: BuildingService, 
+    cardRegistry: CardRegistry,
+    playerDeck: DeckService<Card>
+  ) {
     this.buildingService = buildingService;
+    this.cardRegistry = cardRegistry;
+    this.playerDeck = playerDeck;
     
     // Initialize available recruits from already constructed buildings
     this.initializeAvailableRecruits();
@@ -53,6 +66,19 @@ export class RecruitService {
         });
       }
     });
+  }
+
+  /**
+   * Recruit a card with the given ID and add it to the player's discard pile
+   * @param cardId ID of the card to recruit
+   * @returns The recruited card or undefined if the card ID is invalid
+   */
+  public recruit(cardId: string): Card {
+    // Create a new card instance with the given ID
+    const card = this.cardRegistry.createCardInstance(cardId);
+    if (!card) { throw new Error(`Card with ID ${cardId} not found`); }
+    this.playerDeck.discard(card);
+    return card;
   }
 
   /**

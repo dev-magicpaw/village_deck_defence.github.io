@@ -92,14 +92,8 @@ export class BuildingMenuRenderer {
     this.createInputBlocker(); // keep this first so other elements are on top for input system
     this.createBackgroundPanel();
     this.createResourcePanel();
-    
+    this.createEscapeKeyHandler();
     this.scene.add.existing(this.menuContainer);
-    
-    // Setup Escape key to close menu
-    if (this.scene.input && this.scene.input.keyboard) {
-      this.escapeKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-      this.escapeKey.on('down', this.handleEscapeKey, this);
-    }
     
     // Subscribe to player hand card selection changes
     this.playerHandRenderer.on(
@@ -212,13 +206,23 @@ export class BuildingMenuRenderer {
   }
 
   /**
-   * Handle Escape key press to close the menu
+   * Create the escape key handler
    */
-  private handleEscapeKey(): void {
-    if (this.menuContainer.visible) {
-      this.hide();
+  private createEscapeKeyHandler(): void {
+    // Setup Escape key to close menu
+    if (this.scene.input && this.scene.input.keyboard) {
+      this.escapeKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+      this.escapeKey.on('down', () => {
+        this.handleEscapeKey();
+      });
     }
   }
+
+private handleEscapeKey(): void {
+  if (this.menuContainer.visible) {
+    this.hide();
+  }
+}
   
   /**
    * Show the building menu for a specific slot

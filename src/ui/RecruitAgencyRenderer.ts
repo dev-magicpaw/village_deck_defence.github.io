@@ -104,16 +104,12 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.container = this.scene.add.container(0, 0);
     this.container.setVisible(false);
     
-    // Create UI elements
-    // TODO create element that will intercept clicks on the background
-    this.createInputBlocker();
+    this.createInputBlocker(); // keep this first so other elements are on top for input system
     this.createBackground();
     this.createTitle();
     this.createResourcePanel();
     this.createCloseButton();
-    this.createEscapeKeyHandler();
-    
-    // Render recruit options
+    this.createEscapeKeyHandler();    
     this.renderRecruitOptions();
   }
   
@@ -178,7 +174,6 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * Create the resource panel
    */
   private createResourcePanel(): void {
-    // Create resource panel for Power
     this.resourcePanelRenderer = new ResourcePanelRenderer(
       this.scene,
       this.playerHandRenderer,
@@ -186,19 +181,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       'Recruit',
       () => this.onRecruitButtonClicked(),
       this.resourceService
-    );
-    
-    // Get the container - ResourcePanelRenderer always creates a container in its constructor
-    // so we can safely add it to our container even though TypeScript doesn't know this
-    const resourcePanelContainer = this.resourcePanelRenderer.getContainer();
-    // @ts-ignore - We know this container is not null
-    this.container.add(resourcePanelContainer);
-    
-    // Position the panel - using x/y properties to avoid setPosition method
-    // @ts-ignore - We know these properties exist
-    resourcePanelContainer.x = this.panelX + this.panelWidth - 20;
-    // @ts-ignore - We know these properties exist
-    resourcePanelContainer.y = this.panelY + 60;
+    );    
   }
   
   /**
@@ -232,7 +215,6 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
         this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         this.escKey.on('down', this.handleEscapeKey, this);
       }
-
   }
 
   private handleEscapeKey(): void {
@@ -376,6 +358,8 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Clear any selected target
     this.resourcePanelRenderer.setTarget(false);
+    // Hide the resource panel
+    this.resourcePanelRenderer.hide();
   }
   
   /**

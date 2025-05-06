@@ -9,7 +9,7 @@ import { TavernService, TavernServiceEvents } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { CARD_WIDTH, CARD_WIDTH_TO_HEIGHT_RATIO } from './CardRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
-import { RecruitAgencyRenderer } from './RecruitAgencyRenderer';
+import { RecruitAgencyRenderer, RecruitOption } from './RecruitAgencyRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
 
@@ -361,7 +361,7 @@ export class BuildingsDisplayRenderer {
    * @param recruitIds Array of recruit IDs
    * @returns Array of RecruitOption objects
    */
-  private createRecruitOptions(recruitIds: string[]): Array<{id: string, image: string, cost: number, name: string}> {
+  private createRecruitOptions(recruitIds: string[]): Array<RecruitOption> {
     const recruitCardRegistry = RecruitCardRegistry.getInstance();
     
     return recruitIds.map(id => {

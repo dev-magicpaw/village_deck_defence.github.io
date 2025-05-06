@@ -10,7 +10,7 @@ import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { BuildingsDisplayRenderer, RecruitAgencyRendererFactory } from './BuildingsDisplayRenderer';
 import { InvasionRenderer } from './InvasionRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
-import { RecruitAgencyRenderer } from './RecruitAgencyRenderer';
+import { RecruitAgencyRenderer, RecruitOption } from './RecruitAgencyRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
 
@@ -104,8 +104,7 @@ export class GameUI {
    * @returns A factory function that creates a new RecruitAgencyRenderer
    */
   private createRecruitAgencyRendererFactory(): RecruitAgencyRendererFactory {
-    // TODO use a type for recruitOptions here
-    return (recruitOptions: Array<{id: string, image: string, cost: number, name: string}>): RecruitAgencyRenderer => {
+    return (recruitOptions: RecruitOption[]): RecruitAgencyRenderer => {
       return new RecruitAgencyRenderer(
         this.scene,
         this.resourceService,

@@ -10,7 +10,7 @@ import { SimpleCardRenderer } from './SimpleCardRenderer';
 /**
  * Interface for recruit options that will be displayed in the UI
  */
-interface RecruitOption {
+export interface RecruitOption {
   id: string;
   image: string;
   cost: number;

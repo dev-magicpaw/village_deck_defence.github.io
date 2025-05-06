@@ -330,6 +330,9 @@ export class BuildingMenuRenderer {
       CARD_HEIGHT/2 + 20,
       ResourceType.Construction
     );
+    // Initialize with default affordability (will be updated in updateBuildingOptionCostColors)
+    const initiallyAffordable = this.resourcePanelRenderer.totalAvailable() >= cost;
+    costRenderer.setAffordable(initiallyAffordable);
     
     // Add to the card container
     buildingCard.getContainer().add(costRenderer.getContainer());

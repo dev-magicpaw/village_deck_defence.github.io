@@ -366,16 +366,7 @@ export class BuildingsDisplayRenderer {
     
     return recruitIds.map(id => {
       const config = recruitCardRegistry.getRecruitCardConfig(id);
-      if (!config) {
-        // TODO throw error instead
-        console.error(`Recruit card config not found for ID: ${id}`);
-        return {
-          id,
-          name: `Unknown (${id})`,
-          image: 'card_back',
-          cost: 5
-        };
-      }
+      if (!config) { throw new Error(`Recruit card config not found for ID: ${id}`); }
       
       return {
         id: config.id,

@@ -314,13 +314,15 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * @param option The selected recruit option
    */
   private onRecruitSelected(option: RecruitOption): void {
-    // Store the selected option
+    // Deselect the option
+    if (this.selectedOption && this.selectedOption.id === option.id) {
+      this.selectedOption = null;
+      this.resourcePanelRenderer.setTarget(false);
+      return;
+    } 
+    
     this.selectedOption = option;
-    
-    // Set target in resource panel
     this.resourcePanelRenderer.setTarget(true, option.cost);
-    
-    console.log(`Selected recruit option: ${option.name}`);
   }
   
   /**

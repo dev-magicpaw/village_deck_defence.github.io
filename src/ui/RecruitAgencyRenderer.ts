@@ -186,8 +186,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       'Recruit',
       () => this.onRecruitButtonClicked(),
       this.resourceService
-    );
-
+    );    
+    
+    // Hide initially, will be shown when the recruit agency is shown
     this.resourcePanelRenderer.hide();
   }
   
@@ -329,6 +330,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     // Show the resource panel
     this.resourcePanelRenderer.show();
     
+    // Bring to top to ensure it's above other elements
+    this.container.setDepth(1000);
+    
     // Setup Esc key to close the shop
     if (this.scene.input.keyboard) {
         this.escKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -340,6 +344,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
 
     // Emit state change event
     this.emit(RecruitAgencyRendererEvents.STATE_CHANGED, true);
+
+    // Update target construction cost to none initially
+    this.resourcePanelRenderer.setTarget(false, 0);
     
     // Update cost renderers based on current resources
     this.updateCostRenderers();

@@ -34,5 +34,23 @@
     "race": "Elf",
     "startingStickers": ["sticker_power_3"],
     "maxSlotCount": 2
+  },
+  {
+    "id": "card_human_blacksmith_apprentice",
+    "name": "Blacksmith Apprentice",
+    "description": "Blacksmith Apprentice",
+    "image": "human_blacksmith_apprentice",
+    "race": "Human",
+    "startingStickers": ["sticker_invention_1", "sticker_invention_1"],
+    "maxSlotCount": 3
+  },
+  {
+    "id": "card_human_lumberjack",
+    "name": "Lumberjack",
+    "description": "Lumberjack",
+    "image": "human_lumberjack",
+    "race": "Human",
+    "startingStickers": ["sticker_power_1", "sticker_construction_1", "sticker_construction_1"],
+    "maxSlotCount": 3
   }
 ]

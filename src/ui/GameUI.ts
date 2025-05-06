@@ -2,13 +2,15 @@ import Phaser from 'phaser';
 import { BuildingService } from '../services/BuildingService';
 import { DeckService } from '../services/DeckService';
 import { InvasionService } from '../services/InvasionService';
+import { RecruitService } from '../services/RecruitService';
 import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
-import { BuildingsDisplayRenderer } from './BuildingsDisplayRenderer';
+import { BuildingsDisplayRenderer, RecruitAgencyRendererFactory } from './BuildingsDisplayRenderer';
 import { InvasionRenderer } from './InvasionRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
+import { RecruitAgencyRenderer } from './RecruitAgencyRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
 
@@ -16,6 +18,11 @@ export class GameUI {
   static readonly INVASION_PANEL_HEIGHT_PROPORTION: number = 0.08;
   static readonly PLAYER_HAND_PANEL_HEIGHT_PROPORTION: number = 0.35;
   static readonly INFO_PANEL_WIDTH_PROPORTION: number = 0.3;
+
+  private middlePanelX: number;
+  private middlePanelY: number;
+  private middlePanelWidth: number;
+  private middlePanelHeight: number;
 
   private scene: Phaser.Scene;
   private buildingsDisplayRenderer?: BuildingsDisplayRenderer;
@@ -30,6 +37,7 @@ export class GameUI {
   private stickerShopRenderer!: StickerShopRenderer;
   private tavernRenderer!: TavernRenderer;
   private buildingMenuRenderer!: BuildingMenuRenderer;
+  private recruitService!: RecruitService;
   
   constructor(
     scene: Phaser.Scene, 
@@ -49,12 +57,25 @@ export class GameUI {
     this.deckService = deckService;
     this.invasionService = invasionService;
     this.tavernService = tavernService;
+
+    const { width, height } = this.scene.cameras.main;
+    const topPanelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
+    const bottomPanelHeight = height * GameUI.PLAYER_HAND_PANEL_HEIGHT_PROPORTION;
+    const rightPanelWidth = width * GameUI.INFO_PANEL_WIDTH_PROPORTION;
+
+    this.middlePanelX = 0;
+    this.middlePanelY = topPanelHeight;
+    this.middlePanelWidth = width - rightPanelWidth;
+    this.middlePanelHeight = height - topPanelHeight - bottomPanelHeight;
   }
   
   /**
    * Create all UI panels
    */
   public createUI(): void {
+    // Create RecruitService
+    this.recruitService = new RecruitService(this.buildingService);
+    
     this.createInvasionProgressPanel();
     this.createDisplaySpacePanel();
     this.createEntityInfoPanel();
@@ -79,8 +100,29 @@ export class GameUI {
   }
   
   /**
+   * Create a factory method that returns a new RecruitAgencyRenderer
+   * @returns A factory function that creates a new RecruitAgencyRenderer
+   */
+  private createRecruitAgencyRendererFactory(): RecruitAgencyRendererFactory {
+    // TODO use a type for recruitOptions here
+    return (recruitOptions: Array<{id: string, image: string, cost: number, name: string}>): RecruitAgencyRenderer => {
+      return new RecruitAgencyRenderer(
+        this.scene,
+        this.resourceService,
+        this.playerHandRenderer,
+        recruitOptions,
+        this.middlePanelX,
+        this.middlePanelY,
+        this.middlePanelWidth,
+        this.middlePanelHeight
+      );
+    };
+  }
+  
+  /**
    * Create the main display space panel
    */
+  // TODO use here middlePanelX, middlePanelY, middlePanelWidth, middlePanelHeight
   private createDisplaySpacePanel(): void {
     const { width, height } = this.scene.cameras.main;
     const topPanelHeight = height * GameUI.INVASION_PANEL_HEIGHT_PROPORTION;
@@ -158,7 +200,11 @@ export class GameUI {
         this.tavernRenderer,
         this.buildingMenuRenderer,
         this.tavernService,
-        this.stickerShopService
+        this.stickerShopService,
+        this.recruitService,
+        this.resourceService,
+        this.playerHandRenderer,
+        this.createRecruitAgencyRendererFactory()
       );
       
       this.buildingsDisplayRenderer.init();

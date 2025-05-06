@@ -34,7 +34,7 @@
                 "recruits": ["villager"]
             },
             {
-                "type": "recrute_here",
+                "type": "recruit_here",
                 "recruits": ["villager", "blacksmith_apprentice", "lumberjack"]
             }
         ]

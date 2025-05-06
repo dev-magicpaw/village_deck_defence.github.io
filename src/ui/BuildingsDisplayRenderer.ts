@@ -1,12 +1,22 @@
 import Phaser from 'phaser';
-import { Building, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
+import { Building, BuildingEffect, BuildingSlot, BuildingSlotLocation } from '../entities/Building';
 import { BuildingService } from '../services/BuildingService';
+import { RecruitCardRegistry } from '../services/RecruitCardRegistry';
+import { RecruitService } from '../services/RecruitService';
+import { ResourceService } from '../services/ResourceService';
 import { StickerShopService } from '../services/StickerShopService';
 import { TavernService, TavernServiceEvents } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { CARD_WIDTH, CARD_WIDTH_TO_HEIGHT_RATIO } from './CardRenderer';
+import { PlayerHandRenderer } from './PlayerHandRenderer';
+import { RecruitAgencyRenderer } from './RecruitAgencyRenderer';
 import { StickerShopRenderer } from './StickerShopRenderer';
 import { TavernRenderer } from './TavernRenderer';
+
+// Type definition for the RecruitAgencyRenderer factory function
+export type RecruitAgencyRendererFactory = (
+  recruitOptions: Array<{id: string, image: string, cost: number, name: string}>
+) => RecruitAgencyRenderer;
 
 /**
  * Component that renders the building slots in the main display area
@@ -24,6 +34,11 @@ export class BuildingsDisplayRenderer {
   private buildingMenuRenderer: BuildingMenuRenderer;
   private stickerShopBuildingId: string = '';
   private tavernBuildingId: string = '';
+  private recruitService: RecruitService;
+  private resourceService: ResourceService;
+  private playerHandRenderer: PlayerHandRenderer;
+  private recruitAgencyRenderer: RecruitAgencyRenderer | null = null;
+  private getRecruitAgencyRenderer: RecruitAgencyRendererFactory;
   
   // Card visual properties
   private cardWidth: number = CARD_WIDTH * CARD_WIDTH_TO_HEIGHT_RATIO;
@@ -50,6 +65,8 @@ export class BuildingsDisplayRenderer {
    * @param stickerShopRenderer Sticker shop renderer for showing the sticker shop
    * @param tavernRenderer Tavern renderer for showing the tavern
    * @param buildingMenuRenderer Building menu renderer for showing the building menu
+   * @param recruitService Recruit service for managing recruitment
+   * @param getRecruitAgencyRenderer Factory function for creating RecruitAgencyRenderer instances
    */
   constructor(
     scene: Phaser.Scene,
@@ -60,7 +77,11 @@ export class BuildingsDisplayRenderer {
     tavernRenderer: TavernRenderer,
     buildingMenuRenderer: BuildingMenuRenderer,
     tavernService: TavernService,
-    stickerShopService?: StickerShopService
+    stickerShopService: StickerShopService | undefined,
+    recruitService: RecruitService,
+    resourceService: ResourceService,
+    playerHandRenderer: PlayerHandRenderer,
+    getRecruitAgencyRenderer: RecruitAgencyRendererFactory
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
@@ -71,6 +92,10 @@ export class BuildingsDisplayRenderer {
     this.buildingMenuRenderer = buildingMenuRenderer;
     this.tavernService = tavernService;
     this.stickerShopService = stickerShopService || new StickerShopService();
+    this.recruitService = recruitService;
+    this.resourceService = resourceService;
+    this.playerHandRenderer = playerHandRenderer;
+    this.getRecruitAgencyRenderer = getRecruitAgencyRenderer;
     
     // Create a container to hold all building cards
     this.displayContainer = this.scene.add.container(0, 0);
@@ -266,16 +291,20 @@ export class BuildingsDisplayRenderer {
     // If we have a building, check if it's a special building
     if (building) {
       if (building.id === this.stickerShopBuildingId) {
-        // Hide the buildings display and show the sticker shop
         this.displayContainer.setVisible(false);
         this.stickerShopRenderer.show();
         return;
       }
       
       if (building.id === this.tavernBuildingId) {
-        // Hide the buildings display and show the tavern
         this.displayContainer.setVisible(false);
         this.tavernRenderer.show();
+        return;
+      }
+
+      if (this.canRecruitHere(building)) {
+        this.displayContainer.setVisible(false);
+        this.displayRecruitAgency(building);
         return;
       }
       
@@ -287,6 +316,90 @@ export class BuildingsDisplayRenderer {
     if (slot.available_for_construction.length > 0) {
       this.buildingMenuRenderer.show(slot.unique_id);
     }
+  }
+
+  private canRecruitHere(building: Building): boolean {
+    const recruitHereEffect = this.getBuildingRecruitHereEffect(building);
+    if (!recruitHereEffect) return false;
+    if (!recruitHereEffect.recruits) throw new Error(`Building ${building.id} has a recruit_here effect, but no recruits are defined`);
+    return recruitHereEffect.recruits.length > 0;
+  }
+
+  private displayRecruitAgency(building: Building): void {
+    const recruitHereEffect = this.getBuildingRecruitHereEffect(building);
+    if (!recruitHereEffect) throw new Error(`Trying to display recruit agency for building ${building.id} but it has no recruit_here effect`);
+    
+    const potentialRecruits = recruitHereEffect.recruits;
+    if (!potentialRecruits) throw new Error(`Trying to display recruit agency for building ${building.id} but it has no recruits defined in the recruit_here config`);
+
+    const availableRecruits = potentialRecruits.filter(
+      recruitId => this.recruitService.isRecruitable(recruitId)
+    );
+
+    if (availableRecruits.length === 0) {
+      console.warn(`No available recruits for building ${building.id}`);
+      return;
+    }
+        
+    const recruitOptions = this.createRecruitOptions(availableRecruits);
+    this.showRecruitAgency(recruitOptions);
+  }
+  
+  /**
+   * Get the recruit_here effect from a building if it exists
+   * @param building The building to check
+   * @returns The recruit_here effect or null if not found
+   */
+  private getBuildingRecruitHereEffect(building: Building): BuildingEffect | null {
+    if (!building.effects) return null;
+    
+    return building.effects.find(effect => effect.type === 'recruit_here') || null;
+  }
+  
+  /**
+   * Create RecruitOption objects from recruit IDs
+   * @param recruitIds Array of recruit IDs
+   * @returns Array of RecruitOption objects
+   */
+  private createRecruitOptions(recruitIds: string[]): Array<{id: string, image: string, cost: number, name: string}> {
+    const recruitCardRegistry = RecruitCardRegistry.getInstance();
+    
+    return recruitIds.map(id => {
+      const config = recruitCardRegistry.getRecruitCardConfig(id);
+      if (!config) {
+        // TODO throw error instead
+        console.error(`Recruit card config not found for ID: ${id}`);
+        return {
+          id,
+          name: `Unknown (${id})`,
+          image: 'card_back',
+          cost: 5
+        };
+      }
+      
+      return {
+        id: config.id,
+        name: config.name,
+        image: config.image,
+        cost: config.cost
+      };
+    });
+  }
+  
+  /**
+   * Show the recruit agency UI
+   * @param recruitOptions Array of recruit options to display
+   */
+  private showRecruitAgency(recruitOptions: Array<{id: string, image: string, cost: number, name: string}>): void {    
+    // Use the factory method to get a RecruitAgencyRenderer
+    if (this.recruitAgencyRenderer) {
+      this.recruitAgencyRenderer.destroy();
+    }
+    
+    this.recruitAgencyRenderer = this.getRecruitAgencyRenderer(recruitOptions);
+    
+    // Show the recruit agency
+    this.recruitAgencyRenderer.show();
   }
   
   /**
@@ -326,5 +439,10 @@ export class BuildingsDisplayRenderer {
     this.tavernRenderer.destroy();
     
     this.buildingMenuRenderer.destroy();
+    
+    // Clean up recruit agency renderer if it exists
+    if (this.recruitAgencyRenderer) {
+      this.recruitAgencyRenderer.destroy();
+    }
   }
 } 

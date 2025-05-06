@@ -46,7 +46,7 @@
         "description": "Gives some protection from invaders",
         "image": "building_wooden_wall",
         "cost": {
-            "construction": 9
+            "construction": 5
         },
         "limit": null
     },
@@ -66,7 +66,7 @@
         "description": "Allows to store some resources during the day",
         "image": "building_warehouse",
         "cost": {
-            "construction": 6
+            "construction": 10
         },
         "limit": 1
     },

@@ -15,7 +15,8 @@ import { TavernRenderer } from './TavernRenderer';
 
 // Type definition for the RecruitAgencyRenderer factory function
 export type RecruitAgencyRendererFactory = (
-  recruitOptions: Array<{id: string, image: string, cost: number, name: string}>
+  recruitOptions: Array<{id: string, image: string, cost: number, name: string}>,
+  buildingName: string
 ) => RecruitAgencyRenderer;
 
 /**
@@ -353,7 +354,7 @@ export class BuildingsDisplayRenderer {
     }
         
     const recruitOptions = this.createRecruitOptions(availableRecruits);
-    this.showRecruitAgency(recruitOptions);
+    this.showRecruitAgency(recruitOptions, building.name);
   }
   
   /**
@@ -394,8 +395,13 @@ export class BuildingsDisplayRenderer {
   /**
    * Show the recruit agency UI
    * @param recruitOptions Array of recruit options to display
+   * @param buildingName Name of the building for the recruit agency title
    */
-  private showRecruitAgency(recruitOptions: Array<{id: string, image: string, cost: number, name: string}>): void {    
+  private showRecruitAgency(
+    // TODO use RecruitOption type here
+    recruitOptions: Array<{id: string, image: string, cost: number, name: string}>,
+    buildingName: string
+  ): void {    
     // Clean up previous renderer if it exists
     if (this.recruitAgencyRenderer) {
       this.recruitAgencyRenderer.off(RecruitAgencyRendererEvents.STATE_CHANGED, this.onRecruitAgencyStateChanged, this);
@@ -404,7 +410,7 @@ export class BuildingsDisplayRenderer {
     }
     
     // Create new renderer
-    this.recruitAgencyRenderer = this.getRecruitAgencyRenderer(recruitOptions);
+    this.recruitAgencyRenderer = this.getRecruitAgencyRenderer(recruitOptions, buildingName);
     
     // Subscribe to state change events
     this.recruitAgencyRenderer.on(

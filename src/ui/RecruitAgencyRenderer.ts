@@ -39,6 +39,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   private panelY: number;
   private panelWidth: number;
   private panelHeight: number;
+  private panelTitle: string;
   
   // Background elements
   private background!: Phaser.GameObjects.NineSlice;
@@ -73,16 +74,18 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
+   * @param panelTitle The title to display at the top of the panel
    */
   constructor(
     scene: Phaser.Scene,
     resourceService: ResourceService,
     playerHandRenderer: PlayerHandRenderer,
-    recruitOptions: RecruitOption[], // TODO these should be passed in using setRecruitOptions method instead of constructor
+    recruitOptions: RecruitOption[],
     panelX: number,
     panelY: number,
     panelWidth: number,
-    panelHeight: number
+    panelHeight: number,
+    panelTitle: string
   ) {
     super();
     this.scene = scene;
@@ -95,6 +98,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.panelHeight = panelHeight;
     this.panelX = panelX;
     this.panelY = panelY;
+    this.panelTitle = panelTitle;
     
     // Create container for all UI elements
     this.container = this.scene.add.container(0, 0);
@@ -102,11 +106,11 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Create UI elements
     // TODO create element that will intercept clicks on the background
+    this.createInputBlocker();
     this.createBackground();
     this.createTitle();
     this.createResourcePanel();
     this.createCloseButton();
-    this.createInputBlocker();
     this.createEscapeKeyHandler();
     
     // Render recruit options
@@ -116,22 +120,23 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   /**
    * Create the background panel
    */
-  private createBackground(): void {
-    // Input blocker - catches all clicks outside of UI elements
+
+  private createInputBlocker(): void {
     this.inputBlocker = this.scene.add.rectangle(
-      0, 0, 
-      this.scene.cameras.main.width, 
-      this.scene.cameras.main.height,
-      0x000000, 0.5
+      this.panelX, 
+      this.panelY, 
+      this.panelWidth, 
+      this.panelHeight, 
+      0x000000, 
+      0.01
     );
     this.inputBlocker.setOrigin(0, 0);
-    this.inputBlocker.setInteractive({ useHandCursor: false })
-      .on('pointerdown', () => this.hide());
+    this.inputBlocker.setInteractive();
     
-    // Add to container
     this.container.add(this.inputBlocker);
-    
-    // Create panel background
+  }
+  
+  private createBackground(): void {
     this.background = this.scene.add['nineslice'](
       this.panelX, 
       this.panelY,
@@ -153,20 +158,20 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * Create the panel title
    */
   private createTitle(): void {
-    this.title = this.scene.add.text(
+    const titleText = this.scene.add.text(
       this.panelX + this.panelWidth / 2,
       this.panelY + 30,
-      'Recruit Units',
+      this.panelTitle,
       {
-        fontSize: '32px',
+        fontSize: '24px',
         color: '#ffffff',
         fontStyle: 'bold'
       }
     );
-    this.title.setOrigin(0.5, 0.5);
+    titleText.setOrigin(0.5, 0.5);
     
     // Add to container
-    this.container.add(this.title);
+    this.container.add(titleText);
   }
   
   /**
@@ -203,7 +208,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.closeButton = this.scene.add.image(
       this.panelX + this.panelWidth - 20,
       this.panelY + 20,
-      'close_button'
+      'round_metal_cross'
     );
     this.closeButton.setOrigin(1, 0);
     this.closeButton.setScale(0.8);
@@ -216,13 +221,6 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Add to container
     this.container.add(this.closeButton);
-  }
-  
-  /**
-   * Create the input blocker to prevent clicks on the world
-   */
-  private createInputBlocker(): void {
-    // Already created in createBackground
   }
   
   /**

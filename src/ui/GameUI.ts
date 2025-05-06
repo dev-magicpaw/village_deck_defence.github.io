@@ -104,7 +104,7 @@ export class GameUI {
    * @returns A factory function that creates a new RecruitAgencyRenderer
    */
   private createRecruitAgencyRendererFactory(): RecruitAgencyRendererFactory {
-    return (recruitOptions: RecruitOption[]): RecruitAgencyRenderer => {
+    return (recruitOptions: RecruitOption[], buildingName: string): RecruitAgencyRenderer => {
       return new RecruitAgencyRenderer(
         this.scene,
         this.resourceService,
@@ -113,7 +113,8 @@ export class GameUI {
         this.middlePanelX,
         this.middlePanelY,
         this.middlePanelWidth,
-        this.middlePanelHeight
+        this.middlePanelHeight,
+        buildingName
       );
     };
   }

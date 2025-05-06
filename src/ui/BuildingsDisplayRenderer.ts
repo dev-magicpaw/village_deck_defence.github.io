@@ -367,15 +367,15 @@ export class BuildingsDisplayRenderer {
     return recruitIds.map(id => {
       const config = cardRegistry.getCardConfig(id);
       if (!config) { throw new Error(`Card config not found for ID: ${id}`); }
-      
-      // Use any type since CardConfig doesn't normally have cost
-      const cardConfig = config as any;
-      
+      if (!config.cost) { throw new Error(`Card config for ID: ${id} has no cost defined`); }
+      if (config.cost.power === undefined) { throw new Error(`Recruitable card config for ID: ${id} has no power cost defined`); }
+      if (config.cost.power === 0) { console.warn(`Recruitable card config for ID: ${id} has no power cost defined`); }
+
       return {
-        id: cardConfig.id,
-        name: cardConfig.name,
-        image: cardConfig.image,
-        cost: cardConfig.cost || 0
+        id: config.id,
+        name: config.name,
+        image: config.image,
+        cost: config.cost.power
       };
     });
   }

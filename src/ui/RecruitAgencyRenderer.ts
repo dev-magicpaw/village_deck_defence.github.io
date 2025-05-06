@@ -93,6 +93,7 @@ export class RecruitAgencyRenderer {
     this.container.setVisible(false);
     
     // Create UI elements
+    // TODO create element that will intercept clicks on the background
     this.createBackground();
     this.createTitle();
     this.createResourcePanel();
@@ -126,13 +127,15 @@ export class RecruitAgencyRenderer {
     this.background = this.scene.add['nineslice'](
       this.panelX, 
       this.panelY,
-      'panel_wood_corners_metal', 
+      'panel_metal_corners_metal_nice', 
       undefined,
       this.panelWidth, 
       this.panelHeight,
       20, 20, 20, 20
     );
     this.background.setOrigin(0, 0);
+    this.background.setTint(0x666666);
+
     
     // Add to container
     this.container.add(this.background);

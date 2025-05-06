@@ -16,6 +16,11 @@ export interface CardConfig {
     race: Race;
     startingStickers: string[];
     maxSlotCount: number;
+    cost?: {
+        power?: number;
+        construction?: number;
+        invention?: number;
+    };
 }
 
 export interface CardSlot {
@@ -41,6 +46,11 @@ export class Card extends Phaser.Events.EventEmitter {
   public readonly race: Race;
   public readonly image: string;
   private _slots: CardSlot[];
+  public readonly cost?: {
+    power?: number;
+    construction?: number;
+    invention?: number;
+  };
 
   /**
    * Create a new Card instance
@@ -54,6 +64,7 @@ export class Card extends Phaser.Events.EventEmitter {
     this.race = config.race;
     this.image = config.image;
     this._slots = this.buildSlots(config.maxSlotCount, config.startingStickers);
+    this.cost = config.cost ? { ...config.cost } : undefined;
   }
 
   private buildSlots(maxSlotCount: number, startingStickers: string[]): CardSlot[] {
@@ -184,6 +195,7 @@ export function convertCardJsonToConfig(cardJson: any): CardConfig {
     race: stringToRace(cardJson.race),
     startingStickers: [...cardJson.startingStickers],
     maxSlotCount: cardJson.maxSlotCount,
+    cost: cardJson.cost ? { ...cardJson.cost } : undefined,
   };
 }
 

@@ -6,7 +6,10 @@
     "image": "human_villager",
     "race": "Human",
     "startingStickers": ["sticker_power_1", "sticker_construction_1", "sticker_invention_1"],
-    "maxSlotCount": 3
+    "maxSlotCount": 3,
+    "cost": {
+      "power": 6
+    }
   },
   {
     "id": "card_gnome_student",
@@ -15,7 +18,10 @@
     "image": "gnome_student",
     "race": "Gnome",
     "startingStickers": ["sticker_invention_3"],
-    "maxSlotCount": 2
+    "maxSlotCount": 2,
+    "cost": {
+      "power": 9
+    }
   },
   {
     "id": "card_dwarf_builder",
@@ -24,7 +30,10 @@
     "image": "dwarf_builder",
     "race": "Dwarf",
     "startingStickers": ["sticker_construction_3"],
-    "maxSlotCount": 2
+    "maxSlotCount": 2,
+    "cost": {
+      "power": 9
+    }
   },
   {
     "id": "card_elf_scout",
@@ -33,7 +42,10 @@
     "image": "elf_scout",
     "race": "Elf",
     "startingStickers": ["sticker_power_3"],
-    "maxSlotCount": 2
+    "maxSlotCount": 2,
+    "cost": {
+      "power": 9
+    }
   },
   {
     "id": "card_human_blacksmith_apprentice",
@@ -42,7 +54,10 @@
     "image": "human_blacksmith_apprentice",
     "race": "Human",
     "startingStickers": ["sticker_invention_1", "sticker_invention_1"],
-    "maxSlotCount": 3
+    "maxSlotCount": 3,
+    "cost": {
+      "power": 5
+    }
   },
   {
     "id": "card_human_lumberjack",
@@ -51,6 +66,9 @@
     "image": "human_lumberjack",
     "race": "Human",
     "startingStickers": ["sticker_power_1", "sticker_construction_1", "sticker_construction_1"],
-    "maxSlotCount": 3
+    "maxSlotCount": 3,
+    "cost": {
+      "power": 7
+    }
   }
 ]

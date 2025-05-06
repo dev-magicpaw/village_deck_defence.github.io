@@ -227,6 +227,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.recruitCostRenderers = [];
     
     // Calculate card positions
+    // TODO use some constants for consistency with building menu
     const startY = this.panelY + 100;
     const startX = this.panelX + 50;
     
@@ -258,11 +259,6 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     // Calculate if the player can afford this recruit
     const canAfford = this.resourceService.getPower() >= option.cost;
     
-    // Create callback for recruitment
-    const onRecruitSelected = canAfford 
-      ? () => this.selectRecruitOption(option) 
-      : undefined;
-    
     // Create card
     const card = new SimpleCardRenderer(
       this.scene,
@@ -271,23 +267,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       'panel_wood_paper',
       option.image,
       1,
-      canAfford,
-      onRecruitSelected
+      true,
+      () => this.onRecruitSelected(option)
     );
-    
-    // Add recruit name text
-    const nameText = this.scene.add.text(
-      0,
-      this.cardHeight / 2 - 30,
-      option.name,
-      {
-        fontSize: '16px',
-        color: '#000000',
-        fontStyle: 'bold'
-      }
-    );
-    nameText.setOrigin(0.5, 1);
-    card.getContainer().add(nameText);
     
     // Add cost renderer
     const costRenderer = new CostRenderer(
@@ -312,30 +294,21 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   private onRecruitButtonClicked(): void {
     if (!this.selectedOption) return;
     
-    // Deduct the cost from player's resources
-    const cost = this.selectedOption.cost;
-    if (this.resourceService.getPower() >= cost) {
-      // Deduct the cost
-      this.resourceService.consumePower(cost);
-      
-      // Recruit the card
-      const card = this.recruitService.recruit(this.selectedOption.id);
-      if (card) {
-        console.log(`Successfully recruited ${card.name}`);
-      }
-      
-      // Reset selection and update UI
-      this.selectedOption = null;
-      this.resourcePanelRenderer.setTarget(false);
-      this.updateCostRenderers();
-    }
+    // Recruit the card
+    const card = this.recruitService.recruit(this.selectedOption.id);
+    
+    // Reset selection and update UI
+    this.selectedOption = null;
+    this.resourcePanelRenderer.setTarget(false);
+    this.updateCostRenderers();
   }
   
   /**
    * Select a recruit option
    * @param option The selected recruit option
    */
-  private selectRecruitOption(option: RecruitOption): void {
+  private onRecruitSelected(option: RecruitOption): void {
+    // TODO add deselection part like in building menu?
     // Store the selected option
     this.selectedOption = option;
     

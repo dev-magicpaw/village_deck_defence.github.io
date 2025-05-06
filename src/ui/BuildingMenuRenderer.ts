@@ -364,9 +364,7 @@ private handleEscapeKey(): void {
    * Called when a building is selected from the menu
    * @param buildingId The ID of the selected building
    */
-  private onBuildingSelected(buildingId: string): void {
-    console.log(`Building selected: ${buildingId} for slot ${this.currentSlotUniqueId}`);
-    
+  private onBuildingSelected(buildingId: string): void {    
     // If the building is already selected, deselect it
     if (this.selectedBuildingId === buildingId) {
       this.selectedBuildingId = '';

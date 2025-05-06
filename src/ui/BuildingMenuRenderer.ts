@@ -184,10 +184,7 @@ export class BuildingMenuRenderer {
    */
   // TODO improve visual
   private updateBuildingOptionCostColors(): void {
-    // Get selected cards construction value
-    const selectedConstructionValue = this.playerHandRenderer.getSelectedConstructionValue();
-    const acquiredConstruction = this.resourceService.getConstruction();
-    const totalAvailable = selectedConstructionValue + acquiredConstruction;
+    const totalAvailable = this.resourcePanelRenderer.totalAvailable();
     
     // Update each building card
     this.buildingCards.forEach((card, index) => {
@@ -338,7 +335,7 @@ export class BuildingMenuRenderer {
     // Add cost text
     const costText = this.scene.add.text(
       0,
-      CARD_HEIGHT/2 - 20,
+      CARD_HEIGHT/2 + 20,
       `Cost: ${buildingConfig.cost?.construction || 0}`,
       {
         fontSize: '14px',

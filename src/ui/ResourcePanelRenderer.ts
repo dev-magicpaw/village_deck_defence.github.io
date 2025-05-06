@@ -496,11 +496,17 @@ export class ResourcePanelRenderer {
   private canAfford(): boolean {
     if (!this.hasTarget) return false;
     
+    return this.totalAvailable() >= this.targetCost;
+  }
+  
+  /**
+   * Returns the total available resources (acquired + selected)
+   * @returns The sum of acquired and selected resources
+   */
+  public totalAvailable(): number {
     const selectedValue = this.getSelectedResourceValue();
     const acquiredValue = this.getAcquiredResourceValue();
-    const totalAvailable = acquiredValue + selectedValue;
-    
-    return totalAvailable >= this.targetCost;
+    return acquiredValue + selectedValue;
   }
   
   /**

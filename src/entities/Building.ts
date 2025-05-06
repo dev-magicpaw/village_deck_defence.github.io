@@ -6,6 +6,7 @@ export interface BuildingConfig {
   cost?: {
     construction: number;
   };
+  limit?: number | null;
 }
 
 /**
@@ -39,6 +40,7 @@ export class Building {
   public readonly cost?: {
     construction: number;
   };
+  public readonly limit?: number | null;
 
   /**
    * Create a new Building instance
@@ -50,6 +52,7 @@ export class Building {
     this.description = config.description;
     this.image = config.image;
     this.cost = config.cost;
+    this.limit = config.limit;
   }
 
   /**
@@ -71,6 +74,7 @@ export function convertBuildingJsonToConfig(buildingJson: any): BuildingConfig {
     image: buildingJson.image,
     cost: buildingJson.cost ? {
       construction: buildingJson.cost.construction || 0
-    } : undefined
+    } : undefined,
+    limit: buildingJson.limit
   };
 } 

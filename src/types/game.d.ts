@@ -6,6 +6,7 @@ export interface Building {
   cost?: {
     construction: number;
   };
+  limit?: number | null;
 }
 
 export interface Adventure {

@@ -81,7 +81,8 @@ export class BuildingRegistry {
       name: building.name,
       description: building.description,
       image: building.image,
-      cost: building.cost
+      cost: building.cost,
+      limit: building.limit
     };
   }
   

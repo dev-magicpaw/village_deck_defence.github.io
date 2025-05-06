@@ -166,12 +166,22 @@ export class BuildingService extends Phaser.Events.EventEmitter {
    * @returns true if building was constructed, false if it was already constructed or doesn't exist
    */
   public constructBuilding(buildingId: string, slotUniqueId?: string): boolean {
-    // Check if already constructed
-    // TODO this should account for the limit of the building
-    if (this.isBuildingConstructed(buildingId)) { return false; }
-    
     const building = this.buildingRegistry.createBuildingInterface(buildingId);
     if (!building) { throw new Error(`Failed to create building ${buildingId}`); }
+    
+    // Check if at building limit
+    // TODO move this to a separate methon  constructedCount
+    if (building.limit !== undefined && building.limit !== null) {
+      const constructedCount = this.constructedBuildings.filter(b => b.id === buildingId).length;
+      if (constructedCount >= building.limit) {
+        return false;
+      }
+    }
+    
+    // Check if already constructed (for buildings with limit 1)
+    if (building.limit === 1 && this.isBuildingConstructed(buildingId)) { 
+      return false; 
+    }
     
     const requiredConstruction = building.cost?.construction || 0;
     const availableConstruction = this.resourceService.getConstruction();

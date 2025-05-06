@@ -12,10 +12,12 @@ import { SimpleCardRenderer } from './SimpleCardRenderer';
 /**
  * Extend the BuildingConfig interface to include cost
  */
+// TODO this should be merged with BuildingConfig
 interface BuildingConfig extends OriginalBuildingConfig {
   cost?: {
     construction: number;
   };
+  limit?: number | null;
 }
 
 /**

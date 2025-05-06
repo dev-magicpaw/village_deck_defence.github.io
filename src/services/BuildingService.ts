@@ -160,29 +160,42 @@ export class BuildingService extends Phaser.Events.EventEmitter {
   }
   
   /**
+   * Get the count of constructed buildings with the given ID
+   * @param buildingId The building ID to count
+   * @returns The number of buildings with this ID that have been constructed
+   */
+  public getConstructedBuildingCount(buildingId: string): number {
+    return this.constructedBuildings.filter(b => b.id === buildingId).length;
+  }
+
+  /**
+   * Check if the constructed building limit has been reached for a specific building
+   * @param buildingId The ID of the building to check
+   * @returns true if the limit has been reached, false otherwise
+   */
+  public reachedConstructedBuildingLimit(buildingId: string): boolean {
+    const building = this.getBuildingConfig(buildingId);
+    return this.getConstructedBuildingCount(buildingId) >= (building.limit || 0);
+  }
+
+  public getBuildingConfig(buildingId: string): BuildingConfig {
+    const building = this.buildingRegistry.getBuildingConfig(buildingId);
+    if (!building) { throw new Error(`Building config with ID ${buildingId} not found`); }
+    return building;
+  }
+  
+  /**
    * Construct a new building
    * @param buildingId The ID of the building to construct
    * @param slotUniqueId Optional unique ID of the slot where the building should be constructed
    * @returns true if building was constructed, false if it was already constructed or doesn't exist
    */
   public constructBuilding(buildingId: string, slotUniqueId?: string): boolean {
-    const building = this.buildingRegistry.createBuildingInterface(buildingId);
-    if (!building) { throw new Error(`Failed to create building ${buildingId}`); }
-    
-    // Check if at building limit
-    // TODO move this to a separate methon  constructedCount
-    if (building.limit !== undefined && building.limit !== null) {
-      const constructedCount = this.constructedBuildings.filter(b => b.id === buildingId).length;
-      if (constructedCount >= building.limit) {
-        return false;
-      }
+    if (this.reachedConstructedBuildingLimit(buildingId)) {
+      return false;
     }
     
-    // Check if already constructed (for buildings with limit 1)
-    if (building.limit === 1 && this.isBuildingConstructed(buildingId)) { 
-      return false; 
-    }
-    
+    const building = this.getBuildingConfig(buildingId);
     const requiredConstruction = building.cost?.construction || 0;
     const availableConstruction = this.resourceService.getConstruction();
 
@@ -213,13 +226,6 @@ export class BuildingService extends Phaser.Events.EventEmitter {
     }
     
     return true;
-  }
-
-  /**
-   * Get a building configuration by ID
-   */
-  public getBuildingConfig(buildingId: string): BuildingConfig | undefined {
-    return this.buildingRegistry.getBuildingConfig(buildingId);
   }
 
   /**

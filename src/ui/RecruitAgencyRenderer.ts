@@ -4,7 +4,7 @@ import { RecruitService } from '../services/RecruitService';
 import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
-import { PlayerHandRenderer } from './PlayerHandRenderer';
+import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 import { SimpleCardRenderer } from './SimpleCardRenderer';
 
@@ -116,6 +116,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.createResourcePanel();
     this.createCloseButton();
     this.renderRecruitOptions();
+
+    // Subscribe to player hand card selection changes
+    this.playerHandRenderer.on(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this);
   }
   
   /**
@@ -384,10 +387,11 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * Update the cost renderers based on player's current resources
    */
   private updateCostRenderers(): void {
-    const availablePower = this.resourceService.getPower();
+    const totalAvailable = this.resourcePanelRenderer.totalAvailable();
+
     
     this.recruitOptions.forEach((option, index) => {
-      const canAfford = availablePower >= option.cost;
+      const canAfford = totalAvailable >= option.cost;
       this.recruitCostRenderers[index].setAffordable(canAfford);
     });
   }
@@ -397,6 +401,14 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    */
   public isVisible(): boolean {
     return this.visible;
+  }
+  
+  /**
+   * Handle card selection changes
+   */
+  private onCardSelectionChanged(): void {
+    // Update the cost display colors for all recruit options
+    this.updateCostRenderers();
   }
   
   /**
@@ -418,6 +430,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       this.escKey.removeAllListeners();
       this.escKey = null;
     }
+    
+    // Remove event listeners
+    this.playerHandRenderer.off(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this);
     
     // Remove all listeners from this emitter
     this.removeAllListeners();

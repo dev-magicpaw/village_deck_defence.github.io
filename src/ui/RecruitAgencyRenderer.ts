@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { ResourceType } from '../entities/Types';
+import { CardRegistry } from '../services/CardRegistry';
 import { RecruitService } from '../services/RecruitService';
 import { ResourceService, ResourceServiceEvents } from '../services/ResourceService';
-import { CARD_HEIGHT, CARD_SPACING_X, CARD_WIDTH } from './CardRenderer';
+import { CARD_HEIGHT, CARD_SPACING_X, CARD_WIDTH, CardRenderer } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { ResourcePanelRenderer } from './ResourcePanelRenderer';
-import { SimpleCardRenderer } from './SimpleCardRenderer';
 
 /**
  * Events emitted by the RecruitAgencyRenderer
@@ -34,9 +34,10 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   private resourceService: ResourceService;
   private recruitService: RecruitService;
   private playerHandRenderer: PlayerHandRenderer;
+  private cardRegistry: CardRegistry;
   private visible: boolean = false;
   private selectedOption: RecruitOption | null = null;
-  private selectedOptionRenderer: SimpleCardRenderer | null = null;
+  private selectedOptionRenderer: CardRenderer | null = null;
   
   // Panel dimensions and position
   private panelX: number;
@@ -53,7 +54,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   
   // Recruit options
   private recruitOptions: RecruitOption[];
-  private recruitCards: SimpleCardRenderer[] = [];
+  private recruitCards: CardRenderer[] = [];
   private recruitCostRenderers: CostRenderer[] = [];
   
   // Card properties
@@ -99,6 +100,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.recruitService = recruitService;
     this.playerHandRenderer = playerHandRenderer;
     this.recruitOptions = recruitOptions;
+    this.cardRegistry = CardRegistry.getInstance();
     
     // Store panel dimensions
     this.panelWidth = panelWidth;
@@ -268,16 +270,26 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     // Calculate if the player can afford this recruit
     const canAfford = this.resourceService.getPower() >= option.cost;
     
-    // Create card
-    const card = new SimpleCardRenderer(
+    // Create a Card object from the RecruitOption using the card registry
+    const card = this.cardRegistry.createCardInstance(option.id);
+    if (!card) {
+      throw new Error(`Failed to create card instance for ${option.id}`);
+    }
+    
+    // Create card renderer
+    const cardRenderer = new CardRenderer(
       this.scene,
+      card,
       x + this.cardWidth / 2,
       y + this.cardHeight / 2,
-      'panel_wood_paper',
-      option.image,
-      1,
-      true,
-      (renderer: SimpleCardRenderer) => this.onRecruitSelected(option, renderer)
+      index,
+      () => this.onRecruitSelected(option, cardRenderer),
+      1, // default scale
+      true, // change scale on hover
+      false, // don't change sticker scale on hover
+      false, // not selectable sticker
+      undefined, // no sticker click callback
+      false // not in discard pile
     );
     
     // Add cost renderer
@@ -289,11 +301,11 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       ResourceType.Power
     );
     costRenderer.setAffordable(canAfford);
-    card.getContainer().add(costRenderer.getContainer());
+    cardRenderer.getContainer().add(costRenderer.getContainer());
     
     // Add to container and tracking arrays
-    this.container.add(card.getContainer());
-    this.recruitCards.push(card);
+    this.container.add(cardRenderer.getContainer());
+    this.recruitCards.push(cardRenderer);
     this.recruitCostRenderers.push(costRenderer);
   }
   
@@ -318,7 +330,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * @param option The selected recruit option
    * @param renderer The card renderer that was clicked
    */
-  private onRecruitSelected(option: RecruitOption, renderer: SimpleCardRenderer): void {
+  private onRecruitSelected(option: RecruitOption, renderer: CardRenderer): void {
     // Deselect the option
     if (this.selectedOption && this.selectedOption.id === option.id) {
       this.selectedOption = null;

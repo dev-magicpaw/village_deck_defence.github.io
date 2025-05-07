@@ -65,7 +65,7 @@
     "description": "Lumberjack",
     "image": "human_lumberjack",
     "race": "Human",
-    "startingStickers": ["sticker_power_1", "sticker_construction_1", "sticker_construction_1"],
+    "startingStickers": ["sticker_power_1", "sticker_construction_2"],
     "maxSlotCount": 3,
     "cost": {
       "power": 7

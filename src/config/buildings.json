@@ -83,6 +83,12 @@
             {
                 "type": "make_recruitable",
                 "recruits": ["card_human_blacksmith_apprentice"]
+            },
+            {
+                "type": "add_resource",
+                "when": "on_day_start",
+                "resource": "invention",
+                "amount": 1
             }
         ]
     },
@@ -99,6 +105,12 @@
             {   
                 "type": "make_recruitable",
                 "recruits": ["card_human_lumberjack"]
+            },
+            {
+                "type": "add_resource",
+                "when": "on_day_start",
+                "resource": "construction",
+                "amount": 1
             }
         ]
     },

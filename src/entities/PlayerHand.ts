@@ -189,4 +189,21 @@ export class PlayerHand {
   public off(event: string, fn?: Function, context?: any): Phaser.Events.EventEmitter {
     return this._events.off(event, fn, context);
   }
+
+  /**
+   * Calculate total power across all card locations (hand, deck, discard)
+   * @returns The total power value
+   */
+  public calculateTotalPower(): number {
+    const handCards = this._cards;
+    const deckCards = this._deckService.getDeck();
+    const discardCards = this._deckService.getDiscardPile();
+    
+    // Calculate power from all cards in all locations
+    const totalPower = [...handCards, ...deckCards, ...discardCards].reduce((sum, card) => {
+      return sum + card.getPowerValue();
+    }, 0);
+    
+    return totalPower;
+  }
 } 

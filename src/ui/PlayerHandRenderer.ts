@@ -633,6 +633,10 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     // 1. Progress the invasion if service exists
     if (this.invasionService) {
       this.invasionService.progressInvasion();
+      if (this.invasionService.hasInvasionArrived()) {
+        const totalPlayerPower = this.playerHand.calculateTotalPower();
+        console.log(`Invasion arrived. Total power: ${totalPlayerPower}`);
+      }
     }
     
     // 2. Shuffle discard into deck and draw new hand

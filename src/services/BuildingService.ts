@@ -176,6 +176,8 @@ export class BuildingService extends Phaser.Events.EventEmitter {
    */
   public reachedConstructedBuildingLimit(buildingId: string): boolean {
     const building = this.getBuildingConfig(buildingId);
+    if (building.limit === null) {return false;}
+    
     return this.getConstructedBuildingCount(buildingId) >= (building.limit || 0);
   }
 

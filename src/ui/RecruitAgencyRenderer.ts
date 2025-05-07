@@ -388,9 +388,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   /**
    * Update the cost renderers based on player's current resources
    */
-  private updateCostRenderers(): void {
+  private updateCostRenderers(): void {    
     const totalAvailable = this.resourcePanelRenderer.totalAvailable();
-
+    console.log(`Updating cost renderers. Total available: ${totalAvailable}`);
     
     this.recruitOptions.forEach((option, index) => {
       const canAfford = totalAvailable >= option.cost;

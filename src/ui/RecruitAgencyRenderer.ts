@@ -36,6 +36,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   private playerHandRenderer: PlayerHandRenderer;
   private visible: boolean = false;
   private selectedOption: RecruitOption | null = null;
+  private selectedOptionRenderer: SimpleCardRenderer | null = null;
   
   // Panel dimensions and position
   private panelX: number;
@@ -276,7 +277,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       option.image,
       1,
       true,
-      () => this.onRecruitSelected(option)
+      (renderer: SimpleCardRenderer) => this.onRecruitSelected(option, renderer)
     );
     
     // Add cost renderer
@@ -307,6 +308,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Reset selection and update UI
     this.selectedOption = null;
+    this.selectedOptionRenderer = null;
     this.resourcePanelRenderer.setTarget(false);
     this.updateCostRenderers();
   }
@@ -314,17 +316,27 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   /**
    * Select a recruit option
    * @param option The selected recruit option
+   * @param renderer The card renderer that was clicked
    */
-  private onRecruitSelected(option: RecruitOption): void {
+  private onRecruitSelected(option: RecruitOption, renderer: SimpleCardRenderer): void {
     // Deselect the option
     if (this.selectedOption && this.selectedOption.id === option.id) {
       this.selectedOption = null;
+      this.selectedOptionRenderer?.setSelected(false);
+      this.selectedOptionRenderer = null;
       this.resourcePanelRenderer.setTarget(false);
       return;
     } 
     
+    // Deselect previously selected card if any
+    if (this.selectedOptionRenderer) {
+      this.selectedOptionRenderer.setSelected(false);
+    }
+
     this.selectedOption = option;
+    this.selectedOptionRenderer = renderer;
     this.resourcePanelRenderer.setTarget(true, option.cost);
+    renderer.setSelected(true);
   }
   
   /**
@@ -454,6 +466,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     }
     
     this.selectedOption = null;
+    this.selectedOptionRenderer = null;
     this.visible = false;
   }
 } 

@@ -15,11 +15,12 @@
             { "x": 150, "y": 0, "slot_id": "wall_slot"},
             { "x": 300, "y": 0, "slot_id": "gate_slot"},
             { "x": 450, "y": 0, "slot_id": "wall_slot"},
-            { "x": 0, "y": 200, "slot_id": "workshop_slot"},
+            { "x": 0, "y": 200, "slot_id": "village_slot"},
             { "x": 150, "y": 200, "slot_id": "village_slot"},
-            { "x": 300, "y": 200, "slot_id": "village_slot"},
-            { "x": 450, "y": 200, "slot_id": "village_slot"},
-            { "x": 600, "y": 200, "slot_id": "tavern_slot"}
+            { "x": 300, "y": 200, "slot_id": "workshop_slot"},
+            { "x": 450, "y": 200, "slot_id": "tavern_slot"},
+            { "x": 600, "y": 200, "slot_id": "village_slot"},
+            { "x": 750, "y": 200, "slot_id": "village_slot"}
         ],
         "building_slots": [
             {

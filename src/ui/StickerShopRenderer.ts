@@ -125,16 +125,9 @@ export class StickerShopRenderer {
    */
   private setupResourcePanelEventHandlers(): void {
     // Handle resource panel play cards event
+    // TODO this should instead subscribe to     this.playerHandRenderer.off(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this);
     this.scene.events.on('resourcePanel-playCards', (data: any) => {
-      if (data.type === ResourceType.Invention) {
-        // Add resources to the resource service
-        if (this.resourceService) {
-          this.resourceService.addInvention(data.value);
-        }
-        
-        // Update sticker affordability
-        this.updateStickersAffordability();
-      }
+      this.updateStickersAffordability();
     });
   }
   

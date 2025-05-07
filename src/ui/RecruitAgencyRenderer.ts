@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { ResourceType } from '../entities/Types';
 import { RecruitService } from '../services/RecruitService';
-import { ResourceService } from '../services/ResourceService';
+import { ResourceService, ResourceServiceEvents } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
@@ -119,6 +119,8 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
 
     // Subscribe to player hand card selection changes
     this.playerHandRenderer.on(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this);
+    // Subscribe to resource changes to update cost renderers
+    this.resourceService.on(ResourceServiceEvents.RESOURCE_CHANGED, this.onResourceChanged, this);
   }
   
   /**
@@ -412,6 +414,10 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     // Update the cost display colors for all recruit options
     this.updateCostRenderers();
   }
+
+  private onResourceChanged(): void {
+    this.updateCostRenderers();
+  }
   
   /**
    * Clean up resources
@@ -435,6 +441,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Remove event listeners
     this.playerHandRenderer.off(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this);
+    this.resourceService.off(ResourceServiceEvents.RESOURCE_CHANGED, this.onResourceChanged, this);
     
     // Remove all listeners from this emitter
     this.removeAllListeners();

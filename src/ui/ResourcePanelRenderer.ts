@@ -478,24 +478,27 @@ export class ResourcePanelRenderer {
     this.playerHandRenderer.clearCardSelection();
     
     // 6. Add resources to the resource service
-    // TODO move this to a method
-    switch (this.resourceType) {
-      case ResourceType.Power:
-        this.resourceService.addPower(selectedResourceValue);
-        break;
-      case ResourceType.Construction:
-        this.resourceService.addConstruction(selectedResourceValue);
-        break;
-      case ResourceType.Invention:
-        this.resourceService.addInvention(selectedResourceValue);
-        break;
-    }
+    this.addResource(selectedResourceValue);
     
     // 7. Update the acquired text display
     this.updateAcquiredText();
     
     // 8. Update button states
     this.updateButtonStates();
+  }
+
+  private addResource(value: number): void {
+    switch (this.resourceType) {
+      case ResourceType.Power:
+        this.resourceService.addPower(value);
+        break;
+      case ResourceType.Construction:
+        this.resourceService.addConstruction(value);
+        break;
+      case ResourceType.Invention:
+        this.resourceService.addInvention(value);
+        break;
+    }
   }
   
   /**

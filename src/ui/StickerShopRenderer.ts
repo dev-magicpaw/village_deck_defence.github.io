@@ -21,7 +21,7 @@ export class StickerShopRenderer {
   private shopPanel: Phaser.GameObjects.NineSlice | null = null;
   private stickerRenderers: StickerInShopRenderer[] = [];
   private selectedSticker: StickerConfig | null = null;
-  private resourceService?: ResourceService; // TODO make not optional
+  private resourceService: ResourceService;
   private stickerShopService: StickerShopService;
   private playerHandRenderer: PlayerHandRenderer;
   private cardOverlayRenderer: CardOverlayRenderer | null = null;
@@ -47,7 +47,7 @@ export class StickerShopRenderer {
    * @param panelY Y position of the panel
    * @param panelWidth Width of the panel
    * @param panelHeight Height of the panel
-   * @param resourceService Optional resource service for tracking acquired resources
+   * @param resourceService Required service for tracking resources
    * @param onApplyCallback Callback for when a sticker is applied
    * @param stickerShopService Service managing the shop state
    * @param playerHandRenderer The player hand renderer for card selection
@@ -111,7 +111,7 @@ export class StickerShopRenderer {
       ResourceType.Invention,
       'Purchase',
       () => this.purchaseSticker(),
-      this.resourceService as ResourceService
+      this.resourceService
     );
   }
 
@@ -122,7 +122,7 @@ export class StickerShopRenderer {
   private canAffordSticker(): boolean {
     if (!this.selectedSticker) return false;
     
-    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
+    const acquiredInvention = this.resourceService.getInvention();
     const selectedInvention = this.playerHandRenderer.getSelectedInventionValue();
     const stickerCost = this.selectedSticker.cost;
     
@@ -149,7 +149,7 @@ export class StickerShopRenderer {
    */
   private updateStickersAffordability(): void {
     // Calculate total available invention (acquired + selected)
-    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
+    const acquiredInvention = this.resourceService.getInvention();
     const selectedInvention = this.playerHandRenderer.getSelectedInventionValue();
     const totalAvailable = acquiredInvention + selectedInvention;
     
@@ -388,9 +388,7 @@ export class StickerShopRenderer {
       this.resourcePanelRenderer.show();
       
       // Update acquired invention value from resource service
-      if (this.resourceService) {
-        this.resourcePanelRenderer.setAcquiredResourceValue(this.resourceService.getInvention());
-      }
+      // this.resourcePanelRenderer.setAcquiredResourceValue(this.resourceService.getInvention());
       
       // Update sticker affordability based on current resources and selections
       this.updateStickersAffordability();
@@ -484,8 +482,7 @@ export class StickerShopRenderer {
     }
     
     this.playerHandRenderer.off(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this );
-    this.resourceService?.off(ResourceServiceEvents.RESOURCE_CHANGED, this.onResourceChanged, this); // TODO remove optional
-
+    this.resourceService.off(ResourceServiceEvents.RESOURCE_CHANGED, this.onResourceChanged, this);
     
     // Clear all sticker renderers
     this.clearStickerRenderers();
@@ -539,12 +536,7 @@ export class StickerShopRenderer {
     const stickerToApply = this.selectedSticker;
     
     // Deduct the sticker cost from ResourceService
-    if (this.resourceService) {
-      this.resourceService.consumeInvention(stickerToApply.cost);
-      
-      // Update the acquired resource value in the panel
-      // this.resourcePanelRenderer.setAcquiredResourceValue(this.resourceService.getInvention());
-    }
+    this.resourceService.consumeInvention(stickerToApply.cost);
     
     // Deselect the current sticker from the shop
     this.deselectSticker();

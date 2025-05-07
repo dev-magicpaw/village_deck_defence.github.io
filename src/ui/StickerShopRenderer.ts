@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { StickerConfig } from '../entities/Sticker';
 import { ResourceType } from '../entities/Types';
 import { DeckService } from '../services/DeckService';
-import { ResourceService } from '../services/ResourceService';
+import { ResourceService, ResourceServiceEvents } from '../services/ResourceService';
 import { StickerRegistry } from '../services/StickerRegistry';
 import { StickerShopService } from '../services/StickerShopService';
 import { CardOverlayRenderer } from './CardOverlayRenderer';
@@ -92,17 +92,12 @@ export class StickerShopRenderer {
     );
     
     // Subscribe to player hand card selection changes
-    this.playerHandRenderer.on(
-      PlayerHandRendererEvents.SELECTION_CHANGED,
-      this.onCardSelectionChanged,
-      this
-    );
+    this.playerHandRenderer.on(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this );
+    this.resourceService.on(ResourceServiceEvents.RESOURCE_CHANGED, this.onResourceChanged, this);
+
     
     // Initialize resource panel renderer
     this.initResourcePanelRenderer();
-    
-    // Set up event handlers for resource panel events
-    this.setupResourcePanelEventHandlers();
   }
   
   /**
@@ -119,18 +114,7 @@ export class StickerShopRenderer {
       this.resourceService as ResourceService
     );
   }
-  
-  /**
-   * Set up event handlers for resource panel events
-   */
-  private setupResourcePanelEventHandlers(): void {
-    // Handle resource panel play cards event
-    // TODO this should instead subscribe to     this.playerHandRenderer.off(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this);
-    this.scene.events.on('resourcePanel-playCards', (data: any) => {
-      this.updateStickersAffordability();
-    });
-  }
-  
+
   /**
    * Check if the player can afford the currently selected sticker
    * @returns True if the player has enough resources, false otherwise
@@ -375,6 +359,10 @@ export class StickerShopRenderer {
     // Update the resource panel target state with sticker cost
     this.resourcePanelRenderer.setTarget(this.canAffordSticker(), stickerConfig.cost);
   }
+
+  private onResourceChanged(): void {
+    this.updateStickersAffordability();
+  }
   
   /**
    * Public method to show the sticker shop
@@ -495,8 +483,9 @@ export class StickerShopRenderer {
       this.escKey = null;
     }
     
-    // Remove resource panel event listeners
-    this.scene.events.off('resourcePanel-playCards');
+    this.playerHandRenderer.off(PlayerHandRendererEvents.SELECTION_CHANGED, this.onCardSelectionChanged, this );
+    this.resourceService?.off(ResourceServiceEvents.RESOURCE_CHANGED, this.onResourceChanged, this); // TODO remove optional
+
     
     // Clear all sticker renderers
     this.clearStickerRenderers();
@@ -554,7 +543,7 @@ export class StickerShopRenderer {
       this.resourceService.consumeInvention(stickerToApply.cost);
       
       // Update the acquired resource value in the panel
-      this.resourcePanelRenderer.setAcquiredResourceValue(this.resourceService.getInvention());
+      // this.resourcePanelRenderer.setAcquiredResourceValue(this.resourceService.getInvention());
     }
     
     // Deselect the current sticker from the shop

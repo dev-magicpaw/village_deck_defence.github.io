@@ -127,11 +127,7 @@ export class StickerShopRenderer {
     // Handle resource panel play cards event
     this.scene.events.on('resourcePanel-playCards', (data: any) => {
       if (data.type === ResourceType.Invention) {
-        // Add resources to the resource service
-        if (this.resourceService) {
-          this.resourceService.addInvention(data.value);
-        }
-        
+        // No need to add resources here as the ResourcePanelRenderer already does this
         // Update sticker affordability
         this.updateStickersAffordability();
       }
@@ -145,12 +141,11 @@ export class StickerShopRenderer {
   private canAffordSticker(): boolean {
     if (!this.selectedSticker) return false;
     
-    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
-    const selectedInvention = this.playerHandRenderer.getSelectedInventionValue();
+    const totalAvailable = this.resourcePanelRenderer.totalAvailable();
     const stickerCost = this.selectedSticker.cost;
     
     // Check if the total available invention value is enough to purchase the sticker
-    const canAfford = (acquiredInvention + selectedInvention) >= stickerCost;    
+    const canAfford = totalAvailable >= stickerCost;    
     return canAfford;
   }
   
@@ -172,9 +167,7 @@ export class StickerShopRenderer {
    */
   private updateStickersAffordability(): void {
     // Calculate total available invention (acquired + selected)
-    const acquiredInvention = this.resourceService ? this.resourceService.getInvention() : 0;
-    const selectedInvention = this.playerHandRenderer.getSelectedInventionValue();
-    const totalAvailable = acquiredInvention + selectedInvention;
+    const totalAvailable = this.resourcePanelRenderer.totalAvailable();
     
     // Update each sticker renderer
     this.stickerRenderers.forEach(renderer => {

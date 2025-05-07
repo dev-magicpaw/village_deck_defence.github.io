@@ -67,7 +67,6 @@ export class ResourceService extends Phaser.Events.EventEmitter {
     if (amount < 0) throw new Error('Amount of invention to add must be positive');
     const previousAmount = this.invention;
     this.invention += amount;
-    console.log(`ResourceService: addInvention. New invention: ${this.invention}`);
     this.emitResourceChange(ResourceType.Invention, this.invention, previousAmount);
   }
 
@@ -79,7 +78,6 @@ export class ResourceService extends Phaser.Events.EventEmitter {
     if (amount < 0) throw new Error('Amount of construction to add must be positive');
     const previousAmount = this.construction;
     this.construction += amount;
-    console.log(`ResourceService: addConstruction. New construction: ${this.construction}`);
     this.emitResourceChange(ResourceType.Construction, this.construction, previousAmount);
   }
 
@@ -91,7 +89,6 @@ export class ResourceService extends Phaser.Events.EventEmitter {
     if (amount < 0) throw new Error('Amount of power to add must be positive');
     const previousAmount = this.power;
     this.power += amount;
-    console.log(`ResourceService: addPower. New power: ${this.power}`);
     this.emitResourceChange(ResourceType.Power, this.power, previousAmount);
   }
 
@@ -158,7 +155,6 @@ export class ResourceService extends Phaser.Events.EventEmitter {
    * @returns Current power amount
    */
   public getPower(): number {
-    console.log(`getPower. Power: ${this.power}`);
     return this.power;
   }
 

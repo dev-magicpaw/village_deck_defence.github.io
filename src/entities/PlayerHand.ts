@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Card } from '../entities/Card';
 import { DeckService } from '../services/DeckService';
+import { ResourceService } from '../services/ResourceService';
 
 /**
  * Class representing a player's hand of cards
@@ -9,6 +10,7 @@ export class PlayerHand {
   private _cards: Card[] = [];
   private _handLimit: number;
   private _deckService: DeckService<Card>;
+  private _resourceService: ResourceService;
   private _events: Phaser.Events.EventEmitter;
   
   /**
@@ -16,16 +18,23 @@ export class PlayerHand {
    */
   public static Events = {
     CARDS_CHANGED: 'cards_changed',
+    HAND_DISCARDED: 'hand_discarded',
   };
   
   /**
    * Create a new PlayerHand
    * @param deckService The DeckService to draw cards from and discard to
    * @param handLimit Maximum number of cards in hand
+   * @param resourceService Service for managing game resources
    */
-  constructor(deckService: DeckService<Card>, handLimit: number) {
+  constructor(
+    deckService: DeckService<Card>, 
+    handLimit: number,
+    resourceService: ResourceService
+  ) {
     this._deckService = deckService;
     this._handLimit = handLimit;
+    this._resourceService = resourceService;
     this._events = new Phaser.Events.EventEmitter();
   }
   
@@ -73,7 +82,10 @@ export class PlayerHand {
     
     if (hadCards) {
       this._events.emit(PlayerHand.Events.CARDS_CHANGED, this._cards);
+      this._events.emit(PlayerHand.Events.HAND_DISCARDED);
     }
+
+    this._resourceService.resetResourcesHandDiscard();
   }
   
   /**

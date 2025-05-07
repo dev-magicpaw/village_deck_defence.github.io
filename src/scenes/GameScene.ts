@@ -73,8 +73,9 @@ export class GameScene extends Phaser.Scene {
     
     this.invasionService = this.createInvasionService();
     this.resourceService = this.createResourceService();
-    this.playerDeck = this.createPlayerDeck();
     this.buildingService = this.createBuildingsService();
+    this.resourceService.setBuildingService(this.buildingService);
+    this.playerDeck = this.createPlayerDeck();
     this.tavernService = this.createTavernService();
     this.stickerShopService = new StickerShopService();
     this.recruitService = this.createRecruitService();
@@ -168,7 +169,6 @@ export class GameScene extends Phaser.Scene {
    */
   private createResourceService(): ResourceService {
     const resourceService = new ResourceService();
-
     return resourceService;
   }
   
@@ -196,7 +196,11 @@ export class GameScene extends Phaser.Scene {
     playerDeck.shuffle();
     
     // Create the player hand
-    this.playerHand = new PlayerHand(playerDeck, this.gameConfig.player_hand_size);
+    this.playerHand = new PlayerHand(
+      playerDeck, 
+      this.gameConfig.player_hand_size,
+      this.resourceService
+    );
     
     // Draw initial cards
     this.playerHand.drawUpToLimit();

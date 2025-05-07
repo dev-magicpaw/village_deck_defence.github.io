@@ -627,7 +627,7 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
   private endDay(): void {
     // 0. Reset all resources if service exists
     if (this.resourceService) {
-      this.resourceService.resetResources();
+      this.resourceService.resetResourcesEndOfDay();
     }
     
     // 1. Progress the invasion if service exists

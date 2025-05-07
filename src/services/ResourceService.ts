@@ -5,6 +5,7 @@
 
 import Phaser from 'phaser';
 import { ResourceType } from '../entities/Types';
+import { BuildingService } from './BuildingService';
 
 /**
  * Events emitted by the ResourceService
@@ -26,6 +27,7 @@ export class ResourceService extends Phaser.Events.EventEmitter {
   private invention: number = 0;
   private construction: number = 0;
   private power: number = 0;
+  private buildingService?: BuildingService;
 
   /**
    * Create a new resource service with initial values set to 0
@@ -36,18 +38,51 @@ export class ResourceService extends Phaser.Events.EventEmitter {
   }
 
   /**
-   * Reset all resources to zero
-   * Called at the beginning of each turn
+   * Set the building service
+   * @param buildingService The building service to use
    */
-  public resetResources(): void {
+  public setBuildingService(buildingService: BuildingService): void {
+    this.buildingService = buildingService;
+  }
+
+  public resetResourcesEndOfDay(): void {
+    // For now just reset all to 0.
+    this.resetResources();
+  }
+
+  public resetResourcesHandDiscard(): void {
+    if (!this.buildingService) {
+      throw new Error('Building service not set');
+    }
+
+    const hasWarehouse = this.buildingService.isBuildingConstructed('warehouse');
+    
+    if (hasWarehouse) {
+      // Warehouse keeps 50% of resources
+      this.resetResources(0.5);
+    } else {
+      this.resetResources();
+    }
+  }
+
+  /**
+   * Reset all resources to a percentage of their current value (rounded down)
+   * @param percent_to_keep Percentage to keep (0-1)
+   */
+  private resetResources(percent_to_keep: number = 0): void {
     const oldInvention = this.invention;
     const oldConstruction = this.construction;
     const oldPower = this.power;
-    
-    this.invention = 0;
-    this.construction = 0;
-    this.power = 0;
-    
+
+    // Keep specified percentage of each resource
+    this.invention = Math.floor(this.invention * percent_to_keep);
+    this.construction = Math.floor(this.construction * percent_to_keep);
+    this.power = Math.floor(this.power * percent_to_keep);
+
+    if (percent_to_keep === 1) {
+      return;
+    }
+
     if (oldInvention !== 0) {
       this.emitResourceChange(ResourceType.Invention, 0, oldInvention);
     }

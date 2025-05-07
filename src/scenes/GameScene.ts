@@ -188,7 +188,8 @@ export class GameScene extends Phaser.Scene {
       [], 
       true, 
       this.gameConfig.deck_limit,
-      this.playerHand
+      this.playerHand,
+      this.buildingService
     );
     
     // Set the deck reference in the hand

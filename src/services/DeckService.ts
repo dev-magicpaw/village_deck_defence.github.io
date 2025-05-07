@@ -1,5 +1,6 @@
 import { Card } from '../entities/Card';
 import { PlayerHand } from '../entities/PlayerHand';
+import { BuildingService, BuildingServiceEvents } from './BuildingService';
 
 /**
  * A generic service for managing card decks in the game
@@ -10,6 +11,7 @@ export class DeckService<T extends Card = Card> {
   private discardPile: T[] = [];
   private _deckLimit: number;
   private _hand: PlayerHand;
+  private buildingService: BuildingService;
   
   /**
    * Create a new deck service
@@ -17,19 +19,48 @@ export class DeckService<T extends Card = Card> {
    * @param shuffle Whether to shuffle the initial deck
    * @param deckLimit Maximum number of cards allowed in the deck
    * @param hand The player hand instance
+   * @param buildingService Service for managing buildings
    */
   constructor(
     cards: T[] = [], 
     shuffle: boolean = true, 
     deckLimit: number,
-    hand: PlayerHand
+    hand: PlayerHand,
+    buildingService: BuildingService
   ) {
     this.deck = [...cards];
     this._deckLimit = deckLimit;
     this._hand = hand;
+    this.buildingService = buildingService;
+    
     if (shuffle && this.deck.length > 0) {
       this.shuffle();
     }
+
+    // Listen for building construction events
+    this.buildingService.on(BuildingServiceEvents.BUILDING_CONSTRUCTED, this.handleBuildingConstructed, this);
+  }
+
+  /**
+   * Handle building construction events
+   * @param buildingId The ID of the constructed building
+   */
+  private handleBuildingConstructed(buildingId: string): void {
+    const building = this.buildingService.getBuildingConfig(buildingId);
+    
+    // Check if building has deck limit increase effect
+    const deckLimitEffect = building.effects?.find(effect => effect.type === 'increase_deck_limit');
+    if (deckLimitEffect) {
+      this.increaseDeckLimit(deckLimitEffect.amount);
+    }
+  }
+
+  /**
+   * Increase the deck limit by the specified amount
+   * @param amount The amount to increase the deck limit by
+   */
+  public increaseDeckLimit(amount: number): void {
+    this._deckLimit += amount;
   }
   
   /**

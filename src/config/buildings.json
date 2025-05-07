@@ -101,5 +101,21 @@
                 "recruits": ["card_human_lumberjack"]
             }
         ]
+    },
+    {
+        "id": "village_hut",
+        "name": "Village Hut",
+        "description": "Provides livable space, increasing deck limit by 4",
+        "image": "building_village_hut",
+        "cost": {
+            "construction": 5
+        },
+        "limit": null,
+        "effects": [
+            {   
+                "type": "increase_deck_limit",
+                "amount": 4
+            }
+        ]
     }
 ]

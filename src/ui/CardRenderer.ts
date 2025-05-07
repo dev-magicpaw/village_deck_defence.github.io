@@ -7,6 +7,7 @@ import { Card } from '../entities/Card';
 export const CARD_WIDTH = 150;
 export const CARD_HEIGHT = 200;
 export const CARD_WIDTH_TO_HEIGHT_RATIO = CARD_WIDTH / CARD_HEIGHT;
+export const CARD_SPACING_X = 20;
 
 /**
  * Renders an individual card in the UI

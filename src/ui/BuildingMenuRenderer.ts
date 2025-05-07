@@ -3,7 +3,7 @@ import { BuildingConfig as OriginalBuildingConfig } from '../entities/Building';
 import { ResourceType } from '../entities/Types';
 import { BuildingService } from '../services/BuildingService';
 import { ResourceService } from '../services/ResourceService';
-import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
+import { CARD_HEIGHT, CARD_SPACING_X, CARD_WIDTH } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
 import { CountLimitRenderer } from './CountLimitRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
@@ -44,8 +44,7 @@ export class BuildingMenuRenderer {
   private resourcePanelRenderer!: ResourcePanelRenderer;
 
   private panelMarginX: number = 30;
-  private panelMarginY: number = 30;
-  private buttonSpacingX: number = 10;
+  private buttonSpacingX: number = CARD_SPACING_X;
   // Menu dimensions and position
   private menuWidth: number;
   private menuHeight: number;

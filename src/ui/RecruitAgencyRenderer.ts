@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { ResourceType } from '../entities/Types';
 import { RecruitService } from '../services/RecruitService';
 import { ResourceService, ResourceServiceEvents } from '../services/ResourceService';
-import { CARD_HEIGHT, CARD_WIDTH } from './CardRenderer';
+import { CARD_HEIGHT, CARD_SPACING_X, CARD_WIDTH } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { ResourcePanelRenderer } from './ResourcePanelRenderer';
@@ -58,7 +58,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   // Card properties
   private cardWidth: number = CARD_WIDTH;
   private cardHeight: number = CARD_HEIGHT;
-  private cardSpacing: number = 20;
+  private cardSpacing: number = CARD_SPACING_X;
   private cardsPerRow: number = 4;
   
   // Resource panel

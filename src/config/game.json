@@ -9,6 +9,7 @@
     "invasion_distance": 100,
     "invasion_difficulty": 20,
     "player_hand_size": 5,
+    "deck_limit": 12,
     "sticker_shop_building_id":"workshop",
     "tavern_building_id":"tavern"
 }

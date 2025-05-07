@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { ResourceType } from '../entities/Types';
 import { CardRegistry } from '../services/CardRegistry';
+import { DeckService } from '../services/DeckService';
 import { RecruitService } from '../services/RecruitService';
 import { ResourceService, ResourceServiceEvents } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_SPACING_X, CARD_WIDTH, CardRenderer } from './CardRenderer';
@@ -35,6 +36,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   private recruitService: RecruitService;
   private playerHandRenderer: PlayerHandRenderer;
   private cardRegistry: CardRegistry;
+  private deckService: DeckService;
   private visible: boolean = false;
   private selectedOption: RecruitOption | null = null;
   private selectedOptionRenderer: CardRenderer | null = null;
@@ -49,6 +51,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
   // Background elements
   private background!: Phaser.GameObjects.NineSlice;
   private title!: Phaser.GameObjects.Text;
+  private subtitle!: Phaser.GameObjects.Text;
   private closeButton!: Phaser.GameObjects.Image;
   private inputBlocker!: Phaser.GameObjects.Rectangle;
   
@@ -75,6 +78,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
    * @param resourceService Service for managing resources
    * @param recruitService Service for recruiting cards
    * @param playerHandRenderer Component for handling player hand cards
+   * @param deckService Service for managing the deck
    * @param recruitOptions List of available recruit options (pre-filtered)
    * @param panelX X position of the panel
    * @param panelY Y position of the panel
@@ -87,6 +91,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     resourceService: ResourceService,
     recruitService: RecruitService,
     playerHandRenderer: PlayerHandRenderer,
+    deckService: DeckService,
     recruitOptions: RecruitOption[],
     panelX: number,
     panelY: number,
@@ -101,6 +106,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.playerHandRenderer = playerHandRenderer;
     this.recruitOptions = recruitOptions;
     this.cardRegistry = CardRegistry.getInstance();
+    this.deckService = deckService;
     
     // Store panel dimensions
     this.panelWidth = panelWidth;
@@ -179,8 +185,21 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     );
     this.title.setOrigin(0.5, 0.5);
     
+    // Add subtitle for deck size
+    this.subtitle = this.scene.add.text(
+      this.panelX + this.panelWidth / 2,
+      this.panelY + 60,
+      '',
+      {
+        fontSize: '16px',
+        color: '#ffffff'
+      }
+    );
+    this.subtitle.setOrigin(0.5, 0.5);
+    
     // Add to container
     this.container.add(this.title);
+    this.container.add(this.subtitle);
   }
   
   /**
@@ -323,6 +342,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.selectedOptionRenderer = null;
     this.resourcePanelRenderer.setTarget(false);
     this.updateCostRenderers();
+    this.updateSubtitleText();
   }
   
   /**
@@ -360,6 +380,9 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     
     // Show the resource panel
     this.resourcePanelRenderer.show();
+    
+    // Update deck size text
+    this.updateSubtitleText();
     
     // Bring to top to ensure it's above other elements
     this.container.setDepth(1000);
@@ -480,5 +503,11 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     this.selectedOption = null;
     this.selectedOptionRenderer = null;
     this.visible = false;
+  }
+
+  private updateSubtitleText(): void {
+    const currentSize = this.deckService.getTotalDeckSize();
+    const deckLimit = this.deckService.deckLimit();
+    this.subtitle.setText(`${currentSize}/${deckLimit} cards in the deck`);
   }
 } 

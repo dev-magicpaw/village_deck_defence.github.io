@@ -20,7 +20,6 @@ interface GameConfig {
   player_hand_size: number;
   invasion_speed_per_turn: number;
   
-  // Level-specific settings (can be overridden by level config)
   id?: string;
   name?: string;
   description?: string;
@@ -29,6 +28,7 @@ interface GameConfig {
   invasion_difficulty: number;
   building_slot_locations: Array<BuildingSlotLocation>;
   building_slots: Array<BuildingSlot>;
+  deck_limit: number;
 }
 
 export class GameScene extends Phaser.Scene {
@@ -176,8 +176,23 @@ export class GameScene extends Phaser.Scene {
    * Initialize the player's deck based on level config
    */
   private createPlayerDeck(): DeckService<Card> {
-    // Create empty deck service
-    const playerDeck = new DeckService<Card>();
+    // Create the player hand first
+    this.playerHand = new PlayerHand(
+      null as any, // Will be set after deck creation
+      this.gameConfig.player_hand_size,
+      this.resourceService
+    );
+
+    // Create the deck with the hand reference
+    const playerDeck = new DeckService<Card>(
+      [], 
+      true, 
+      this.gameConfig.deck_limit,
+      this.playerHand
+    );
+    
+    // Set the deck reference in the hand
+    this.playerHand['_deckService'] = playerDeck;
     
     const startingCards = this.gameConfig.starting_cards
     startingCards.forEach(cardEntry => {
@@ -194,13 +209,6 @@ export class GameScene extends Phaser.Scene {
 
     // Shuffle the deck
     playerDeck.shuffle();
-    
-    // Create the player hand
-    this.playerHand = new PlayerHand(
-      playerDeck, 
-      this.gameConfig.player_hand_size,
-      this.resourceService
-    );
     
     // Draw initial cards
     this.playerHand.drawUpToLimit();

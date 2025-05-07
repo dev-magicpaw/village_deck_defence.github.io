@@ -1,4 +1,5 @@
 import { Card } from '../entities/Card';
+import { PlayerHand } from '../entities/PlayerHand';
 
 /**
  * A generic service for managing card decks in the game
@@ -7,17 +8,42 @@ import { Card } from '../entities/Card';
 export class DeckService<T extends Card = Card> {
   private deck: T[] = [];
   private discardPile: T[] = [];
+  private _deckLimit: number;
+  private _hand: PlayerHand;
   
   /**
    * Create a new deck service
    * @param cards Optional initial cards to populate the deck
    * @param shuffle Whether to shuffle the initial deck
+   * @param deckLimit Maximum number of cards allowed in the deck
+   * @param hand The player hand instance
    */
-  constructor(cards: T[] = [], shuffle: boolean = true) {
+  constructor(
+    cards: T[] = [], 
+    shuffle: boolean = true, 
+    deckLimit: number,
+    hand: PlayerHand
+  ) {
     this.deck = [...cards];
+    this._deckLimit = deckLimit;
+    this._hand = hand;
     if (shuffle && this.deck.length > 0) {
       this.shuffle();
     }
+  }
+  
+  /**
+   * Get the maximum number of cards allowed in the deck
+   */
+  deckLimit(): number {
+    return this._deckLimit;
+  }
+  
+  /**
+   * Get the number of free spaces remaining in the deck
+   */
+  deckFreeSpace(): number {
+    return Math.max(0, this._deckLimit - this.deck.length);
   }
   
   /**
@@ -112,6 +138,13 @@ export class DeckService<T extends Card = Card> {
    */
   getDeckSize(): number {
     return this.deck.length;
+  }
+
+   /**
+   * Get the current number of cards in the deck
+   */
+   getTotalDeckSize(): number {
+    return this.deck.length + this.discardPile.length + this._hand.getSize();
   }
   
   /**

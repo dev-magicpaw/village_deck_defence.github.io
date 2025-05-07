@@ -109,6 +109,7 @@ export class GameUI {
         this.resourceService,
         this.recruitService,
         this.playerHandRenderer,
+        this.deckService,
         recruitOptions,
         this.middlePanelX,
         this.middlePanelY,

@@ -367,7 +367,11 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
 
     this.selectedOption = option;
     this.selectedOptionRenderer = renderer;
-    this.resourcePanelRenderer.setTarget(true, option.cost);
+    // Don't allow selection if deck limit is reached
+    if (this.deckService.getTotalDeckSize() < this.deckService.deckLimit()) {
+      this.resourcePanelRenderer.setTarget(true, option.cost);
+    }
+    
     renderer.setSelected(true);
   }
   
@@ -509,5 +513,12 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
     const currentSize = this.deckService.getTotalDeckSize();
     const deckLimit = this.deckService.deckLimit();
     this.subtitle.setText(`${currentSize}/${deckLimit} cards in the deck`);
+    
+    // Change color to red if deck limit is reached
+    if (currentSize >= deckLimit) {
+      this.subtitle.setColor('#ff0000'); // red
+    } else {
+      this.subtitle.setColor('#ffffff'); // white
+    }
   }
 } 

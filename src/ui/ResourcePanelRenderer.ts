@@ -463,7 +463,6 @@ export class ResourcePanelRenderer {
     
     // 2. Get the selected resource value
     const selectedResourceValue = this.getSelectedResourceValue();
-    console.log(`Selected resource value: ${selectedResourceValue}`);
     
     // 3. Emit an event with selected resource value to be handled by parent
     this.scene.events.emit('resourcePanel-playCards', {
@@ -515,7 +514,6 @@ export class ResourcePanelRenderer {
   public totalAvailable(): number {
     const selectedValue = this.getSelectedResourceValue();
     const acquiredValue = this.getAcquiredResourceValue();
-    console.log(`Total available: ${acquiredValue} + ${selectedValue} = ${acquiredValue + selectedValue}`);
     return acquiredValue + selectedValue;
   }
   

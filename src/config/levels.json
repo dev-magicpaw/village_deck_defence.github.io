@@ -41,9 +41,7 @@
                 "id": "village_slot",
                 "already_constructed": null,
                 "available_for_construction": [
-                    "warehouse",
-                    "blacksmith_house",
-                    "sawmill"
+                    "warehouse"
                 ]
             },
             {

@@ -52,6 +52,7 @@ export class BuildingMenuRenderer {
   private menuY: number;
   private currentSlotUniqueId: string = '';
   private selectedBuildingId: string = '';
+  private selectedBuildingRenderer: SimpleCardRenderer | null = null;
   
   /**
    * Create a new building menu renderer
@@ -308,7 +309,7 @@ private handleEscapeKey(): void {
 
     const buildingConfig = this.buildingService.getBuildingConfig(buildingId) as BuildingConfig;
     const buildingLimitNotReached = !this.buildingService.reachedConstructedBuildingLimit(buildingId);
-    const onBuildingSelected = buildingLimitNotReached ? () => { this.onBuildingSelected(buildingId); } : undefined;
+    const onBuildingSelected = buildingLimitNotReached ? (renderer: SimpleCardRenderer) => { this.onBuildingSelected(buildingId, renderer); } : undefined;
 
     // Create a simple card for the building option
     const buildingCard = new SimpleCardRenderer(
@@ -363,18 +364,26 @@ private handleEscapeKey(): void {
    * Called when a building is selected from the menu
    * @param buildingId The ID of the selected building
    */
-  private onBuildingSelected(buildingId: string): void {    
+  private onBuildingSelected(buildingId: string, renderer: SimpleCardRenderer): void {    
     // If the building is already selected, deselect it
-    // TODO this is not needed. SimpleCardRenderer already handles this
     if (this.selectedBuildingId === buildingId) {
       this.selectedBuildingId = '';
+      this.selectedBuildingRenderer?.setSelected(false);
+      this.selectedBuildingRenderer = null;
       this.resourcePanelRenderer.setTarget(false, 0);
       return;
     }
     
+    // Deselect previously selected building if any
+    if (this.selectedBuildingRenderer) {
+      this.selectedBuildingRenderer.setSelected(false);
+    }
+    
     // Set the selected building
     this.selectedBuildingId = buildingId;
+    this.selectedBuildingRenderer = renderer;
     this.resourcePanelRenderer.setTarget(true, this.buildingService.getBuildingConfig(buildingId)?.cost?.construction || 0);
+    renderer.setSelected(true);
   }
   
   /**

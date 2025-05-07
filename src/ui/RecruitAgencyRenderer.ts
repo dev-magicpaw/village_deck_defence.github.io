@@ -316,7 +316,7 @@ export class RecruitAgencyRenderer extends Phaser.Events.EventEmitter {
       this.scene,
       option.cost,
       0,
-      this.cardHeight / 2 + 20,
+      this.cardHeight / 2 + 30,
       ResourceType.Power
     );
     costRenderer.setAffordable(canAfford);

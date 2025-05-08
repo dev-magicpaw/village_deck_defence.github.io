@@ -6,6 +6,7 @@ import { ResourceService } from '../services/ResourceService';
 import { CARD_HEIGHT, CARD_SPACING_X, CARD_WIDTH } from './CardRenderer';
 import { CostRenderer } from './CostRenderer';
 import { CountLimitRenderer } from './CountLimitRenderer';
+import { InfoPanelRenderer } from './InfoPanelRenderer';
 import { PlayerHandRenderer, PlayerHandRendererEvents } from './PlayerHandRenderer';
 import { ResourcePanelRenderer } from './ResourcePanelRenderer';
 import { SimpleCardRenderer } from './SimpleCardRenderer';
@@ -39,6 +40,7 @@ export class BuildingMenuRenderer {
   private escapeKey?: Phaser.Input.Keyboard.Key;
   private playerHandRenderer: PlayerHandRenderer;
   private resourceService: ResourceService;
+  private infoPanelRenderer: InfoPanelRenderer;
 
   // Resource panel
   private resourcePanelRenderer!: ResourcePanelRenderer;
@@ -64,6 +66,7 @@ export class BuildingMenuRenderer {
    * @param panelHeight Height of the panel (defaults to 500)
    * @param playerHandRenderer The player hand renderer for card selection
    * @param resourceService Resource service for tracking acquired resources
+   * @param infoPanelRenderer The info panel renderer for building information
    */
   constructor(
     scene: Phaser.Scene,
@@ -73,12 +76,14 @@ export class BuildingMenuRenderer {
     panelWidth: number,
     panelHeight: number,
     playerHandRenderer: PlayerHandRenderer,
-    resourceService: ResourceService
+    resourceService: ResourceService,
+    infoPanelRenderer: InfoPanelRenderer
   ) {
     this.scene = scene;
     this.buildingService = buildingService;
     this.playerHandRenderer = playerHandRenderer;
     this.resourceService = resourceService;
+    this.infoPanelRenderer = infoPanelRenderer;
     
     this.menuWidth = panelWidth;
     this.menuHeight = panelHeight;
@@ -268,6 +273,7 @@ private handleEscapeKey(): void {
   public hide(): void {
     this.menuContainer.setVisible(false);
     this.resourcePanelRenderer.hide();
+    this.infoPanelRenderer.infoTargetDeselected();
     this.currentSlotUniqueId = '';
     this.selectedBuildingId = '';
     
@@ -376,6 +382,7 @@ private handleEscapeKey(): void {
       this.selectedBuildingRenderer?.setSelected(false);
       this.selectedBuildingRenderer = null;
       this.resourcePanelRenderer.setTarget(false, 0);
+      this.infoPanelRenderer.infoTargetDeselected();
       return;
     }
     
@@ -389,6 +396,16 @@ private handleEscapeKey(): void {
     this.selectedBuildingRenderer = renderer;
     this.resourcePanelRenderer.setTarget(true, this.buildingService.getBuildingConfig(buildingId)?.cost?.construction || 0);
     renderer.setSelected(true);
+
+    // Show building info in the info panel
+    const buildingConfig = this.buildingService.getBuildingConfig(buildingId);
+    if (buildingConfig) {
+      this.infoPanelRenderer.infoTargetSelected({
+        image: buildingConfig.image,
+        name: buildingConfig.name,
+        description: buildingConfig.description
+      });
+    }
   }
   
   /**

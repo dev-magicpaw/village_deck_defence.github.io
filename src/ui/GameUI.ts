@@ -8,6 +8,7 @@ import { StickerShopService } from '../services/StickerShopService';
 import { TavernService } from '../services/TavernService';
 import { BuildingMenuRenderer } from './BuildingMenuRenderer';
 import { BuildingsDisplayRenderer, RecruitAgencyRendererFactory } from './BuildingsDisplayRenderer';
+import { InfoPanelRenderer } from './InfoPanelRenderer';
 import { InvasionRenderer } from './InvasionRenderer';
 import { PlayerHandRenderer } from './PlayerHandRenderer';
 import { RecruitAgencyRenderer, RecruitOption } from './RecruitAgencyRenderer';
@@ -39,6 +40,7 @@ export class GameUI {
   private tavernRenderer!: TavernRenderer;
   private buildingMenuRenderer!: BuildingMenuRenderer;
   private recruitService: RecruitService;
+  private infoPanelRenderer!: InfoPanelRenderer;
   
   constructor(
     scene: Phaser.Scene, 
@@ -78,7 +80,7 @@ export class GameUI {
   public createUI(): void {
     this.createInvasionProgressPanel();
     this.createDisplaySpacePanel();
-    this.createEntityInfoPanel();
+    // this.createEntityInfoPanel();
   }
   
   /**
@@ -178,6 +180,9 @@ export class GameUI {
       this.tavernService,
       this.resourceService
     );
+
+    // Create the info panel renderer
+    this.infoPanelRenderer = new InfoPanelRenderer(this.scene);
     
     // Create the building menu renderer
     this.buildingMenuRenderer = new BuildingMenuRenderer(
@@ -188,7 +193,8 @@ export class GameUI {
       panelWidth,
       panelHeight,
       this.playerHandRenderer,
-      this.resourceService
+      this.resourceService,
+      this.infoPanelRenderer
     );
     
     // Initialize buildings display if building service is available

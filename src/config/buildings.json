@@ -56,9 +56,9 @@
         "description": "Gives a bit of protection from invaders",
         "image": "building_wooden_gates",
         "cost": {
-            "construction": 12
+            "construction": 10
         },
-        "limit": null
+        "limit": 1
     },
     {
         "id": "warehouse",

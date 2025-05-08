@@ -187,20 +187,22 @@ export class BuildingMenuRenderer {
       // Get the building ID for this card
       const buildingIds = this.buildingService.getBuildingSlotByUniqueId(this.currentSlotUniqueId)?.available_for_construction;
       if (!buildingIds || index >= buildingIds.length) return;
-      console.log(`Update buildings costst. Building ID: ${buildingIds[index]}`);
       
       const buildingId = buildingIds[index];
       const buildingConfig = this.buildingService.getBuildingConfig(buildingId) as BuildingConfig;
       if (!buildingConfig) return;
-      console.log(`Update buildings costst. Building config found`);
       
       const cost = buildingConfig.cost?.construction || 0;
       const isAffordable = totalAvailable >= cost;
-      console.log(`Update buildings costst. With cost: ${cost}. Is affordable: ${isAffordable}`);
-      // Update cost renderer affordability directly
-      if (index < this.buildingCostRenderers.length) {
-        console.log(`Update buildings costst. Setting affordable: ${isAffordable}`);
-        this.buildingCostRenderers[index].setAffordable(isAffordable);
+      
+      // Find the corresponding cost renderer for this building
+      const costRenderer = this.buildingCostRenderers.find(renderer => 
+        renderer.getContainer().parentContainer === card.getContainer()
+      );
+      
+      // Only update if we found a cost renderer (buildings at limit won't have one)
+      if (costRenderer) {
+        costRenderer.setAffordable(isAffordable);
       }
     });
   }

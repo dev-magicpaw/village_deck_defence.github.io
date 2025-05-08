@@ -31,6 +31,8 @@ export class InvasionService {
     this.currentDistance -= this.invasionSpeedPerTurn;
     this.currentDay += 1;
     
+    console.log(`Invasion progress: ${this.currentDistance} days remaining`);
+
     // Ensure distance doesn't go below zero
     if (this.currentDistance < 0) {
       this.currentDistance = 0;

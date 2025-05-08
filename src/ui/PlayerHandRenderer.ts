@@ -643,6 +643,8 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.playerHand.discardHand();
     this.playerHand.shuffleDiscardIntoTheDeck();
     this.playerHand.drawUpToLimit();
+
+    this.resourceService.processResourcesStartOfDay();
     
     // 3. The updating of UI is handled by events now
     this.updateButtonVisibility();

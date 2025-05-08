@@ -46,8 +46,11 @@ export class ResourceService extends Phaser.Events.EventEmitter {
   }
 
   public resetResourcesEndOfDay(): void {
-    // For now just reset all to 0.
     this.resetResources();
+  }
+
+  public processResourcesStartOfDay(): void {
+    this.processBuildingEffects();
   }
 
   public resetResourcesHandDiscard(): void {
@@ -92,6 +95,36 @@ export class ResourceService extends Phaser.Events.EventEmitter {
     if (oldPower !== 0) {
       this.emitResourceChange(ResourceType.Power, 0, oldPower);
     }
+  }
+
+  /**
+   * Process effects from all constructed buildings
+   * Adds resources based on building effects with 'on_day_start' timing
+   */
+  private processBuildingEffects(): void {
+    if (!this.buildingService) {
+      throw new Error('Building service not set');
+    }
+
+    const constructedBuildings = this.buildingService.getConstructedBuildings();
+    
+    constructedBuildings.forEach(building => {
+      building.effects?.forEach(effect => {
+        if (effect.type === 'add_resource' && effect.when === 'on_day_start') {
+          switch (effect.resource) {
+            case 'invention':
+              this.addInvention(effect.amount);
+              break;
+            case 'construction':
+              this.addConstruction(effect.amount);
+              break;
+            case 'power':
+              this.addPower(effect.amount);
+              break;
+          }
+        }
+      });
+    });
   }
 
   /**

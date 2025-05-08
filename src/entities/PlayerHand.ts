@@ -60,10 +60,8 @@ export class PlayerHand {
    * @returns The number of cards drawn
    */
   public discardAndDraw(): number {
-    // Discard all cards in hand
     this.discardHand()
-    
-    // Draw up to the hand limit
+    this._resourceService.processResourcesFromBuildings()
     return this.drawUpToLimit();
   }
 

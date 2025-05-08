@@ -114,26 +114,9 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
       );
     }
     
-    // Subscribe to tavern state changes
-    this.tavernService.on(
-      TavernServiceEvents.TAVERN_STATE_CHANGED,
-      this.onTavernStateChanged,
-      this
-    );
-    
-    // Subscribe to building menu state changes
-    this.buildingService.on(
-      BuildingServiceEvents.MENU_STATE_CHANGED,
-      this.onBuildingMenuStateChanged,
-      this
-    );
-    
-    // Subscribe to recruit agency state changes
-    this.recruitService.on(
-      RecruitServiceEvents.AGENCY_STATE_CHANGED,
-      this.onRecruitAgencyStateChanged,
-      this
-    );
+    this.tavernService.on(TavernServiceEvents.TAVERN_STATE_CHANGED, this.onTavernStateChanged, this);
+    this.buildingService.on(BuildingServiceEvents.MENU_STATE_CHANGED, this.onBuildingMenuStateChanged, this);
+    this.recruitService.on(RecruitServiceEvents.AGENCY_STATE_CHANGED, this.onRecruitAgencyStateChanged, this);
   }
   
   /**
@@ -643,8 +626,6 @@ export class PlayerHandRenderer extends Phaser.Events.EventEmitter {
     this.playerHand.discardHand();
     this.playerHand.shuffleDiscardIntoTheDeck();
     this.playerHand.drawUpToLimit();
-
-    this.resourceService.processResourcesStartOfDay();
     
     // 3. The updating of UI is handled by events now
     this.updateButtonVisibility();

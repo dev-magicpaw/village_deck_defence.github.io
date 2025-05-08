@@ -49,7 +49,7 @@ export class ResourceService extends Phaser.Events.EventEmitter {
     this.resetResources();
   }
 
-  public processResourcesStartOfDay(): void {
+  public processResourcesFromBuildings(): void {
     this.processBuildingEffects();
   }
 

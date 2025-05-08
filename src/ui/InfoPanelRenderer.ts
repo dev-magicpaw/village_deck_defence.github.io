@@ -22,7 +22,10 @@ export class InfoPanelRenderer {
   private panelX: number;
   private panelY: number;
   
-  private descriptionPercent: number = 0.3;
+  private descriptionBackground!: Phaser.GameObjects.Rectangle;
+  private nameBackground!: Phaser.GameObjects.Rectangle;
+  private descriptionHeightPercent: number = 0.15;
+  private nameHeightPercent: number = 0.1;
 
 
   constructor(scene: Phaser.Scene) {
@@ -77,10 +80,24 @@ export class InfoPanelRenderer {
     this.image.setOrigin(0.5, 0.5);
     this.image.setVisible(false);
 
+    // Create name background
+    const descriptionHeight = this.panelHeight * this.descriptionHeightPercent;
+    const nameHeight = this.panelHeight * this.nameHeightPercent;
+    this.nameBackground = this.scene.add.rectangle(
+      this.panelWidth/2,
+      this.panelHeight - descriptionHeight - nameHeight/2,
+      this.panelWidth - 15,
+      nameHeight,
+      0x000000,
+      0.8
+    );
+    this.nameBackground.setOrigin(0.5, 0.5);
+    this.nameBackground.setVisible(false);
+
     // Create name text
     this.nameText = this.scene.add.text(
       this.panelWidth/2,
-      this.panelHeight/2,
+      this.panelHeight - descriptionHeight - nameHeight/2,
       '',
       {
         fontSize: '24px',
@@ -92,20 +109,31 @@ export class InfoPanelRenderer {
     this.nameText.setOrigin(0.5, 0.5);
     this.nameText.setVisible(false);
 
+    // Create description background
+    this.descriptionBackground = this.scene.add.rectangle(
+      this.panelWidth/2,
+      this.panelHeight - descriptionHeight/2,
+      this.panelWidth - 15,
+      descriptionHeight,
+      0x000000,
+      0.8
+    );
+    this.descriptionBackground.setOrigin(0.5, 0.5);
+    this.descriptionBackground.setVisible(false);
+
     // Create description text
-    const descriptionHeight = this.panelHeight * this.descriptionPercent;
     this.descriptionText = this.scene.add.text(
       this.panelWidth/2,
-      this.panelHeight/2,
+      this.panelHeight - descriptionHeight/2,
       '',
       {
-        fontSize: '18px',
+        fontSize: '16px',
         color: '#ffffff',
         align: 'center',
-        wordWrap: { width: this.panelWidth - 30 }
+        wordWrap: { width: this.panelWidth - 40 }
       }
     );
-    this.descriptionText.setOrigin(0.5, 1);
+    this.descriptionText.setOrigin(0.5, 0.5);
     this.descriptionText.setVisible(false);
 
     // Add all elements to container
@@ -113,7 +141,9 @@ export class InfoPanelRenderer {
       this.infoPanel,
       this.titleText,
       this.image,
+      this.nameBackground,
       this.nameText,
+      this.descriptionBackground,
       this.descriptionText
     ]);
   }
@@ -130,22 +160,28 @@ export class InfoPanelRenderer {
     if (target.name) {
       this.nameText.setText(target.name);
       this.nameText.setVisible(true);
+      this.nameBackground.setVisible(true);
     } else {
       this.nameText.setVisible(false);
+      this.nameBackground.setVisible(false);
     }
 
     if (target.description) {
       this.descriptionText.setText(target.description);
       this.descriptionText.setVisible(true);
+      this.descriptionBackground.setVisible(true);
     } else {
       this.descriptionText.setVisible(false);
+      this.descriptionBackground.setVisible(false);
     }
   }
 
   public infoTargetDeselected(): void {
     this.image.setVisible(false);
     this.nameText.setVisible(false);
+    this.nameBackground.setVisible(false);
     this.descriptionText.setVisible(false);
+    this.descriptionBackground.setVisible(false);
   }
 
   public destroy(): void {
@@ -159,7 +195,9 @@ export class InfoPanelRenderer {
     safeDestroy(this.titleText);
     safeDestroy(this.image);
     safeDestroy(this.nameText);
+    safeDestroy(this.nameBackground);
     safeDestroy(this.descriptionText);
+    safeDestroy(this.descriptionBackground);
     safeDestroy(this.displayContainer);
   }
 } 

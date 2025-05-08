@@ -32,8 +32,11 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
   private stickerApplicationOverlay: StickerApplicationOverlayRenderer | null = null;
   
   // Card dimensions and grid configuration
-  private static GRID_COLUMNS = 7;
-  private static GRID_ROWS = 3;
+  private GRID_COLUMNS = 7;
+  private GRID_ROWS = 3;
+  private PADDING = 20;
+  private TOP_MARGIN = 60;
+  private LEFT_MARGIN = 55;
 
   /**
    * Create a new CardOverlayRenderer
@@ -191,18 +194,12 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
       throw new Error('No cards available');
     }
     
-    // Calculate optimal card size
-    const { width, height } = this.scene.cameras.main;
-    const padding = 20;
-    const topMargin = 60; // Space for title
-    const leftMargin = 60;
-    
     // Calculate grid dimensions
     let cols: number;
     let rows: number;
     
-    cols = CardOverlayRenderer.GRID_COLUMNS;
-    rows = CardOverlayRenderer.GRID_ROWS;
+    cols = this.GRID_COLUMNS;
+    rows = this.GRID_ROWS;
     
     // For now we use a fixed scale
     const scale = 1;
@@ -212,8 +209,8 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     const actualCardHeight = CARD_HEIGHT * scale;
     
     // Calculate starting position
-    const startX = leftMargin + actualCardWidth/2; // + (width - padding * 2 - (actualCardWidth * cols) - (padding * (cols - 1))) / 2;
-    const startY = topMargin;
+    const startX = this.LEFT_MARGIN + actualCardWidth/2;
+    const startY = this.TOP_MARGIN;
 
     // Create sets for faster lookups
     const discardSet = new Set(discard.map(card => card.unique_id));
@@ -223,8 +220,8 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
       const row = Math.floor(index / cols);
       const col = index % cols;
       
-      const x = startX + col * (actualCardWidth + padding)
-      const y = startY + row * (actualCardHeight + padding) + actualCardHeight / 2;
+      const x = startX + col * (actualCardWidth + this.PADDING)
+      const y = startY + row * (actualCardHeight + this.PADDING) + actualCardHeight / 2;
       
       // Check if the card is in the discard pile
       const isInDiscard = discardSet.has(card.unique_id);

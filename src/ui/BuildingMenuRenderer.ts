@@ -180,22 +180,26 @@ export class BuildingMenuRenderer {
    */
   private updateBuildingOptionCostColors(): void {
     const totalAvailable = this.resourcePanelRenderer.totalAvailable();
+    console.log(`Update buildings costst. Available: ${totalAvailable}`);
     
     // Update each building card
     this.buildingCards.forEach((card, index) => {
       // Get the building ID for this card
       const buildingIds = this.buildingService.getBuildingSlotByUniqueId(this.currentSlotUniqueId)?.available_for_construction;
       if (!buildingIds || index >= buildingIds.length) return;
+      console.log(`Update buildings costst. Building ID: ${buildingIds[index]}`);
       
       const buildingId = buildingIds[index];
       const buildingConfig = this.buildingService.getBuildingConfig(buildingId) as BuildingConfig;
       if (!buildingConfig) return;
+      console.log(`Update buildings costst. Building config found`);
       
       const cost = buildingConfig.cost?.construction || 0;
       const isAffordable = totalAvailable >= cost;
-      
+      console.log(`Update buildings costst. With cost: ${cost}. Is affordable: ${isAffordable}`);
       // Update cost renderer affordability directly
       if (index < this.buildingCostRenderers.length) {
+        console.log(`Update buildings costst. Setting affordable: ${isAffordable}`);
         this.buildingCostRenderers[index].setAffordable(isAffordable);
       }
     });

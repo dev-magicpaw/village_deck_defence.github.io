@@ -195,6 +195,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     const { width, height } = this.scene.cameras.main;
     const padding = 20;
     const topMargin = 60; // Space for title
+    const leftMargin = 60;
     
     // Calculate grid dimensions
     let cols: number;
@@ -211,7 +212,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
     const actualCardHeight = CARD_HEIGHT * scale;
     
     // Calculate starting position
-    const startX = padding + (width - padding * 2 - (actualCardWidth * cols) - (padding * (cols - 1))) / 2;
+    const startX = leftMargin + actualCardWidth/2; // + (width - padding * 2 - (actualCardWidth * cols) - (padding * (cols - 1))) / 2;
     const startY = topMargin;
 
     // Create sets for faster lookups

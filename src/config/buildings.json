@@ -88,7 +88,7 @@
                 "type": "add_resource",
                 "when": "on_day_start",
                 "resource": "invention",
-                "amount": 1
+                "amount": 2
             }
         ]
     },
@@ -110,7 +110,7 @@
                 "type": "add_resource",
                 "when": "on_day_start",
                 "resource": "construction",
-                "amount": 1
+                "amount": 2
             }
         ]
     },

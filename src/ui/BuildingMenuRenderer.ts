@@ -180,7 +180,6 @@ export class BuildingMenuRenderer {
    */
   private updateBuildingOptionCostColors(): void {
     const totalAvailable = this.resourcePanelRenderer.totalAvailable();
-    console.log(`Update buildings costst. Available: ${totalAvailable}`);
     
     // Update each building card
     this.buildingCards.forEach((card, index) => {

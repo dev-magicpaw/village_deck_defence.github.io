@@ -16,8 +16,9 @@ import { TavernRenderer } from './TavernRenderer';
 
 export class GameUI {
   static readonly INVASION_PANEL_HEIGHT_PROPORTION: number = 0.08;
+  // Keep info area in 1x0.75 proportion (standard card) for a 16:9 screen
   static readonly PLAYER_HAND_PANEL_HEIGHT_PROPORTION: number = 0.35;
-  static readonly INFO_PANEL_WIDTH_PROPORTION: number = 0.3;
+  static readonly INFO_PANEL_WIDTH_PROPORTION: number = 0.24;
 
   private middlePanelX: number;
   private middlePanelY: number;

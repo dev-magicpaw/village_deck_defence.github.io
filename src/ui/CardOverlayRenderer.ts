@@ -32,7 +32,7 @@ export class CardOverlayRenderer extends Phaser.Events.EventEmitter {
   private stickerApplicationOverlay: StickerApplicationOverlayRenderer | null = null;
   
   // Card dimensions and grid configuration
-  private static GRID_COLUMNS = 6;
+  private static GRID_COLUMNS = 7;
   private static GRID_ROWS = 3;
 
   /**

@@ -73,7 +73,7 @@
     {
         "id": "blacksmith_house",
         "name": "Blacksmith House",
-        "description": "Adds a bit of invention each term. Allows to hire a blacksmith apprentice",
+        "description": "Adds 2 invention on each hand draw. Allows to hire a blacksmith apprentice",
         "image": "building_blacksmith_house",
         "cost": {
             "construction": 6
@@ -95,7 +95,7 @@
     {
         "id": "sawmill",
         "name": "Sawmill",
-        "description": "Adds some construction each term. Allows to hire a lumberjack",
+        "description": "Adds 2 construction on each hand draw. Allows to hire a lumberjack",
         "image": "building_sawmill",
         "cost": {
             "construction": 6
